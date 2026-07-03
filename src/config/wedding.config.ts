@@ -147,14 +147,14 @@ export const weddingConfig: WeddingConfig = {
       fullName: 'Nguyễn Thảo Nhi',
       role: 'Cô dâu',
       parents: 'Con ông Nguyễn Văn A & bà Trần Thị B',
-      photo: '/images/bride.jpg',
+      photo: 'images/bride.jpg',
     },
     groom: {
       name: 'Minh Khôi',
       fullName: 'Lê Minh Khôi',
       role: 'Chú rể · Cơ trưởng',
       parents: 'Con ông Lê Văn C & bà Phạm Thị D',
-      photo: '/images/groom.jpg',
+      photo: 'images/groom.jpg',
     },
     hashtag: '#ChuyenBayHanhPhuc',
   },
@@ -178,7 +178,7 @@ export const weddingConfig: WeddingConfig = {
   },
 
   hero: {
-    backgroundImage: '/images/hero.jpg',
+    backgroundImage: 'images/hero.jpg',
     backgroundVideo: '',
   },
 
@@ -190,7 +190,7 @@ export const weddingConfig: WeddingConfig = {
       title: 'Lần đầu gặp gỡ',
       description:
         'Hai hành khách xa lạ tình cờ chung một chuyến bay. Một ánh nhìn, và hành trình bắt đầu.',
-      image: '/images/timeline-1.jpg',
+      image: 'images/timeline-1.jpg',
     },
     {
       phase: 'Take-off',
@@ -199,7 +199,7 @@ export const weddingConfig: WeddingConfig = {
       title: 'Chính thức cất cánh',
       description:
         'Chúng mình về chung một đội bay, cùng nhau viết nên câu chuyện của riêng mình.',
-      image: '/images/timeline-2.jpg',
+      image: 'images/timeline-2.jpg',
     },
     {
       phase: 'Cruising Altitude',
@@ -208,7 +208,7 @@ export const weddingConfig: WeddingConfig = {
       title: 'Những kỷ niệm đẹp',
       description:
         'Bay qua bao vùng trời, cùng đón bình minh và hoàng hôn ở khắp mọi nơi.',
-      image: '/images/timeline-3.jpg',
+      image: 'images/timeline-3.jpg',
     },
     {
       phase: 'Landing',
@@ -217,25 +217,25 @@ export const weddingConfig: WeddingConfig = {
       title: 'Ngày hạ cánh',
       description:
         'Chuyến bay hạnh phúc đáp xuống bến đỗ cuối cùng — mãi mãi bên nhau.',
-      image: '/images/timeline-4.jpg',
+      image: 'images/timeline-4.jpg',
     },
   ],
 
   gallery: {
     images: [
-      { src: '/images/gallery-1.jpg', alt: 'Ảnh cưới 1' },
-      { src: '/images/gallery-2.jpg', alt: 'Ảnh cưới 2' },
-      { src: '/images/gallery-3.jpg', alt: 'Ảnh cưới 3' },
-      { src: '/images/gallery-4.jpg', alt: 'Ảnh cưới 4' },
-      { src: '/images/gallery-5.jpg', alt: 'Ảnh cưới 5' },
-      { src: '/images/gallery-6.jpg', alt: 'Ảnh cưới 6' },
+      { src: 'images/gallery-1.jpg', alt: 'Ảnh cưới 1' },
+      { src: 'images/gallery-2.jpg', alt: 'Ảnh cưới 2' },
+      { src: 'images/gallery-3.jpg', alt: 'Ảnh cưới 3' },
+      { src: 'images/gallery-4.jpg', alt: 'Ảnh cưới 4' },
+      { src: 'images/gallery-5.jpg', alt: 'Ảnh cưới 5' },
+      { src: 'images/gallery-6.jpg', alt: 'Ảnh cưới 6' },
     ],
-    video: '/videos/prewedding.mp4',
-    videoPoster: '/images/prewedding-poster.jpg',
+    video: 'videos/prewedding.mp4',
+    videoPoster: 'images/prewedding-poster.jpg',
   },
 
   boardingPass: {
-    poster: '/images/boarding-poster.jpg',
+    poster: 'images/boarding-poster.jpg',
     from: 'Single Life',
     to: 'Forever',
     gate: 'Wedding Hall',
@@ -259,7 +259,7 @@ export const weddingConfig: WeddingConfig = {
   },
 
   music: {
-    src: '/music/wedding.mp3',
+    src: 'music/wedding.mp3',
     title: 'Nhạc nền',
   },
 }
