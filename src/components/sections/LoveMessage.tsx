@@ -1,17 +1,19 @@
 import type { WeddingConfig } from '../../config/wedding.config'
+import { useI18n } from '../../i18n/LanguageContext'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Reveal } from '../ui/Reveal'
 import { PassportStamp } from '../decorations/PassportStamp'
 import { CoupleProfile } from './CoupleProfile'
 
 export function LoveMessage({ config }: { config: WeddingConfig }) {
-  const { loveMessage, couple } = config
+  const { couple } = config
+  const { t } = useI18n()
 
   return (
     <section
       id="message"
       className="relative overflow-hidden bg-ivory px-5 py-24"
-      aria-label="Lời ngỏ từ cô dâu chú rể"
+      aria-label={t.love.title}
     >
       <PassportStamp
         top="Save the Date"
@@ -22,11 +24,11 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
 
       <div className="mx-auto max-w-2xl">
         <Reveal>
-          <SectionHeading kicker="From the Couple" title={loveMessage.heading} />
+          <SectionHeading kicker={t.love.kicker} title={t.love.title} />
         </Reveal>
 
         <Reveal delay={0.1} className="mt-10 flex flex-col items-center gap-5 text-center">
-          {loveMessage.body.map((paragraph, i) => (
+          {t.love.body.map((paragraph, i) => (
             <p
               key={i}
               className="text-balance font-display text-xl italic leading-relaxed text-navy sm:text-2xl"
@@ -34,7 +36,7 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
               {paragraph}
             </p>
           ))}
-          <p className="mt-2 text-sm text-navy-400">{loveMessage.signature}</p>
+          <p className="mt-2 text-sm text-navy-400">{t.love.signature}</p>
           <p className="font-display text-2xl text-gold-dark">
             {couple.groom.name} &amp; {couple.bride.name}
           </p>

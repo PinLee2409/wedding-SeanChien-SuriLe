@@ -3,6 +3,8 @@ import { useInView } from 'motion/react'
 import confetti from 'canvas-confetti'
 import { Plane } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
+import { useI18n } from '../../i18n/LanguageContext'
+import { formatWeekday } from '../../i18n/translations'
 import { Clouds } from '../decorations/Clouds'
 import { FlyingPlane } from '../decorations/FlyingPlane'
 import { FloatingHearts } from '../decorations/FloatingHearts'
@@ -12,7 +14,9 @@ import { Reveal } from '../ui/Reveal'
 const GOLD_COLORS = ['#c68a74', '#e9c5b5', '#fffefd', '#dba8a3']
 
 export function FinalThankYou({ config }: { config: WeddingConfig }) {
-  const { thankYou, couple, date, event } = config
+  const { couple, date, event } = config
+  const { t, lang } = useI18n()
+  const weekday = formatWeekday(date.iso, lang)
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, amount: 0.5 })
 
@@ -38,7 +42,7 @@ export function FinalThankYou({ config }: { config: WeddingConfig }) {
     <section
       ref={ref}
       className="relative flex min-h-[80svh] flex-col items-center justify-center overflow-hidden bg-navy px-5 py-24 text-center text-warm-white"
-      aria-label="Lời cảm ơn"
+      aria-label={t.thanks.heading}
     >
       <Clouds tone="sky" className="opacity-20" />
 
@@ -70,14 +74,14 @@ export function FinalThankYou({ config }: { config: WeddingConfig }) {
           <Plane className="h-7 w-7 rotate-45" strokeWidth={1.4} />
         </span>
 
-        <p className="label-caps text-xs text-gold">Thank You for Flying With Us</p>
+        <p className="label-caps text-xs text-gold">{t.thanks.tagline}</p>
 
         <h2 className="font-display text-5xl font-semibold sm:text-6xl">
-          {thankYou.heading}
+          {t.thanks.heading}
         </h2>
 
         <p className="max-w-md text-balance text-sm leading-relaxed text-sky-soft sm:text-base">
-          {thankYou.message}
+          {t.thanks.message}
         </p>
 
         <div className="mt-2 flex items-center gap-4 font-script text-4xl leading-snug sm:text-5xl">
@@ -87,7 +91,7 @@ export function FinalThankYou({ config }: { config: WeddingConfig }) {
         </div>
 
         <p className="label-caps text-[11px] text-warm-white/80">
-          {date.weekday} · {date.displayDate}
+          {weekday} · {date.displayDate}
         </p>
 
         {couple.hashtag && (

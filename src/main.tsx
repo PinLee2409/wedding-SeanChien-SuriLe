@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { applyThemeById, getSavedThemeId } from './config/themes'
+import { LanguageProvider } from './i18n/LanguageContext'
 
 // Apply the saved colour theme before first paint to avoid a flash.
 applyThemeById(getSavedThemeId())
@@ -16,6 +17,8 @@ if ('scrollRestoration' in history) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <LanguageProvider>
+      <App />
+    </LanguageProvider>
   </StrictMode>,
 )

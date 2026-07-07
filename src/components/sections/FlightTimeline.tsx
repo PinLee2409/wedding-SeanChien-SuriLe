@@ -4,6 +4,8 @@ import { motion, useReducedMotion } from 'motion/react'
 import type { TimelineItem, WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { easeLux } from '../../lib/motion'
+import { useI18n } from '../../i18n/LanguageContext'
+import type { TimelineCopy } from '../../i18n/translations'
 import { SectionHeading } from '../ui/SectionHeading'
 import { SmartImage } from '../ui/SmartImage'
 import { Reveal } from '../ui/Reveal'
@@ -15,7 +17,16 @@ const ICONS: Record<TimelineItem['icon'], LucideIcon> = {
   'plane-landing': PlaneLanding,
 }
 
-function TimelineRow({ item, index }: { item: TimelineItem; index: number }) {
+function TimelineRow({
+  item,
+  copy,
+  index,
+}: {
+  item: TimelineItem
+  /** Localised date/title/description for this leg. */
+  copy: TimelineCopy
+  index: number
+}) {
   const Icon = ICONS[item.icon]
   const isLeft = index % 2 === 0
 
@@ -42,13 +53,13 @@ function TimelineRow({ item, index }: { item: TimelineItem; index: number }) {
             : 'md:col-start-2 md:pl-12',
         )}
       >
-        <span className="label-caps text-[10px] text-gold">{item.phase}</span>
-        <p className="mt-1 font-mono text-xs text-navy-400">{item.date}</p>
+        <span className="label-caps text-[10px] text-gold">{copy.phase}</span>
+        <p className="mt-1 font-mono text-xs text-navy-400">{copy.date}</p>
         <h3 className="mt-1 font-display text-[clamp(1.4rem,4.5vw,2rem)] text-navy">
-          {item.title}
+          {copy.title}
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-navy-400">
-          {item.description}
+          {copy.description}
         </p>
       </div>
 
@@ -62,8 +73,8 @@ function TimelineRow({ item, index }: { item: TimelineItem; index: number }) {
       >
         <SmartImage
           src={item.image}
-          alt={item.title}
-          label={item.phase}
+          alt={copy.title}
+          label={copy.phase}
           className="aspect-[4/3] w-full"
           imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.04]"
         />
@@ -74,19 +85,20 @@ function TimelineRow({ item, index }: { item: TimelineItem; index: number }) {
 
 export function FlightTimeline({ config }: { config: WeddingConfig }) {
   const reduce = useReducedMotion()
+  const { t } = useI18n()
 
   return (
     <section
       id="timeline"
       className="bg-ivory px-5 py-24"
-      aria-label="Hành trình tình yêu"
+      aria-label={t.timeline.title}
     >
       <div className="mx-auto max-w-4xl">
         <Reveal>
           <SectionHeading
-            kicker="Flight Journey"
-            title="Hành trình của chúng mình"
-            subtitle="Mỗi chặng bay là một dấu mốc yêu thương trên hành trình về chung một nhà."
+            kicker={t.timeline.kicker}
+            title={t.timeline.title}
+            subtitle={t.timeline.subtitle}
           />
         </Reveal>
 
@@ -102,7 +114,12 @@ export function FlightTimeline({ config }: { config: WeddingConfig }) {
           />
           <ol className="flex flex-col gap-16">
             {config.timeline.map((item, i) => (
-              <TimelineRow key={item.phase} item={item} index={i} />
+              <TimelineRow
+                key={item.phase}
+                item={item}
+                copy={t.timeline.items[i] ?? { date: item.date, title: item.title, description: item.description }}
+                index={i}
+              />
             ))}
           </ol>
         </div>

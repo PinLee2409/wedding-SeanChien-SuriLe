@@ -1,7 +1,10 @@
-import { Play } from 'lucide-react'
+import { Fragment } from 'react'
+import { Heart, Play } from 'lucide-react'
 import { useReducedMotion } from 'motion/react'
 import type { WeddingConfig } from '../../config/wedding.config'
+import type { GalleryImage } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
 import { SectionHeading } from '../ui/SectionHeading'
 import { SmartImage } from '../ui/SmartImage'
 import { Reveal } from '../ui/Reveal'
@@ -18,8 +21,8 @@ interface FrameDef {
   kind: FrameKind
   /** Grid placement classes. */
   span: string
-  /** Polaroid handwriting caption (script font). */
-  caption?: string
+  /** Index into the localised polaroid captions (t.gallery.captions). */
+  captionIdx?: 0 | 1
   /** Polaroid resting angle; straightens on hover. */
   tilt?: string
 }
@@ -29,9 +32,9 @@ const FRAMES: FrameDef[] = [
   { kind: 'arch', span: 'row-span-2' },
   { kind: 'wide', span: 'col-span-2' },
   { kind: 'oval', span: '' },
-  { kind: 'polaroid', span: 'md:row-span-2', caption: 'Yêu thương', tilt: '-rotate-2' },
+  { kind: 'polaroid', span: 'md:row-span-2', captionIdx: 0, tilt: '-rotate-2' },
   { kind: 'standard', span: '' },
-  { kind: 'polaroid', span: '', caption: 'Mãi mãi', tilt: 'rotate-2' },
+  { kind: 'polaroid', span: '', captionIdx: 1, tilt: 'rotate-2' },
 ]
 
 function GalleryFrame({
@@ -45,7 +48,8 @@ function GalleryFrame({
   src?: string
   alt: string
 }) {
-  const label = `Ảnh ${index + 1}`
+  const { t } = useI18n()
+  const label = `${t.gallery.photo} ${index + 1}`
 
   if (frame.kind === 'polaroid') {
     // A white-bordered polaroid resting at a slight angle; straightens on hover.
@@ -64,7 +68,7 @@ function GalleryFrame({
           imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.04]"
         />
         <figcaption className="shrink-0 pt-2 text-center font-script text-xl leading-none text-navy-600">
-          {frame.caption}
+          {t.gallery.captions[frame.captionIdx ?? 0]}
         </figcaption>
       </figure>
     )
@@ -87,24 +91,92 @@ function GalleryFrame({
   )
 }
 
+/**
+ * One marquee lane of photos. The content is duplicated so the -50% keyframe
+ * loops seamlessly; `reverse` flips the direction so two stacked lanes glide
+ * past each other. Hovering a lane pauses it so a photo can be admired.
+ */
+function MarqueeLane({
+  images,
+  reverse = false,
+  duration = 32,
+  reduce,
+}: {
+  images: GalleryImage[]
+  reverse?: boolean
+  duration?: number
+  reduce: boolean
+}) {
+  const { t } = useI18n()
+  const lane = reduce ? images : [...images, ...images]
+
+  return (
+    <div
+      className={cn(
+        'group relative',
+        !reduce &&
+          '[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]',
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-center gap-3',
+          reduce
+            ? 'w-full overflow-x-auto pb-2'
+            : 'w-max animate-marquee group-hover:[animation-play-state:paused]',
+        )}
+        style={
+          reduce
+            ? undefined
+            : {
+                animationDuration: `${duration}s`,
+                animationDirection: reverse ? 'reverse' : 'normal',
+              }
+        }
+      >
+        {lane.map((image, i) => (
+          <Fragment key={image.src + i}>
+            <SmartImage
+              src={image.src}
+              alt=""
+              label={`${t.gallery.photo} ${(i % images.length) + 1}`}
+              className={cn(
+                'h-24 w-36 shrink-0 rounded-xl border border-gold/20 ring-1 ring-rose/20 shadow-sm transition-transform duration-500 hover:rotate-0 hover:scale-105 sm:h-28 sm:w-44',
+                i % 2 === 0 ? 'rotate-1' : '-rotate-1',
+              )}
+            />
+            {/* A little heart resting between every pair of memories. */}
+            <Heart
+              className="h-3.5 w-3.5 shrink-0 fill-current text-rose/70"
+              strokeWidth={0}
+              aria-hidden="true"
+            />
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function MediaGallery({ config }: { config: WeddingConfig }) {
   const { images, video, videoPoster } = config.gallery
+  const { t } = useI18n()
   const reduce = useReducedMotion()
-  // Duplicate the set so the -50% marquee loops without a visible seam.
-  const strip = [...images, ...images]
+  // Second lane shows the collection in reverse order so the two never mirror.
+  const reversedImages = [...images].reverse()
 
   return (
     <section
       id="gallery"
       className="overflow-hidden bg-gradient-to-b from-warm-white to-ivory px-5 py-20"
-      aria-label="Album ảnh cưới"
+      aria-label={t.gallery.title}
     >
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <SectionHeading
-            kicker="Gallery"
-            title="Khoảnh khắc yêu thương"
-            subtitle="Những mảnh ghép đẹp nhất trên hành trình của chúng mình."
+            kicker={t.gallery.kicker}
+            title={t.gallery.title}
+            subtitle={t.gallery.subtitle}
           />
         </Reveal>
 
@@ -145,32 +217,22 @@ export function MediaGallery({ config }: { config: WeddingConfig }) {
         </SectionReveal>
       </div>
 
-      {/* Film-strip: a slow, endless fly-past of the same memories. Static
-          scrollable row under reduced motion. */}
-      <Reveal delay={0.1} className="mt-10">
+      {/* Memory lanes: two marquees gliding past each other — one drifts left,
+          the other right — over a soft rose glow, with a heart tucked between
+          every pair of photos. Static scrollable rows under reduced motion. */}
+      <Reveal delay={0.1} className="relative mt-12">
         <div
-          className={cn(
-            'relative',
-            !reduce &&
-              '[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]',
-          )}
-        >
-          <div
-            className={cn(
-              'flex w-max gap-3',
-              reduce ? 'w-full overflow-x-auto' : 'animate-marquee',
-            )}
-          >
-            {(reduce ? images : strip).map((image, i) => (
-              <SmartImage
-                key={image.src + i}
-                src={image.src}
-                alt=""
-                label={`Ảnh ${(i % images.length) + 1}`}
-                className="h-24 w-36 shrink-0 rounded-xl border border-gold/15 sm:h-28 sm:w-44"
-              />
-            ))}
-          </div>
+          className="pointer-events-none absolute inset-x-0 top-1/2 -z-10 h-[130%] -translate-y-1/2 bg-[radial-gradient(ellipse_70%_100%_at_50%_50%,var(--color-rose)_0%,transparent_70%)] opacity-25"
+          aria-hidden="true"
+        />
+        <p className="label-caps mb-4 text-center text-[10px] text-navy-400">
+          <Heart className="mr-1.5 inline h-3 w-3 fill-current text-rose" strokeWidth={0} />
+          {t.gallery.memoryLane}
+          <Heart className="ml-1.5 inline h-3 w-3 fill-current text-rose" strokeWidth={0} />
+        </p>
+        <div className="flex flex-col gap-4">
+          <MarqueeLane images={images} duration={34} reduce={!!reduce} />
+          <MarqueeLane images={reversedImages} reverse duration={44} reduce={!!reduce} />
         </div>
       </Reveal>
     </section>

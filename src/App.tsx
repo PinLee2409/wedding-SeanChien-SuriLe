@@ -20,6 +20,7 @@ import { FallingPetals } from './components/decorations/FallingPetals'
 import { MusicToggle } from './components/ui/MusicToggle'
 import { BackToTop } from './components/ui/BackToTop'
 import { ThemePicker } from './components/ui/ThemePicker'
+import { LanguageSwitcher } from './components/ui/LanguageSwitcher'
 import { ScrollProgress } from './components/ui/ScrollProgress'
 
 function App() {
@@ -117,14 +118,9 @@ function App() {
       {/* Floating controls */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col items-center gap-3">
         <BackToTop />
+        <LanguageSwitcher />
         <ThemePicker themes={themes} activeId={themeId} onSelect={setTheme} />
-        {musicEnabled && (
-          <MusicToggle
-            isPlaying={isPlaying}
-            onToggle={toggle}
-            title={weddingConfig.music.title}
-          />
-        )}
+        {musicEnabled && <MusicToggle isPlaying={isPlaying} onToggle={toggle} />}
       </div>
     </motion.div>
   )

@@ -1,9 +1,20 @@
 import { Heart } from 'lucide-react'
 import type { Person } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
 import { SmartImage } from '../ui/SmartImage'
 
-function ProfileCard({ person, side }: { person: Person; side: string }) {
+function ProfileCard({
+  person,
+  side,
+  role,
+  parents,
+}: {
+  person: Person
+  side: string
+  role: string
+  parents: string
+}) {
   return (
     <div
       className={cn(
@@ -33,11 +44,11 @@ function ProfileCard({ person, side }: { person: Person; side: string }) {
         {person.fullName ?? person.name}
       </h3>
       <p className="mt-0.5 text-navy-400 text-[clamp(0.72rem,2.4vw,0.9rem)]">
-        {person.role}
+        {role}
       </p>
-      {person.parents && (
+      {parents && (
         <p className="mt-2 leading-relaxed text-navy-400 text-[clamp(0.64rem,2.2vw,0.8rem)]">
-          {person.parents}
+          {parents}
         </p>
       )}
     </div>
@@ -52,11 +63,23 @@ export function CoupleProfile({
   groom: Person
   bride: Person
 }) {
+  const { t } = useI18n()
+
   return (
     <div className="relative mx-auto max-w-3xl">
       <div className="grid grid-cols-2 items-stretch gap-[clamp(0.6rem,3.5vw,2.5rem)]">
-        <ProfileCard person={groom} side="Nhà Trai" />
-        <ProfileCard person={bride} side="Nhà Gái" />
+        <ProfileCard
+          person={groom}
+          side={t.couple.groomSide}
+          role={t.couple.groomRole}
+          parents={t.couple.groomParents}
+        />
+        <ProfileCard
+          person={bride}
+          side={t.couple.brideSide}
+          role={t.couple.brideRole}
+          parents={t.couple.brideParents}
+        />
       </div>
 
       {/* Center heart accent (hidden on the smallest screens) */}

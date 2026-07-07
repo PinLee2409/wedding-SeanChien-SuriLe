@@ -2,6 +2,8 @@ import { forwardRef } from 'react'
 import { Plane } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
+import { formatWeekday } from '../../i18n/translations'
 import { SmartImage } from '../ui/SmartImage'
 
 interface BoardingPassCardProps {
@@ -110,7 +112,9 @@ function Field({
 export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps>(
   ({ config, guestName, className, fontPx }, ref) => {
     const { event, couple, date, venue, boardingPass } = config
-    const passenger = guestName.trim() || 'Quý Khách'
+    const { t, lang } = useI18n()
+    const weekday = formatWeekday(date.iso, lang)
+    const passenger = guestName.trim() || t.pass.passengerFallback
     const flightNo = `LOVE-${event.flightCode}`
 
     return (
@@ -137,7 +141,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
               </span>
             </div>
             <span className="text-[0.62em] uppercase tracking-[0.28em] text-gold-light">
-              Boarding Pass
+              {t.pass.label}
             </span>
           </div>
           <span className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
@@ -149,7 +153,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             <SmartImage
               src={boardingPass.poster}
               alt={`${couple.groom.name} & ${couple.bride.name}`}
-              label="Ảnh cưới"
+              label={t.pass.photoLabel}
               /* Eager so the (possibly missing) poster resolves to a real image
                  or a placeholder BEFORE export — a pending 404 <img> would make
                  html-to-image reject. */
@@ -163,7 +167,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
         {/* Names */}
         <div className="flex flex-col items-center px-[1.5em] pt-[1em] text-center">
           <span className="text-[0.58em] uppercase tracking-[0.34em] text-gold-dark">
-            The Wedding Of
+            {t.pass.weddingOf}
           </span>
           <p className="mt-[0.35em] whitespace-nowrap font-display text-[1.85em] font-semibold leading-[1.1]">
             {couple.groom.name}
@@ -171,16 +175,16 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             {couple.bride.name}
           </p>
           <span className="mt-[0.35em] text-[0.66em] uppercase tracking-[0.24em] text-navy-400">
-            {date.weekday} · {date.displayDate}
+            {weekday} · {date.displayDate}
           </span>
         </div>
 
         {/* Route From → To */}
         <div className="flex items-center justify-between gap-[0.8em] px-[1.5em] pt-[1.1em]">
           <div className="flex flex-col">
-            <span className="text-[0.58em] uppercase tracking-[0.22em] text-gold-dark">From</span>
+            <span className="text-[0.58em] uppercase tracking-[0.22em] text-gold-dark">{t.pass.from}</span>
             <span className="whitespace-nowrap font-display text-[1.2em] font-semibold leading-none">
-              {boardingPass.from}
+              {t.pass.fromValue}
             </span>
           </div>
           <div className="flex flex-1 items-center text-gold">
@@ -189,9 +193,9 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/70" />
           </div>
           <div className="flex flex-col items-end text-right">
-            <span className="text-[0.58em] uppercase tracking-[0.22em] text-gold-dark">To</span>
+            <span className="text-[0.58em] uppercase tracking-[0.22em] text-gold-dark">{t.pass.to}</span>
             <span className="whitespace-nowrap font-display text-[1.2em] font-semibold leading-none">
-              {boardingPass.to}
+              {t.pass.toValue}
             </span>
           </div>
         </div>
@@ -199,15 +203,23 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
         {/* Details */}
         <div className="mt-[1em] flex flex-col gap-[0.9em] px-[1.5em]">
           <div className="border-t border-dashed border-gold/30 pt-[0.9em]">
-            <Field label="Passenger" value={passenger} nowrap={false} />
+            <Field label={t.pass.passenger} value={passenger} nowrap={false} />
           </div>
           <div className="grid grid-cols-2 gap-x-[1.2em] gap-y-[0.9em]">
-            <Field label="Flight" value={flightNo} />
-            <Field label="Boarding" value={date.time} align="right" />
-            <Field label="Gate" value={boardingPass.gate} />
-            <Field label="Seat" value={boardingPass.seat} align="right" />
-            <Field label="Date" value={date.displayDate} />
-            <Field label="Class" value="Forever ♥" align="right" />
+            <Field label={t.pass.flight} value={flightNo} />
+            <Field label={t.pass.boarding} value={date.time} align="right" />
+            <Field label={t.pass.gate} value={t.pass.gateValue} />
+            <Field label={t.pass.seat} value={t.pass.seatValue} align="right" />
+            <Field label={t.pass.date} value={date.displayDate} />
+            <Field label={t.pass.class} value={t.pass.classValue} align="right" />
+          </div>
+          {/* Venue — the one detail every guest actually needs on the pass. */}
+          <div className="border-t border-dashed border-gold/30 pt-[0.9em]">
+            <Field
+              label={t.pass.venue}
+              value={venue.hall ? `${venue.name} · ${venue.hall}` : venue.name}
+              nowrap={false}
+            />
           </div>
         </div>
 
@@ -225,9 +237,11 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             <span className="font-mono text-[0.62em] tracking-[0.2em] text-navy-400">
               {flightNo} · {event.flightCode}
             </span>
-            <span className="truncate text-[0.6em] leading-snug text-navy-400">
-              {venue.name}
-            </span>
+            {couple.hashtag && (
+              <span className="truncate text-[0.6em] leading-snug text-navy-400">
+                {couple.hashtag}
+              </span>
+            )}
           </div>
           <QrCode />
         </div>

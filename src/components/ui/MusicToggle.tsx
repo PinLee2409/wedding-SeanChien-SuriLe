@@ -1,10 +1,10 @@
 import { motion, useReducedMotion } from 'motion/react'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
 
 interface MusicToggleProps {
   isPlaying: boolean
   onToggle: () => void
-  title?: string
   className?: string
   variant?: 'floating' | 'inline'
 }
@@ -17,19 +17,20 @@ interface MusicToggleProps {
 export function MusicToggle({
   isPlaying,
   onToggle,
-  title = 'nhạc nền',
   className,
   variant = 'floating',
 }: MusicToggleProps) {
   const reduce = useReducedMotion()
+  const { t } = useI18n()
+  const label = isPlaying ? t.ui.musicOff : t.ui.musicOn
 
   return (
     <motion.button
       type="button"
       onClick={onToggle}
       aria-pressed={isPlaying}
-      aria-label={isPlaying ? `Tắt ${title}` : `Bật ${title}`}
-      title={isPlaying ? `Tắt ${title}` : `Bật ${title}`}
+      aria-label={label}
+      title={label}
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.06 }}
       className={cn(

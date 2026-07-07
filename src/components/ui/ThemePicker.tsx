@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Check, Palette, Shuffle, X } from 'lucide-react'
 import type { Theme } from '../../config/themes'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
 
 interface ThemePickerProps {
   themes: Theme[]
@@ -16,6 +17,7 @@ interface ThemePickerProps {
  * scrolls when there are many palettes, and each card previews its mood.
  */
 export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
+  const { t: tr } = useI18n()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef<HTMLButtonElement>(null)
@@ -53,7 +55,7 @@ export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
         {open && (
           <motion.div
             role="menu"
-            aria-label="Chọn bộ màu"
+            aria-label={tr.ui.chooseTheme}
             initial={{ opacity: 0, y: 12, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.94 }}
@@ -63,7 +65,7 @@ export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
             <div className="mb-2.5 flex items-center justify-between px-1.5">
               <span className="flex items-center gap-2">
                 <span className="text-gold-shimmer label-caps text-[11px]">
-                  Không gian màu
+                  {tr.ui.themes}
                 </span>
                 <span className="rounded-full bg-gold/15 px-1.5 py-px text-[9px] font-semibold text-gold-dark">
                   {themes.length}
@@ -78,8 +80,8 @@ export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
                     const pick = rest[Math.floor(Math.random() * rest.length)]
                     if (pick) onSelect(pick.id)
                   }}
-                  aria-label="Chọn bộ màu ngẫu nhiên"
-                  title="Ngẫu nhiên"
+                  aria-label={tr.ui.random}
+                  title={tr.ui.random}
                   className="grid h-6 w-6 place-items-center rounded-full text-navy-400 transition-colors hover:bg-gold/15 hover:text-gold-dark"
                 >
                   <Shuffle className="h-3.5 w-3.5" />
@@ -87,7 +89,7 @@ export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  aria-label="Đóng"
+                  aria-label={tr.ui.close}
                   className="grid h-6 w-6 place-items-center rounded-full text-navy-400 transition-colors hover:bg-navy/5 hover:text-navy"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -99,6 +101,9 @@ export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
               {themes.map((t) => {
                 const active = t.id === activeId
                 const [dark, accent, light] = t.swatch
+                // Palette names follow the active language (vi falls back to
+                // the canonical labels in config/themes.ts).
+                const name = tr.themeNames[t.id] ?? { label: t.label, note: t.note }
                 return (
                   <motion.button
                     key={t.id}
@@ -132,10 +137,10 @@ export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
                     </span>
                     <span className="flex flex-col gap-0.5">
                       <span className="text-[11px] font-semibold leading-tight text-navy">
-                        {t.label}
+                        {name.label}
                       </span>
                       <span className="text-[9px] leading-tight text-navy-400">
-                        {t.note}
+                        {name.note}
                       </span>
                     </span>
                   </motion.button>
@@ -149,7 +154,7 @@ export function ThemePicker({ themes, activeId, onSelect }: ThemePickerProps) {
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Chọn bộ màu"
+        aria-label={tr.ui.chooseTheme}
         aria-expanded={open}
         whileHover={{ scale: 1.05, rotate: 8 }}
         whileTap={{ scale: 0.92 }}

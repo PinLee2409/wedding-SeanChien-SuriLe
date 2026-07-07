@@ -29,16 +29,20 @@ function escapeICS(text: string): string {
     .replace(/\r?\n/g, '\\n')
 }
 
-export function buildICS(config: WeddingConfig): string {
+/** Localised copy for the calendar entry (translated by the caller). */
+export interface ICSCopy {
+  summary: string
+  description: string
+}
+
+export function buildICS(config: WeddingConfig, copy: ICSCopy): string {
   const start = new Date(config.date.iso)
   const end = new Date(
     start.getTime() + config.date.durationHours * 60 * 60 * 1000,
   )
-  const title = `Đám cưới ${config.couple.groom.name} & ${config.couple.bride.name}`
   const location = [config.venue.name, config.venue.hall, config.venue.address]
     .filter(Boolean)
     .join(', ')
-  const description = `${config.event.tagline} — ${config.event.kicker}`
   const uid = `wedding-${start.getTime()}@flight-to-forever`
 
   // Note: lines are joined with CRLF per RFC 5545.
@@ -53,8 +57,8 @@ export function buildICS(config: WeddingConfig): string {
     `DTSTAMP:${toICSDate(new Date())}`,
     `DTSTART:${toICSDate(start)}`,
     `DTEND:${toICSDate(end)}`,
-    `SUMMARY:${escapeICS(title)}`,
-    `DESCRIPTION:${escapeICS(description)}`,
+    `SUMMARY:${escapeICS(copy.summary)}`,
+    `DESCRIPTION:${escapeICS(copy.description)}`,
     `LOCATION:${escapeICS(location)}`,
     'END:VEVENT',
     'END:VCALENDAR',
@@ -62,8 +66,8 @@ export function buildICS(config: WeddingConfig): string {
 }
 
 /** Build the .ics and trigger a download. */
-export function downloadICS(config: WeddingConfig): void {
-  const blob = new Blob([buildICS(config)], {
+export function downloadICS(config: WeddingConfig, copy: ICSCopy): void {
+  const blob = new Blob([buildICS(config, copy)], {
     type: 'text/calendar;charset=utf-8',
   })
   const url = URL.createObjectURL(blob)

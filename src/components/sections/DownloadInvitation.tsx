@@ -4,6 +4,7 @@ import { Download, FileText, LoaderCircle } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { exportElementToPdf, exportElementToPng } from '../../lib/exportCard'
 import { cardEntrance } from '../../lib/motion'
+import { useI18n } from '../../i18n/LanguageContext'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Reveal } from '../ui/Reveal'
 import { BoardingPassCard } from './BoardingPassCard'
@@ -37,6 +38,7 @@ export function DownloadInvitation({
   guestName: string
 }) {
   const reduce = useReducedMotion()
+  const { t } = useI18n()
   const exportRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState<Busy>(null)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +57,7 @@ export function DownloadInvitation({
       else await exportElementToPdf(exportRef.current, fileBase)
     } catch (err) {
       console.error('Invitation export failed:', err)
-      setError('Rất tiếc, không thể tạo tệp. Vui lòng thử lại.')
+      setError(t.download.error)
       window.setTimeout(() => setError(null), 4500)
     } finally {
       setBusy(null)
@@ -66,14 +68,14 @@ export function DownloadInvitation({
     <section
       id="boarding-pass"
       className="relative bg-gradient-to-b from-cream via-ivory to-cream px-4 py-20 sm:px-6"
-      aria-label="Thẻ mời của bạn"
+      aria-label={t.download.title}
     >
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-10">
         <Reveal>
           <SectionHeading
-            kicker="Your Boarding Pass"
-            title="Tấm thiệp mời của bạn"
-            subtitle="Lưu lại tấm thẻ mời riêng để check-in vào ngày trọng đại của chúng mình."
+            kicker={t.download.kicker}
+            title={t.download.title}
+            subtitle={t.download.subtitle}
           />
         </Reveal>
 
@@ -105,7 +107,7 @@ export function DownloadInvitation({
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              Tải thiệp PNG
+              {t.download.png}
             </button>
             <button
               type="button"
@@ -118,11 +120,11 @@ export function DownloadInvitation({
               ) : (
                 <FileText className="h-4 w-4" />
               )}
-              Tải thiệp PDF
+              {t.download.pdf}
             </button>
           </div>
           <p aria-live="polite" className="min-h-[1.1rem] text-center text-xs text-navy-400">
-            {busy ? 'Đang tạo tệp chất lượng cao…' : 'Ảnh sắc nét, không bị cắt mép.'}
+            {busy ? t.download.generating : t.download.hint}
           </p>
         </Reveal>
       </div>

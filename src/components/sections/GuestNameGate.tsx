@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { Plane, Ticket } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
 
 interface GuestNameGateProps {
   open: boolean
@@ -14,6 +15,7 @@ interface GuestNameGateProps {
  * their name to "unlock" the personalised invitation.
  */
 export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
+  const { t } = useI18n()
   const [value, setValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -131,11 +133,9 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
                   id="gate-title"
                   className="font-display text-2xl text-navy font-semibold"
                 >
-                  Chào mừng quý khách
+                  {t.gate.title}
                 </h2>
-                <p className="mt-1.5 text-sm text-navy-400">
-                  Nhập tên của bạn để mở thiệp mời
-                </p>
+                <p className="mt-1.5 text-sm text-navy-400">{t.gate.subtitle}</p>
               </motion.div>
 
               <motion.div
@@ -145,7 +145,7 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <label htmlFor="guest-name" className="sr-only">
-                  Tên của bạn
+                  {t.gate.subtitle}
                 </label>
                 <input
                   id="guest-name"
@@ -153,7 +153,7 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
                   type="text"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  placeholder="Ví dụ: Anh Tuấn & Chị Lan"
+                  placeholder={t.gate.placeholder}
                   autoComplete="name"
                   className="w-full rounded-xl border border-navy/10 bg-ivory px-4 py-3.5 text-center text-navy outline-none transition-all duration-300 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:shadow-[0_0_16px_rgba(200,164,92,0.12)]"
                 />
@@ -170,7 +170,7 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
                   disabled={!value.trim()}
                   className="btn btn-primary w-full"
                 >
-                  Mở thiệp mời
+                  {t.gate.submit}
                   <Plane className="h-4 w-4 rotate-45" strokeWidth={1.6} />
                 </button>
 
@@ -179,7 +179,7 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
                   onClick={onSkip}
                   className="text-xs text-navy-400 underline-offset-4 transition-all duration-300 hover:text-gold-dark hover:underline"
                 >
-                  Xem thiệp mà không cần nhập tên
+                  {t.gate.skip}
                 </button>
               </motion.div>
             </div>

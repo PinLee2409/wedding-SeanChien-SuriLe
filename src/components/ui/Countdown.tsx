@@ -1,5 +1,6 @@
 import { useCountdown } from '../../hooks/useCountdown'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
 
 interface CountdownProps {
   iso: string
@@ -13,6 +14,7 @@ function pad(n: number): string {
 
 /** Live countdown display with four elegant tiles. */
 export function Countdown({ iso, tone = 'navy', className }: CountdownProps) {
+  const { t } = useI18n()
   const { days, hours, minutes, seconds, isPast } = useCountdown(iso)
 
   if (isPast) {
@@ -24,16 +26,16 @@ export function Countdown({ iso, tone = 'navy', className }: CountdownProps) {
           className,
         )}
       >
-        Chuyến bay hạnh phúc đã cất cánh ♥
+        {t.countdown.departed}
       </p>
     )
   }
 
   const units: Array<[string, string]> = [
-    [String(days), 'Ngày'],
-    [pad(hours), 'Giờ'],
-    [pad(minutes), 'Phút'],
-    [pad(seconds), 'Giây'],
+    [String(days), t.countdown.days],
+    [pad(hours), t.countdown.hours],
+    [pad(minutes), t.countdown.minutes],
+    [pad(seconds), t.countdown.seconds],
   ]
 
   const tileClass =

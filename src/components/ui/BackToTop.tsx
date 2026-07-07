@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronUp } from 'lucide-react'
+import { useI18n } from '../../i18n/LanguageContext'
 
 /** Elegant back-to-top control that appears after scrolling down. */
 export function BackToTop() {
+  const { t } = useI18n()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -19,7 +21,7 @@ export function BackToTop() {
         <motion.button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          aria-label="Lên đầu trang"
+          aria-label={t.ui.backToTop}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}

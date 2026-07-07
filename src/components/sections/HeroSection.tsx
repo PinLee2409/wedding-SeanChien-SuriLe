@@ -2,6 +2,8 @@ import { motion, useReducedMotion } from 'motion/react'
 import { ChevronDown, Plane } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { fadeUp, staggerContainer } from '../../lib/motion'
+import { useI18n } from '../../i18n/LanguageContext'
+import { formatWeekday } from '../../i18n/translations'
 import { Clouds } from '../decorations/Clouds'
 import { FlyingPlane } from '../decorations/FlyingPlane'
 import { FloatingHearts } from '../decorations/FloatingHearts'
@@ -26,12 +28,14 @@ export function HeroSection({
   musicEnabled,
 }: HeroSectionProps) {
   const reduce = useReducedMotion()
+  const { t, lang } = useI18n()
   const { event, couple, date, hero } = config
+  const weekday = formatWeekday(date.iso, lang)
 
   return (
     <section
       className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-sky-soft px-5 py-16 text-center text-navy"
-      aria-label="Trang bìa thiệp cưới"
+      aria-label={t.hero.aria}
     >
       {/* Background: video if provided, otherwise a poster image. */}
       <div className="absolute inset-0">
@@ -126,7 +130,7 @@ export function HeroSection({
           variants={fadeUp}
           className="label-caps text-xs text-gold-dark sm:text-sm"
         >
-          {event.kicker}
+          {t.hero.kicker}
         </motion.p>
 
         <motion.h1
@@ -148,7 +152,7 @@ export function HeroSection({
 
         <motion.div variants={fadeUp} className="flex flex-col items-center gap-1">
           <p className="label-caps text-sm text-navy-600">
-            {date.weekday} · {date.displayDate}
+            {weekday} · {date.displayDate}
           </p>
         </motion.div>
 
@@ -160,7 +164,7 @@ export function HeroSection({
           {guestName ? (
             <>
               <span className="label-caps text-[11px] text-navy-400">
-                Kính mời
+                {t.hero.inviteLabel}
               </span>
               <span className="mt-1.5 font-script text-3xl leading-snug text-gold-dark sm:text-4xl">
                 {guestName}
@@ -168,12 +172,10 @@ export function HeroSection({
             </>
           ) : (
             <span className="font-display text-xl font-semibold text-gold-dark sm:text-2xl">
-              Trân trọng kính mời
+              {t.hero.inviteFallback}
             </span>
           )}
-          <p className="mt-2 text-xs text-navy-600 sm:text-sm">
-            Cùng lên chuyến bay hạnh phúc của chúng mình.
-          </p>
+          <p className="mt-2 text-xs text-navy-600 sm:text-sm">{t.hero.inviteLine}</p>
         </motion.div>
 
         <motion.div variants={fadeUp}>
@@ -190,7 +192,7 @@ export function HeroSection({
             animate={{ y: [0, 6, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <span className="label-caps text-[9px]">Cuộn xuống</span>
+            <span className="label-caps text-[9px]">{t.hero.scroll}</span>
             <ChevronDown className="h-4 w-4" />
           </motion.div>
         )}

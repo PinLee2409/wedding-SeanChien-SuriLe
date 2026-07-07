@@ -3,6 +3,7 @@ import { Check, ChevronDown, Copy, ExternalLink, Link2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { buildGuestUrl } from '../../lib/guest'
 import { cn } from '../../lib/cn'
+import { useI18n } from '../../i18n/LanguageContext'
 
 /**
  * A frontend-only helper for the couple: type a guest's name, get a
@@ -10,6 +11,7 @@ import { cn } from '../../lib/cn'
  * it doesn't distract guests.
  */
 export function GuestLinkGenerator() {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [copied, setCopied] = useState(false)
@@ -36,7 +38,7 @@ export function GuestLinkGenerator() {
     <section
       id="guest-link"
       className="bg-ivory px-5 pb-20"
-      aria-label="Công cụ tạo liên kết mời"
+      aria-label={t.guestLink.title}
     >
       <div className="mx-auto max-w-xl">
         <div className="overflow-hidden rounded-2xl border border-navy/10 bg-warm-white shadow-sm">
@@ -52,10 +54,10 @@ export function GuestLinkGenerator() {
               </span>
               <span>
                 <span className="block text-sm font-medium text-navy">
-                  Tạo liên kết mời riêng
+                  {t.guestLink.title}
                 </span>
                 <span className="block text-xs text-navy-400">
-                  Dành cho cô dâu &amp; chú rể
+                  {t.guestLink.subtitle}
                 </span>
               </span>
             </span>
@@ -81,14 +83,14 @@ export function GuestLinkGenerator() {
                     htmlFor="link-guest-name"
                     className="label-caps text-[10px] text-navy-400"
                   >
-                    Tên khách mời
+                    {t.guestLink.nameLabel}
                   </label>
                   <input
                     id="link-guest-name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ví dụ: Gia đình bác Hoàng"
+                    placeholder={t.guestLink.namePlaceholder}
                     className="w-full rounded-xl border border-navy/15 bg-ivory px-4 py-2.5 text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
                   />
 
@@ -96,7 +98,7 @@ export function GuestLinkGenerator() {
                     htmlFor="link-guest-url"
                     className="label-caps mt-1 text-[10px] text-navy-400"
                   >
-                    Liên kết cá nhân hoá
+                    {t.guestLink.urlLabel}
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -105,7 +107,7 @@ export function GuestLinkGenerator() {
                       type="text"
                       readOnly
                       value={url}
-                      placeholder="Nhập tên để tạo liên kết…"
+                      placeholder={t.guestLink.urlPlaceholder}
                       onFocus={(e) => e.target.select()}
                       className="min-w-0 flex-1 rounded-xl border border-navy/15 bg-white px-4 py-2.5 font-mono text-xs text-navy-400 outline-none"
                     />
@@ -113,7 +115,7 @@ export function GuestLinkGenerator() {
                       type="button"
                       onClick={handleCopy}
                       disabled={!url}
-                      aria-label="Sao chép liên kết"
+                      aria-label={t.guestLink.copyAria}
                       className="flex shrink-0 items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-medium text-warm-white transition enabled:hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {copied ? (
@@ -121,7 +123,7 @@ export function GuestLinkGenerator() {
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}
-                      {copied ? 'Đã chép' : 'Chép'}
+                      {copied ? t.guestLink.copied : t.guestLink.copy}
                     </button>
                   </div>
 
@@ -133,7 +135,7 @@ export function GuestLinkGenerator() {
                       className="mt-1 inline-flex items-center gap-1.5 self-start text-xs text-gold-dark underline-offset-4 hover:underline"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
-                      Mở thử liên kết
+                      {t.guestLink.openTest}
                     </a>
                   )}
                 </div>
