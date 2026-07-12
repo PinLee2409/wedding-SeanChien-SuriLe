@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Heart, Plane, Play, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useReducedMotion } from 'motion/react'
 import type { WeddingConfig } from '../../config/wedding.config'
@@ -277,13 +278,11 @@ function MarqueeLane({
   reverse = false,
   duration = 32,
   reduce,
-  onOpen,
 }: {
   srcs: string[]
   reverse?: boolean
   duration?: number
   reduce: boolean
-  onOpen?: (image: GalleryLightboxImage) => void
 }) {
   const { t } = useI18n()
   const lane = reduce ? srcs : [...srcs, ...srcs]
@@ -314,18 +313,7 @@ function MarqueeLane({
       >
         {lane.map((src, i) => (
           <Fragment key={src + i}>
-            <PhotoButton
-              label={`${t.ui.viewPhoto}: ${t.gallery.photo} ${(i % srcs.length) + 1}`}
-              onOpen={() =>
-                onOpen?.({
-                  src,
-                  alt: '',
-                  label: `${t.gallery.photo} ${(i % srcs.length) + 1}`,
-                })
-              }
-              disabled={!onOpen}
-              className="w-auto shrink-0 rounded-xl"
-            >
+            <div className="w-auto shrink-0 rounded-xl">
               <SmartImage
                 src={src}
                 alt=""
@@ -336,7 +324,7 @@ function MarqueeLane({
                   i % 2 === 0 ? 'rotate-1' : '-rotate-1',
                 )}
               />
-            </PhotoButton>
+            </div>
             {/* A little heart resting between every pair of memories. */}
             <Heart
               className="h-3.5 w-3.5 shrink-0 fill-current text-rose/70"
@@ -381,7 +369,7 @@ function GalleryLightbox({
 
   const zoomLabel = zoomed ? t.ui.unzoomPhoto : t.ui.zoomPhoto
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -428,13 +416,9 @@ function GalleryLightbox({
             )}
           </span>
         </button>
-        {image.alt && (
-          <figcaption className="mt-3 text-sm font-medium text-warm-white/90">
-            {image.alt}
-          </figcaption>
-        )}
       </figure>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -558,14 +542,12 @@ export function MediaGallery({ config }: { config: WeddingConfig }) {
             srcs={laneA}
             duration={60}
             reduce={!!reduce}
-            onOpen={(image) => setLightboxImage(image)}
           />
           <MarqueeLane
             srcs={laneB}
             reverse
             duration={75}
             reduce={!!reduce}
-            onOpen={(image) => setLightboxImage(image)}
           />
         </div>
       </Reveal>
