@@ -4,5 +4,5 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/wedding-ThaiBinh-SeanChien/',
+  base: '/wedding-SeanChien-SuriLe/',
 })

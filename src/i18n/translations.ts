@@ -269,8 +269,8 @@ export const translations: Record<Lang, Translation> = {
       description: 'Flight to Forever — Cùng lên chuyến bay hạnh phúc.',
     },
     meta: {
-      title: 'Thái Bình & Sean Chien · Thiệp cưới',
-      description: 'Thiệp cưới của Thái Bình và Sean Chien — chuyến bay đến trọn đời.',
+      title: 'Sean Chien & Suri Le · Thiệp cưới',
+      description: 'Thiệp cưới của Sean Chien và Suri Le — chuyến bay đến trọn đời.',
     },
     ui: {
       music: 'Nhạc nền',
@@ -403,8 +403,8 @@ export const translations: Record<Lang, Translation> = {
       description: 'Flight to Forever — fly with us to happiness.',
     },
     meta: {
-      title: 'Flight to Forever · Wedding Invitation',
-      description: 'An online wedding invitation — fly with us to happiness.',
+      title: 'Sean Chien & Suri Le · Wedding Invitation',
+      description: 'Sean Chien and Suri Le invite you to join their flight to forever.',
     },
     ui: {
       music: 'Music',
@@ -569,8 +569,8 @@ export const translations: Record<Lang, Translation> = {
       description: 'Flight to Forever——與我們一同飛向幸福。',
     },
     meta: {
-      title: 'Flight to Forever · 婚禮喜帖',
-      description: '線上喜帖——與我們一同飛向幸福。',
+      title: 'Sean Chien & Suri Le · 婚禮喜帖',
+      description: 'Sean Chien 與 Suri Le 誠摯邀請您，一同飛向永恆的幸福。',
     },
     ui: {
       music: '背景音樂',

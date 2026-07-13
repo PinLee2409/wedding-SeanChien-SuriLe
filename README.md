@@ -1,4 +1,4 @@
-# ✈️ Thái Bình & Sean Chien — Flight to Forever
+# ✈️ Sean Chien & Suri Le — Flight to Forever
 
 A luxury, aviation-themed **online wedding invitation** for a pilot groom, built
 as a **frontend-only** React app. “Boarding Pass Wedding Invitation / Flight to
@@ -70,8 +70,8 @@ commented. The important fields:
 
 ```ts
 couple: {
-  bride: { name: 'Thái Bình', fullName: 'Thái Bình', role: 'Cô dâu' },
-  groom: { name: 'Sean Chien', fullName: 'Sean Chien', role: 'Chú rể' },
+  groom: { name: 'Sean Chien', fullName: 'Sean Chien', role: 'Groom' },
+  bride: { name: 'Suri Le', fullName: 'Suri Le', role: 'Bride' },
 },
 
 date: {
@@ -198,4 +198,4 @@ Pages — it’s just static files.
 - Heavy export libraries (`html-to-image`, `jsPDF`) are **lazy-loaded** on first
   download, keeping the initial bundle small for mobile.
 
-Made with ♥ for Thái Bình & Sean Chien's flight to forever.
+Made with ♥ for Sean Chien & Suri Le's flight to forever.

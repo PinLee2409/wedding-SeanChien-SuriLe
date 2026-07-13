@@ -144,9 +144,9 @@ export interface WeddingConfig {
 
 export const weddingConfig: WeddingConfig = {
   site: {
-    enabledLanguages: ['vi'],
-    defaultLanguage: 'vi',
-    coupleOrder: ['bride', 'groom'],
+    enabledLanguages: ['en', 'tw'],
+    defaultLanguage: 'en',
+    coupleOrder: ['groom', 'bride'],
   },
 
   event: {
@@ -158,18 +158,18 @@ export const weddingConfig: WeddingConfig = {
 
   couple: {
     bride: {
-      name: 'Thái Bình',
-      fullName: 'Thái Bình',
-      role: 'Cô dâu',
+      name: 'Suri Le',
+      fullName: 'Suri Le',
+      role: 'Bride',
       photo: 'images/web/anh_nu.jpg',
     },
     groom: {
       name: 'Sean Chien',
       fullName: 'Sean Chien',
-      role: 'Chú rể',
+      role: 'Groom',
       photo: 'images/web/anh_nam.jpg',
     },
-    hashtag: '#ChuyenBayHanhPhuc',
+    hashtag: '#SeanAndSuri',
   },
 
   date: {
@@ -236,20 +236,20 @@ export const weddingConfig: WeddingConfig = {
 
   gallery: {
     images: [
-      { src: 'images/web/anh_cuoi_1.jpg', alt: 'Ảnh cưới 1' },
+      { src: 'images/web/anh_cuoi_1.jpg', alt: '' },
       // Portrait photo in the wide panorama frame: start just below the top
       // (skips the dark headroom) and zoom in so the couple fills the frame.
       {
         src: 'images/web/anh_cuoi_2.jpg',
-        alt: 'Ảnh cưới 2',
+        alt: '',
         focus: 'object-[50%_20%] translate-x-[3%] scale-[1.35] origin-[50%_15%]',
       },
-      { src: 'images/web/anh_cuoi_3.jpg', alt: 'Ảnh cưới 3' },
-      { src: 'images/web/anh_cuoi_4.jpg', alt: 'Ảnh cưới 4' },
-      { src: 'images/web/anh_cuoi_5.jpg', alt: 'Ảnh cưới 5' },
-      { src: 'images/web/anh_cuoi_6.jpg', alt: 'Ảnh cưới 6' },
-      { src: 'images/web/anh_cuoi_7.jpg', alt: 'Ảnh cưới 7' },
-      { src: 'images/web/anh_cuoi_8.jpg', alt: 'Ảnh cưới 8' },
+      { src: 'images/web/anh_cuoi_3.jpg', alt: '' },
+      { src: 'images/web/anh_cuoi_4.jpg', alt: '' },
+      { src: 'images/web/anh_cuoi_5.jpg', alt: '' },
+      { src: 'images/web/anh_cuoi_6.jpg', alt: '' },
+      { src: 'images/web/anh_cuoi_7.jpg', alt: '' },
+      { src: 'images/web/anh_cuoi_8.jpg', alt: '' },
     ],
     video: 'videos/prewedding.mp4',
     videoPoster: 'images/prewedding-poster.jpg',
