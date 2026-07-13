@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { Plane, Ticket } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { MAX_GUEST_NAME_LENGTH } from '../../lib/guest'
 import { useI18n } from '../../i18n/LanguageContext'
 
 interface GuestNameGateProps {
@@ -153,6 +154,7 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
                   type="text"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
+                  maxLength={MAX_GUEST_NAME_LENGTH}
                   placeholder={t.gate.placeholder}
                   autoComplete="name"
                   className="w-full rounded-xl border border-navy/10 bg-ivory px-4 py-3.5 text-center text-navy outline-none transition-all duration-300 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:shadow-[0_0_16px_rgba(200,164,92,0.12)]"

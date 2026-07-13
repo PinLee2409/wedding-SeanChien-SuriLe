@@ -44,6 +44,14 @@ export function LanguageProvider({
   const setLang = useCallback((next: Lang) => {
     setLangState(next)
     saveLang(next)
+
+    // QR links pin their original language in the URL. Keep that value in
+    // sync so a later reload does not undo the guest's language choice.
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('lang')) {
+      url.searchParams.set('lang', next)
+      window.history.replaceState({}, '', url.toString())
+    }
   }, [])
 
   return (

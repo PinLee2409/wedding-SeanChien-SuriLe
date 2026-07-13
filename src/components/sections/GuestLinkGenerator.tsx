@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Copy, ExternalLink, Link2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
-import { buildGuestUrl } from '../../lib/guest'
+import { buildGuestUrl, MAX_GUEST_NAME_LENGTH } from '../../lib/guest'
 import { cn } from '../../lib/cn'
 import { useI18n } from '../../i18n/LanguageContext'
 
@@ -90,6 +90,7 @@ export function GuestLinkGenerator() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    maxLength={MAX_GUEST_NAME_LENGTH}
                     placeholder={t.guestLink.namePlaceholder}
                     className="w-full rounded-xl border border-navy/15 bg-ivory px-4 py-2.5 text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
                   />

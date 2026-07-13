@@ -123,6 +123,7 @@ export interface Translation {
     venue: string
     photoLabel: string
     passengerFallback: string
+    scanQr: string
     /** Localised field VALUES (the config keeps only data, not copy). */
     fromValue: string
     toValue: string
@@ -153,6 +154,7 @@ export interface Translation {
     viewPhoto: string
     zoomPhoto: string
     unzoomPhoto: string
+    openFullInvitation: string
   }
   /** Palette names by theme id. Empty entry ⇒ fall back to the Vietnamese
    *  label defined in `config/themes.ts`. */
@@ -267,6 +269,7 @@ export const translations: Record<Lang, Translation> = {
       venue: 'Địa điểm',
       photoLabel: 'Ảnh cưới',
       passengerFallback: 'Quý khách',
+      scanQr: 'Quét để mở thiệp',
       fromValue: 'Ga Độc Thân',
       toValue: 'Bến Đỗ Hạnh Phúc',
     },
@@ -297,6 +300,7 @@ export const translations: Record<Lang, Translation> = {
       viewPhoto: 'Xem ảnh',
       zoomPhoto: 'Phóng to ảnh',
       unzoomPhoto: 'Thu nhỏ ảnh',
+      openFullInvitation: 'Xem trọn thiệp mời',
     },
     // Vietnamese names live in config/themes.ts — empty map falls back there.
     themeNames: {},
@@ -408,6 +412,7 @@ export const translations: Record<Lang, Translation> = {
       venue: 'Venue',
       photoLabel: 'Wedding photo',
       passengerFallback: 'Honoured Guest',
+      scanQr: 'Scan to open invite',
       fromValue: 'Single Terminal',
       toValue: 'Happy Destination',
     },
@@ -438,6 +443,7 @@ export const translations: Record<Lang, Translation> = {
       viewPhoto: 'View photo',
       zoomPhoto: 'Zoom photo',
       unzoomPhoto: 'Zoom out',
+      openFullInvitation: 'View full invitation',
     },
     themeNames: {
       'classic-navy': { label: 'Navy & Champagne', note: 'The classic wedding duo' },
@@ -582,6 +588,7 @@ export const translations: Record<Lang, Translation> = {
       venue: '地點',
       photoLabel: '婚紗照',
       passengerFallback: '貴賓',
+      scanQr: '掃描開啟喜帖',
       fromValue: '單身',
       toValue: '永遠',
     },
@@ -612,6 +619,7 @@ export const translations: Record<Lang, Translation> = {
       viewPhoto: '查看照片',
       zoomPhoto: '放大照片',
       unzoomPhoto: '縮小照片',
+      openFullInvitation: '查看完整喜帖',
     },
     themeNames: {
       'classic-navy': { label: '海軍藍與香檳', note: '經典婚禮配色' },
@@ -735,6 +743,17 @@ export function getSavedLang(
   defaultLanguage: Lang,
 ): Lang {
   if (typeof window === 'undefined') return defaultLanguage
+
+  // A QR link must reproduce the language in which that invitation was made,
+  // even on a phone that has never opened the site before.
+  const requested = new URLSearchParams(window.location.search).get('lang')
+  if (
+    (requested === 'vi' || requested === 'en' || requested === 'tw') &&
+    enabledLanguages.includes(requested)
+  ) {
+    return requested
+  }
+
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (

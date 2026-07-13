@@ -54,6 +54,8 @@ export interface WeddingConfig {
     enabledLanguages: readonly Lang[]
     defaultLanguage: Lang
     coupleOrder: readonly ['bride' | 'groom', 'bride' | 'groom']
+    /** Canonical deployed URL encoded into the scannable invitation QR. */
+    publicUrl: string
   }
 
   /** Names & flight code used across hero, boarding pass, etc. */
@@ -151,6 +153,7 @@ export const weddingConfig: WeddingConfig = {
     enabledLanguages: ['en', 'tw'],
     defaultLanguage: 'en',
     coupleOrder: ['groom', 'bride'],
+    publicUrl: 'https://pinlee2409.github.io/wedding-SeanChien-SuriLe/',
   },
 
   event: {

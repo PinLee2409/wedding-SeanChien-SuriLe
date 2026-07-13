@@ -1,8 +1,10 @@
 import { forwardRef } from 'react'
 import { Plane } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { getOrderedCouple } from '../../lib/couple'
+import { buildCardViewUrl } from '../../lib/guest'
 import { useI18n } from '../../i18n/LanguageContext'
 import { formatWeekday } from '../../i18n/translations'
 import { SmartImage } from '../ui/SmartImage'
@@ -35,44 +37,25 @@ function Barcode() {
   )
 }
 
-/* ── Decorative CSS "QR" (finder patterns + deterministic fill) ──────────── */
-const QR_SIZE = 21
-function buildQrMatrix(): boolean[][] {
-  const finder = (r: number, c: number, r0: number, c0: number) => {
-    if (r < r0 || r > r0 + 6 || c < c0 || c > c0 + 6) return null
-    const rr = r - r0
-    const cc = c - c0
-    const ring = rr === 0 || rr === 6 || cc === 0 || cc === 6
-    const core = rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4
-    return ring || core
-  }
-  const m: boolean[][] = []
-  for (let r = 0; r < QR_SIZE; r++) {
-    m[r] = []
-    for (let c = 0; c < QR_SIZE; c++) {
-      const tl = finder(r, c, 0, 0)
-      const tr = finder(r, c, 0, QR_SIZE - 7)
-      const bl = finder(r, c, QR_SIZE - 7, 0)
-      if (tl !== null) m[r][c] = tl
-      else if (tr !== null) m[r][c] = tr
-      else if (bl !== null) m[r][c] = bl
-      else m[r][c] = (r * 13 + c * 7 + ((r * c) % 5)) % 3 === 0
-    }
-  }
-  return m
-}
-const QR_MATRIX = buildQrMatrix()
-
-function QrCode() {
+/* ── Real, personalised QR — opens the standalone invitation card ───────── */
+function QrCode({ value, label }: { value: string; label: string }) {
   return (
-    <div
-      className="grid h-[4.8em] w-[4.8em] rounded-[0.2em] bg-white p-[0.18em] shadow-[0_0_0_1px_rgba(71,35,59,0.08)]"
-      style={{ gridTemplateColumns: `repeat(${QR_SIZE}, 1fr)` }}
-      aria-hidden="true"
-    >
-      {QR_MATRIX.flat().map((on, i) => (
-        <span key={i} className={on ? 'bg-navy' : 'bg-transparent'} />
-      ))}
+    <div className="flex shrink-0 flex-col items-center gap-[0.35em]" role="img" aria-label={label}>
+      <div className="grid h-[7em] w-[7em] place-items-center overflow-hidden rounded-[0.28em] bg-white shadow-[0_0_0_1px_rgba(71,35,59,0.1)]">
+        <QRCodeSVG
+          value={value}
+          size={160}
+          level="M"
+          marginSize={4}
+          bgColor="#ffffff"
+          fgColor="#1b2a4a"
+          className="h-full w-full"
+          aria-hidden="true"
+        />
+      </div>
+      <span className="max-w-[9em] text-center text-[0.48em] font-semibold uppercase leading-tight tracking-[0.12em] text-gold-dark">
+        {label}
+      </span>
     </div>
   )
 }
@@ -125,6 +108,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
     const passenger = guestName.trim() || t.pass.passengerFallback
     const flightNo = `LOVE-${event.flightCode}`
     const [firstPartner, secondPartner] = getOrderedCouple(config)
+    const qrUrl = buildCardViewUrl(guestName, lang, config.site.publicUrl)
 
     return (
       <div
@@ -252,7 +236,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
               </span>
             )}
           </div>
-          <QrCode />
+          <QrCode value={qrUrl} label={t.pass.scanQr} />
         </div>
       </div>
     )

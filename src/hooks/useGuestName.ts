@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getGuestFromUrl, updateGuestInUrl } from '../lib/guest'
+import {
+  getGuestFromUrl,
+  normaliseGuestName,
+  updateGuestInUrl,
+} from '../lib/guest'
 
 /**
  * Guest-name state kept in sync with the `?guest=` URL param.
@@ -18,7 +22,7 @@ export function useGuestName() {
   }, [])
 
   const setGuestName = useCallback((name: string) => {
-    const trimmed = name.trim()
+    const trimmed = normaliseGuestName(name)
     setGuestNameState(trimmed)
     updateGuestInUrl(trimmed)
   }, [])

@@ -14,6 +14,7 @@ import { WeddingDetails } from './components/sections/WeddingDetails'
 import { LoveMessage } from './components/sections/LoveMessage'
 import { GuestLinkGenerator } from './components/sections/GuestLinkGenerator'
 import { FinalThankYou } from './components/sections/FinalThankYou'
+import { ScannedInvitationView } from './components/sections/ScannedInvitationView'
 import { RouteDivider } from './components/decorations/RouteDivider'
 import { FloatingDecor } from './components/decorations/FloatingDecor'
 import { FallingPetals } from './components/decorations/FallingPetals'
@@ -22,6 +23,7 @@ import { BackToTop } from './components/ui/BackToTop'
 import { ThemePicker } from './components/ui/ThemePicker'
 import { LanguageSwitcher } from './components/ui/LanguageSwitcher'
 import { ScrollProgress } from './components/ui/ScrollProgress'
+import { clearCardViewInUrl, isCardViewFromUrl } from './lib/guest'
 
 function App() {
   const reduce = useReducedMotion()
@@ -39,8 +41,10 @@ function App() {
     enabled: musicEnabled,
   } = useAudio(weddingConfig.music.tracks, weddingConfig.music.initialVolume)
 
+  const [cardView, setCardView] = useState(() => isCardViewFromUrl())
   // Show the name gate on every page load / reload.
-  const [gateDismissed, setGateDismissed] = useState(false)
+  // A scanned QR is the exception: its dedicated view opens the card directly.
+  const [gateDismissed, setGateDismissed] = useState(cardView)
   const gateOpen = !gateDismissed
 
   const startMusicAfterGate = () => {
@@ -62,6 +66,22 @@ function App() {
     window.addEventListener('pageshow', toTop)
     return () => window.removeEventListener('pageshow', toTop)
   }, [])
+
+  if (cardView) {
+    return (
+      <ScannedInvitationView
+        config={weddingConfig}
+        guestName={guestName}
+        onOpenFullInvitation={() => {
+          clearCardViewInUrl()
+          startMusicAfterGate()
+          setGateDismissed(true)
+          setCardView(false)
+          window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)
+        }}
+      />
+    )
+  }
 
   return (
     // IMPORTANT: no `filter`/`transform` on this root — any filter value (even
