@@ -215,7 +215,7 @@ export const weddingConfig: WeddingConfig = {
       date: 'Xuân 2021',
       title: 'Chính thức cất cánh',
       description:
-        'Chúng mình về chung một đội bay, cùng nhau viết nên câu chuyện của riêng mình.',
+        'Sean Chien and Suri Le joined the same crew and began writing their story together.',
       image: 'images/timeline-2.jpg',
     },
     {
@@ -263,22 +263,23 @@ export const weddingConfig: WeddingConfig = {
     poster: 'images/web/anhcuoi_passcard.jpg',
     from: 'Single Life',
     to: 'Forever',
-    footnote: 'Vui lòng có mặt đúng giờ để không lỡ chuyến bay hạnh phúc ♥',
+    footnote:
+      'Please arrive in good time so we may welcome you aboard this joyful journey ♥',
   },
 
   loveMessage: {
-    heading: 'Đôi lời từ chúng mình',
+    heading: 'With heartfelt gratitude',
     body: [
-      'Có những chuyến bay đưa ta đến những vùng đất mới, và có một chuyến bay đưa hai con người đến trọn đời bên nhau.',
-      'Cảm ơn bạn đã là một phần trong hành trình của chúng mình. Sự hiện diện của bạn chính là món quà quý giá nhất trong ngày trọng đại này.',
+      'Our journey has brought us together for a lifetime.',
+      'We are deeply grateful for the honour of your presence on our special day.',
     ],
-    signature: 'Với tất cả yêu thương,',
+    signature: 'With love and gratitude,',
   },
 
   thankYou: {
-    heading: 'Cảm ơn bạn',
+    heading: 'With heartfelt thanks',
     message:
-      'Hẹn gặp bạn tại cổng khởi hành. Cùng nâng ly và bay đến hạnh phúc!',
+      'We look forward to welcoming you as we begin this joyful journey together.',
   },
 
   music: {
