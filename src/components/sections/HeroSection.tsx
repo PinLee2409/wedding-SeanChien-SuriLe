@@ -19,6 +19,7 @@ interface HeroSectionProps {
   isMusicPlaying: boolean
   onToggleMusic: () => void
   musicEnabled: boolean
+  isRevealed: boolean
 }
 
 export function HeroSection({
@@ -27,6 +28,7 @@ export function HeroSection({
   isMusicPlaying,
   onToggleMusic,
   musicEnabled,
+  isRevealed,
 }: HeroSectionProps) {
   const reduce = useReducedMotion()
   const { t, lang } = useI18n()
@@ -147,9 +149,71 @@ export function HeroSection({
           variants={fadeUp}
           className="flex items-center justify-center gap-4 font-script text-[clamp(2.1rem,7.5vw,3.4rem)] leading-snug text-navy"
         >
-          <span>{firstPartner.person.name}</span>
-          <Plane className="h-5 w-5 shrink-0 rotate-45 text-gold-dark" strokeWidth={1.5} />
-          <span>{secondPartner.person.name}</span>
+          <motion.span
+            initial={false}
+            animate={
+              reduce || isRevealed
+                ? { x: 0, opacity: 1, filter: 'blur(0px)' }
+                : { x: -30, opacity: 0, filter: 'blur(5px)' }
+            }
+            transition={{
+              duration: reduce ? 0 : 1.15,
+              delay: !reduce && isRevealed ? 0.18 : 0,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            {firstPartner.person.name}
+          </motion.span>
+
+          <motion.span
+            className="relative grid h-10 w-10 shrink-0 place-items-center"
+            initial={false}
+            animate={
+              reduce || isRevealed
+                ? { scale: 1, opacity: 1, rotate: 0 }
+                : { scale: 0.45, opacity: 0, rotate: -24 }
+            }
+            transition={{
+              duration: reduce ? 0 : 1,
+              delay: !reduce && isRevealed ? 0.45 : 0,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            <motion.span
+              className="pointer-events-none absolute inset-1 rounded-full bg-gold/35 blur-md"
+              aria-hidden="true"
+              animate={
+                reduce || !isRevealed
+                  ? { scale: 1, opacity: 0.25 }
+                  : { scale: [0.75, 1.55, 0.75], opacity: [0.2, 0.55, 0.2] }
+              }
+              transition={{
+                duration: 3.8,
+                repeat: reduce ? 0 : Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+            <Plane
+              className="relative h-5 w-5 rotate-45 text-gold-dark"
+              strokeWidth={1.5}
+            />
+          </motion.span>
+
+          <motion.span
+            initial={false}
+            animate={
+              reduce || isRevealed
+                ? { x: 0, opacity: 1, filter: 'blur(0px)' }
+                : { x: 30, opacity: 0, filter: 'blur(5px)' }
+            }
+            transition={{
+              duration: reduce ? 0 : 1.15,
+              delay: !reduce && isRevealed ? 0.18 : 0,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            {secondPartner.person.name}
+          </motion.span>
         </motion.div>
 
         <motion.div variants={fadeUp} className="flex flex-col items-center gap-1">

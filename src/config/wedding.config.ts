@@ -136,9 +136,13 @@ export interface WeddingConfig {
   }
 
   music: {
-    /** Background track in /public/music. Leave "" to hide the toggle. */
-    src: string
-    title: string
+    /** Sequential background playlist in /public/music. Empty hides controls. */
+    tracks: Array<{
+      src: string
+      title: string
+      artist: string
+    }>
+    initialVolume: number
   }
 }
 
@@ -278,8 +282,24 @@ export const weddingConfig: WeddingConfig = {
   },
 
   music: {
-    src: 'music/wedding.mp3',
-    title: 'Nhạc nền',
+    tracks: [
+      {
+        src: 'music/beautiful-in-white.mp3',
+        title: 'Beautiful In White',
+        artist: 'Shane Filan',
+      },
+      {
+        src: 'music/young-and-beautiful.mp3',
+        title: 'Young and Beautiful',
+        artist: 'Lana Del Rey',
+      },
+      {
+        src: 'music/souvenirs.mp3',
+        title: 'Souvenirs',
+        artist: 'van',
+      },
+    ],
+    initialVolume: 0.55,
   },
 }
 

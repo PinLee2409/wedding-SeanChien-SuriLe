@@ -1,14 +1,16 @@
 # /public/music
 
-Background music.
+Wedding playlist.
 
-| File           | Used for                          |
-| -------------- | --------------------------------- |
-| `wedding.mp3`  | Background track (tap to play)    |
+| Order | File                         |
+| ----- | ---------------------------- |
+| 1     | `beautiful-in-white.mp3`     |
+| 2     | `young-and-beautiful.mp3`    |
+| 3     | `souvenirs.mp3`              |
 
-The music **never autoplays with sound** — it starts only after the guest taps
-the music button, and fades in gently. To disable music entirely, set
-`music.src` to an empty string `""` in `src/config/wedding.config.ts`; the
-toggle button then hides automatically.
+Music starts after the guest opens the invitation, plays every track in order,
+then loops back to the first. The floating player provides play/pause, mute and
+volume controls. To disable music entirely, set `music.tracks` to an empty
+array in `src/config/wedding.config.ts`; the controls then hide automatically.
 
 Please use a track you have the rights to use.

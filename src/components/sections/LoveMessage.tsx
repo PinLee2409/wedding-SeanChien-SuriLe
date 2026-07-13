@@ -6,6 +6,7 @@ import { useI18n } from '../../i18n/LanguageContext'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Reveal } from '../ui/Reveal'
 import { PassportStamp } from '../decorations/PassportStamp'
+import { RomanticAura } from '../decorations/RomanticAura'
 import { CoupleProfile } from './CoupleProfile'
 
 export function LoveMessage({ config }: { config: WeddingConfig }) {
@@ -19,6 +20,8 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
       className="relative overflow-hidden bg-ivory px-5 py-24"
       aria-label={t.love.title}
     >
+      <RomanticAura />
+
       <PassportStamp
         top="Save the Date"
         date={config.date.displayDate.replace(/\s·\s/g, '.').slice(0, 5)}
@@ -26,7 +29,7 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
         className="absolute -right-2 top-8 hidden opacity-70 md:grid"
       />
 
-      <div className="mx-auto max-w-2xl">
+      <div className="relative z-10 mx-auto max-w-2xl">
         <Reveal>
           <SectionHeading kicker={t.love.kicker} title={t.love.title} />
         </Reveal>
@@ -65,7 +68,7 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
       </div>
 
       {/* Couple & family — always two columns */}
-      <Reveal delay={0.1} className="mt-16">
+      <Reveal delay={0.1} className="relative z-10 mt-16">
         <CoupleProfile config={config} />
       </Reveal>
     </section>

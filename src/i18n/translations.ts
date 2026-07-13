@@ -140,6 +140,10 @@ export interface Translation {
     music: string
     musicOn: string
     musicOff: string
+    musicNowPlaying: string
+    musicVolume: string
+    musicMute: string
+    musicUnmute: string
     themes: string
     chooseTheme: string
     random: string
@@ -276,6 +280,10 @@ export const translations: Record<Lang, Translation> = {
       music: 'Nhạc nền',
       musicOn: 'Bật nhạc nền',
       musicOff: 'Tắt nhạc nền',
+      musicNowPlaying: 'Đang phát',
+      musicVolume: 'Âm lượng',
+      musicMute: 'Tắt tiếng',
+      musicUnmute: 'Bật tiếng',
       themes: 'Bộ màu',
       chooseTheme: 'Chọn bộ màu',
       random: 'Ngẫu nhiên',
@@ -410,6 +418,10 @@ export const translations: Record<Lang, Translation> = {
       music: 'Music',
       musicOn: 'Play music',
       musicOff: 'Pause music',
+      musicNowPlaying: 'Now playing',
+      musicVolume: 'Volume',
+      musicMute: 'Mute',
+      musicUnmute: 'Unmute',
       themes: 'Palette',
       chooseTheme: 'Choose a palette',
       random: 'Random',
@@ -576,6 +588,10 @@ export const translations: Record<Lang, Translation> = {
       music: '背景音樂',
       musicOn: '播放音樂',
       musicOff: '暫停音樂',
+      musicNowPlaying: '正在播放',
+      musicVolume: '音量',
+      musicMute: '靜音',
+      musicUnmute: '取消靜音',
       themes: '色彩主題',
       chooseTheme: '選擇色彩主題',
       random: '隨機',

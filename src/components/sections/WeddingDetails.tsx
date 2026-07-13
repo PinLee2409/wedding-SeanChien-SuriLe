@@ -6,6 +6,7 @@ import { formatWeekday } from '../../i18n/translations'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Countdown } from '../ui/Countdown'
 import { Reveal } from '../ui/Reveal'
+import { RomanticAura } from '../decorations/RomanticAura'
 
 /**
  * Flight details — one centred glass card. Deliberately light so the page
@@ -20,10 +21,12 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
   return (
     <section
       id="details"
-      className="bg-gradient-to-b from-ivory via-sky-soft/60 to-ivory px-5 py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-ivory via-sky-soft/60 to-ivory px-5 py-20"
       aria-label={t.details.title}
     >
-      <div className="mx-auto max-w-5xl">
+      <RomanticAura className="opacity-75" />
+
+      <div className="relative z-10 mx-auto max-w-5xl">
         <Reveal>
           <SectionHeading
             kicker={t.details.kicker}
