@@ -1,6 +1,17 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { AnimatePresence, motion, useInView, useReducedMotion } from 'motion/react'
-import { Heart, Plane } from 'lucide-react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from 'motion/react'
+import { Heart, Pause, Plane, Play } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import {
   pickGalleryPhotos,
@@ -11,9 +22,9 @@ import { Clouds } from '../decorations/Clouds'
 import { SmartImage } from '../ui/SmartImage'
 
 /**
- * The order intentionally alternates Cuoi1 and Cuoi2. Besides making every
- * five-second change feel fresh, this prevents one location or outfit from
- * appearing as a long, repetitive block.
+ * The order intentionally alternates Cuoi1 and Cuoi2. Automatic playback is
+ * sequential, so two adjacent frames can never repeat and the visual story is
+ * deterministic for every guest.
  */
 const WINDOW_PHOTOS = pickGalleryPhotos([
   'cuoi1_t04-04-248.jpg',
@@ -37,9 +48,110 @@ const PORTRAIT_PHOTOS = pickGalleryPhotos([
   'cuoi2_dsc09704.jpg',
 ])
 
+interface PhotoPresentation {
+  /** Focus for the soft background used behind uncropped foreground photos. */
+  backdropFocus: string
+  /** Tablet/desktop crop for landscape photos inside the 16:10 window. */
+  landscapeFocus: string
+  /** Near-native 2:3 crop used by the side polaroids. */
+  polaroidFocus: string
+}
+
+/**
+ * Each image was inspected at its rendered 1600px tier. Portraits are always
+ * shown uncropped over a blurred cover; landscapes are also uncropped on the
+ * narrow mobile window, then use these focal points for the very shallow crop
+ * required by the tablet/desktop 16:10 window.
+ */
+const PHOTO_PRESENTATION: Record<string, PhotoPresentation> = {
+  'cuoi1_t04-04-248.jpg': {
+    backdropFocus: 'object-[50%_48%]',
+    landscapeFocus: 'sm:object-[50%_48%] lg:object-[50%_50%]',
+    polaroidFocus: 'object-center',
+  },
+  'cuoi2_dsc09678.jpg': {
+    backdropFocus: 'object-[51%_60%]',
+    landscapeFocus: 'sm:object-[51%_58%] lg:object-[51%_60%]',
+    polaroidFocus: 'object-center',
+  },
+  'cuoi1_t04-04-032.jpg': {
+    backdropFocus: 'object-[50%_45%]',
+    landscapeFocus: 'object-center',
+    polaroidFocus: 'object-[50%_50%]',
+  },
+  'cuoi2_dsc09667.jpg': {
+    backdropFocus: 'object-[50%_52%]',
+    landscapeFocus: 'object-center',
+    polaroidFocus: 'object-[50%_50%]',
+  },
+  'cuoi1_t04-04-293.jpg': {
+    backdropFocus: 'object-[50%_48%]',
+    landscapeFocus: 'sm:object-[50%_48%] lg:object-[50%_50%]',
+    polaroidFocus: 'object-center',
+  },
+  'cuoi2_dsc09717.jpg': {
+    backdropFocus: 'object-[50%_64%]',
+    landscapeFocus: 'object-center',
+    polaroidFocus: 'object-[50%_52%]',
+  },
+  'cuoi1_t04-04-193.jpg': {
+    backdropFocus: 'object-[50%_48%]',
+    landscapeFocus: 'object-center',
+    polaroidFocus: 'object-[50%_50%]',
+  },
+  'cuoi2_dsc09644.jpg': {
+    backdropFocus: 'object-[50%_52%]',
+    landscapeFocus: 'object-center',
+    polaroidFocus: 'object-[50%_50%]',
+  },
+  'cuoi1_t04-04-327.jpg': {
+    backdropFocus: 'object-[50%_60%]',
+    landscapeFocus: 'sm:object-[50%_58%] lg:object-[50%_61%]',
+    polaroidFocus: 'object-center',
+  },
+  'cuoi2_dsc09704.jpg': {
+    backdropFocus: 'object-[50%_66%]',
+    landscapeFocus: 'object-center',
+    polaroidFocus: 'object-[50%_55%]',
+  },
+  'cuoi1_t04-04-151.jpg': {
+    backdropFocus: 'object-[46%_50%]',
+    landscapeFocus: 'object-center',
+    polaroidFocus: 'object-[50%_50%]',
+  },
+}
+
+const DEFAULT_PRESENTATION: PhotoPresentation = {
+  backdropFocus: 'object-center',
+  landscapeFocus: 'object-center',
+  polaroidFocus: 'object-center',
+}
+
+const CONTROL_COPY = {
+  vi: {
+    pause: 'Tạm dừng trình chiếu ảnh',
+    resume: 'Tiếp tục trình chiếu ảnh',
+    show: (index: number) => `Xem ảnh ${index + 1}`,
+  },
+  en: {
+    pause: 'Pause photo slideshow',
+    resume: 'Resume photo slideshow',
+    show: (index: number) => `Show photo ${index + 1}`,
+  },
+  tw: {
+    pause: '暫停照片播放',
+    resume: '繼續照片播放',
+    show: (index: number) => `查看第 ${index + 1} 張照片`,
+  },
+} as const
+
 const WINDOW_RADIUS = '44% 44% 38% 38% / 25% 25% 40% 40%'
 const WINDOW_INNER_RADIUS = '42% 42% 36% 36% / 23% 23% 38% 38%'
 const PHOTO_INTERVAL_MS = 5_000
+
+function getPresentation(photo: GalleryPhoto) {
+  return PHOTO_PRESENTATION[photo.filename] ?? DEFAULT_PRESENTATION
+}
 
 function WindowShell({
   children,
@@ -76,6 +188,20 @@ function WindowShell({
   )
 }
 
+function usePageVisible() {
+  const [visible, setVisible] = useState(
+    () => typeof document === 'undefined' || document.visibilityState === 'visible',
+  )
+
+  useEffect(() => {
+    const update = () => setVisible(document.visibilityState === 'visible')
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+
+  return visible
+}
+
 function useRotatingPhotoIndex({
   count,
   active,
@@ -86,35 +212,70 @@ function useRotatingPhotoIndex({
   reduced: boolean
 }) {
   const [index, setIndex] = useState(0)
+  const [scheduleVersion, setScheduleVersion] = useState(0)
+
+  const selectIndex = useCallback(
+    (nextIndex: number) => {
+      if (count === 0) return
+      setIndex(((nextIndex % count) + count) % count)
+      // A manual selection earns a complete five-second viewing interval.
+      setScheduleVersion((version) => version + 1)
+    },
+    [count],
+  )
 
   useEffect(() => {
     if (!active || reduced || count < 2) return undefined
 
     let timer: number | undefined
-    const stop = () => {
-      if (timer !== undefined) window.clearInterval(timer)
-      timer = undefined
+    const schedule = () => {
+      timer = window.setTimeout(() => {
+        setIndex((current) => (current + 1) % count)
+        schedule()
+      }, PHOTO_INTERVAL_MS)
     }
-    const start = () => {
-      stop()
-      if (document.visibilityState !== 'visible') return
-      timer = window.setInterval(
-        () => setIndex((current) => (current + 1) % count),
-        PHOTO_INTERVAL_MS,
-      )
-    }
-    const handleVisibility = () => start()
 
-    start()
-    document.addEventListener('visibilitychange', handleVisibility)
-
+    // The first callback is scheduled immediately when the section becomes
+    // visible, so the first change happens at ~5s rather than after a hover or
+    // an unrelated animation completes.
+    schedule()
     return () => {
-      stop()
-      document.removeEventListener('visibilitychange', handleVisibility)
+      if (timer !== undefined) window.clearTimeout(timer)
     }
-  }, [active, count, reduced])
+  }, [active, count, reduced, scheduleVersion])
 
-  return index
+  return { index, selectIndex }
+}
+
+function BlurredContainPhoto({
+  photo,
+  presentation,
+}: {
+  photo: GalleryPhoto
+  presentation: PhotoPresentation
+}) {
+  return (
+    <>
+      <img
+        src={photo.display}
+        alt=""
+        loading="eager"
+        decoding="async"
+        className={cn(
+          'absolute inset-0 h-full w-full scale-110 object-cover opacity-75 blur-2xl saturate-110',
+          presentation.backdropFocus,
+        )}
+      />
+      <div className="absolute inset-0 bg-navy/16" aria-hidden="true" />
+      <img
+        src={photo.display}
+        alt=""
+        loading="eager"
+        decoding="async"
+        className="absolute inset-[6%] z-10 h-[88%] w-[88%] object-contain drop-shadow-[0_18px_28px_rgba(9,22,46,0.28)] sm:inset-[4%] sm:h-[92%] sm:w-[92%]"
+      />
+    </>
+  )
 }
 
 function CinematicWindowImage({
@@ -126,54 +287,73 @@ function CinematicWindowImage({
   alt: string
   reduced: boolean
 }) {
+  const presentation = getPresentation(photo)
+  const alwaysContain = photo.orientation === 'portrait'
+
   return (
     <div className="absolute inset-0" role="img" aria-label={alt}>
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="sync">
         <motion.div
           key={photo.filename}
           className="absolute inset-0 will-change-transform"
           initial={
             reduced
               ? false
-              : { opacity: 0, scale: 1.075, filter: 'blur(7px)' }
+              : { opacity: 0, scale: 1.055, filter: 'blur(6px)' }
           }
-          animate={{ opacity: 1, scale: 1.015, filter: 'blur(0px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
           exit={
             reduced
               ? undefined
-              : { opacity: 0, scale: 1.045, filter: 'blur(4px)' }
+              : { opacity: 0, scale: 1.025, filter: 'blur(3px)' }
           }
           transition={{
-            duration: reduced ? 0 : 1.35,
+            duration: reduced ? 0 : 1.15,
             ease: [0.22, 1, 0.36, 1],
           }}
           aria-hidden="true"
         >
-          <SmartImage
-            src={photo.display}
-            alt=""
-            fit="cover"
-            loading="eager"
-            placeholder="bare"
-            className="h-full w-full"
-            imgClassName={cn(
-              photo.orientation === 'portrait' && 'object-[50%_38%]',
-            )}
-          />
+          {alwaysContain ? (
+            <BlurredContainPhoto
+              photo={photo}
+              presentation={presentation}
+            />
+          ) : (
+            <>
+              {/* A portrait-shaped phone window keeps the whole landscape. */}
+              <div className="absolute inset-0 sm:hidden">
+                <BlurredContainPhoto
+                  photo={photo}
+                  presentation={presentation}
+                />
+              </div>
+              {/* 16:10 needs only a shallow, hand-tuned crop from tablet up. */}
+              <img
+                src={photo.display}
+                alt=""
+                loading="eager"
+                decoding="async"
+                className={cn(
+                  'hidden h-full w-full object-cover sm:block',
+                  presentation.landscapeFocus,
+                )}
+              />
+            </>
+          )}
         </motion.div>
       </AnimatePresence>
 
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/12 via-transparent to-navy/20"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-navy/18"
         aria-hidden="true"
       />
       {!reduced && (
         <motion.div
           key={`glint-${photo.filename}`}
-          className="pointer-events-none absolute -inset-y-1/4 w-1/4 -skew-x-12 bg-gradient-to-r from-transparent via-white/28 to-transparent mix-blend-screen"
+          className="pointer-events-none absolute -inset-y-1/4 w-1/4 -skew-x-12 bg-gradient-to-r from-transparent via-white/26 to-transparent mix-blend-screen"
           initial={{ x: '-180%' }}
           animate={{ x: '560%' }}
-          transition={{ duration: 2.2, ease: 'easeInOut', delay: 0.35 }}
+          transition={{ duration: 2.1, ease: 'easeInOut', delay: 0.3 }}
           aria-hidden="true"
         />
       )}
@@ -194,14 +374,15 @@ function PortraitPolaroid({
 }) {
   const reduced = !!useReducedMotion()
   const baseRotate = side === 'left' ? -5 : 5
+  const presentation = getPresentation(photo)
 
   return (
     <motion.figure
       className={cn(
         'absolute z-30 hidden w-[clamp(9rem,16vw,14rem)] bg-white p-2.5 pb-8 shadow-[0_28px_58px_-28px_rgba(27,42,74,0.68)] ring-1 ring-gold/20 lg:block xl:p-3 xl:pb-10',
         side === 'left'
-          ? 'left-[1.5%] top-[19%]'
-          : 'right-[1.5%] top-[18%]',
+          ? 'left-[1.5%] top-[18%]'
+          : 'right-[1.5%] top-[17%]',
       )}
       animate={
         reduced || !active
@@ -228,10 +409,10 @@ function PortraitPolaroid({
           <motion.div
             key={photo.filename}
             className="absolute inset-0"
-            initial={reduced ? false : { opacity: 0, scale: 1.06 }}
+            initial={reduced ? false : { opacity: 0, scale: 1.045 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={reduced ? undefined : { opacity: 0, scale: 1.025 }}
-            transition={{ duration: reduced ? 0 : 1.05, ease: 'easeOut' }}
+            exit={reduced ? undefined : { opacity: 0, scale: 1.02 }}
+            transition={{ duration: reduced ? 0 : 0.95, ease: 'easeOut' }}
             aria-hidden="true"
           >
             <SmartImage
@@ -240,7 +421,7 @@ function PortraitPolaroid({
               fit="cover"
               placeholder="bare"
               className="h-full w-full"
-              imgClassName="object-[50%_35%]"
+              imgClassName={presentation.polaroidFocus}
             />
           </motion.div>
         </AnimatePresence>
@@ -256,7 +437,7 @@ function PortraitPolaroid({
 function FlightRoute({ active, reduced }: { active: boolean; reduced: boolean }) {
   return (
     <div
-      className="pointer-events-none absolute inset-x-[4%] bottom-[3%] z-40 h-16 sm:inset-x-[8%] sm:bottom-[5%]"
+      className="pointer-events-none absolute inset-x-[4%] bottom-0 z-40 h-16 sm:inset-x-[8%]"
       aria-hidden="true"
     >
       <motion.div
@@ -264,7 +445,10 @@ function FlightRoute({ active, reduced }: { active: boolean; reduced: boolean })
         initial={reduced ? false : { opacity: 0, scaleX: 0.08 }}
         whileInView={{ opacity: 0.72, scaleX: 1 }}
         viewport={{ once: true, amount: 0.6 }}
-        transition={{ duration: reduced ? 0 : 1.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{
+          duration: reduced ? 0 : 1.4,
+          ease: [0.22, 1, 0.36, 1],
+        }}
       />
 
       <motion.span
@@ -298,15 +482,16 @@ function FlightRoute({ active, reduced }: { active: boolean; reduced: boolean })
 }
 
 export function FlightPhotoStory() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const reduced = !!useReducedMotion()
+  const pageVisible = usePageVisible()
   const sectionRef = useRef<HTMLElement>(null)
-  const inView = useInView(sectionRef, { margin: '180px 0px' })
-  const [hoverPaused, setHoverPaused] = useState(false)
-  const slideshowActive = inView && !hoverPaused
-  const activeIndex = useRotatingPhotoIndex({
+  const inView = useInView(sectionRef, { amount: 'some' })
+  const [userPaused, setUserPaused] = useState(false)
+  const ambientActive = inView && pageVisible && !reduced && !userPaused
+  const { index: activeIndex, selectIndex } = useRotatingPhotoIndex({
     count: WINDOW_PHOTOS.length,
-    active: slideshowActive,
+    active: ambientActive,
     reduced,
   })
 
@@ -316,7 +501,7 @@ export function FlightPhotoStory() {
     PORTRAIT_PHOTOS[(activeIndex + 3) % PORTRAIT_PHOTOS.length]
 
   useEffect(() => {
-    if (reduced || !inView || WINDOW_PHOTOS.length < 2) return
+    if (!inView || !pageVisible || WINDOW_PHOTOS.length < 2) return
     const nextIndex = activeIndex + 1
     const upcoming = [
       WINDOW_PHOTOS[nextIndex % WINDOW_PHOTOS.length],
@@ -327,18 +512,19 @@ export function FlightPhotoStory() {
       const preload = new Image()
       preload.src = photo.display
     }
-  }, [activeIndex, inView, reduced])
+  }, [activeIndex, inView, pageVisible])
 
   if (!activePhoto || !leftPortrait || !rightPortrait) return null
 
   const sectionLabel = `${t.gallery.title} — Cabin Window Journey`
   const activeLabel = `${t.gallery.photo} ${activeIndex + 1}`
+  const controls = CONTROL_COPY[lang]
 
   return (
     <section
       ref={sectionRef}
       id="flight-photo-story"
-      className="relative overflow-hidden bg-gradient-to-b from-ivory via-sky-soft to-warm-white py-16 sm:py-20 lg:py-24"
+      className="relative overflow-hidden bg-gradient-to-b from-ivory via-sky-soft to-warm-white py-10 sm:py-12 lg:py-16"
       aria-label={sectionLabel}
     >
       <h2 className="sr-only">{sectionLabel}</h2>
@@ -350,15 +536,16 @@ export function FlightPhotoStory() {
       />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative flex min-h-[31rem] items-center justify-center sm:min-h-[34rem] lg:min-h-[clamp(36rem,52vw,43rem)]">
+        <div className="relative flex items-center justify-center pb-16 pt-4 sm:pb-20 sm:pt-6 lg:pb-20 lg:pt-8">
           <motion.div
             className="relative z-20 aspect-[4/5] w-[min(86vw,25rem)] sm:aspect-[16/10] sm:w-[min(76vw,48rem)] lg:w-[min(68vw,58rem)]"
-            initial={reduced ? false : { opacity: 0, y: 28, scale: 0.97 }}
+            initial={reduced ? false : { opacity: 0, y: 24, scale: 0.97 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, amount: 0.35 }}
-            transition={{ duration: reduced ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
-            onMouseEnter={() => setHoverPaused(true)}
-            onMouseLeave={() => setHoverPaused(false)}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{
+              duration: reduced ? 0 : 0.85,
+              ease: [0.22, 1, 0.36, 1],
+            }}
           >
             <WindowShell className="h-full w-full">
               <CinematicWindowImage
@@ -368,20 +555,46 @@ export function FlightPhotoStory() {
               />
 
               <div
-                className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/25 bg-navy/25 px-3 py-2 backdrop-blur-sm sm:bottom-5"
-                aria-hidden="true"
+                className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/25 bg-navy/30 px-2 py-1 backdrop-blur-md sm:bottom-4"
+                role="group"
+                aria-label={sectionLabel}
               >
                 {WINDOW_PHOTOS.map((photo, index) => (
-                  <motion.span
+                  <button
                     key={photo.filename}
-                    className="h-1.5 rounded-full bg-white"
-                    animate={{
-                      width: index === activeIndex ? 20 : 6,
-                      opacity: index === activeIndex ? 0.95 : 0.4,
-                    }}
-                    transition={{ duration: reduced ? 0 : 0.45 }}
-                  />
+                    type="button"
+                    onClick={() => selectIndex(index)}
+                    aria-label={controls.show(index)}
+                    aria-current={index === activeIndex ? 'true' : undefined}
+                    className="grid h-8 w-4 place-items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-1 focus-visible:ring-offset-navy/60"
+                  >
+                    <motion.span
+                      className="h-1.5 rounded-full bg-white"
+                      animate={{
+                        width: index === activeIndex ? 14 : 5,
+                        opacity: index === activeIndex ? 0.98 : 0.42,
+                      }}
+                      transition={{ duration: reduced ? 0 : 0.4 }}
+                      aria-hidden="true"
+                    />
+                  </button>
                 ))}
+
+                {!reduced && (
+                  <button
+                    type="button"
+                    onClick={() => setUserPaused((paused) => !paused)}
+                    aria-label={userPaused ? controls.resume : controls.pause}
+                    aria-pressed={userPaused}
+                    className="ml-0.5 grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    {userPaused ? (
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                    ) : (
+                      <Pause className="h-3.5 w-3.5 fill-current" />
+                    )}
+                  </button>
+                )}
               </div>
             </WindowShell>
           </motion.div>
@@ -390,16 +603,16 @@ export function FlightPhotoStory() {
             photo={leftPortrait}
             alt={`${t.gallery.photo} ${activeIndex + 2}`}
             side="left"
-            active={inView}
+            active={ambientActive}
           />
           <PortraitPolaroid
             photo={rightPortrait}
             alt={`${t.gallery.photo} ${activeIndex + 3}`}
             side="right"
-            active={inView}
+            active={ambientActive}
           />
 
-          <FlightRoute active={inView} reduced={reduced} />
+          <FlightRoute active={ambientActive} reduced={reduced} />
         </div>
       </div>
     </section>

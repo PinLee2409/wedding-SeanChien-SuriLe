@@ -20,7 +20,6 @@ import { formatWeekday } from '../../i18n/translations'
 import { FlyingPlane } from '../decorations/FlyingPlane'
 import { RunwayLights } from '../decorations/RunwayLights'
 import { Countdown } from '../ui/Countdown'
-import { MusicToggle } from '../ui/MusicToggle'
 
 interface HeroSectionProps {
   config: WeddingConfig
@@ -39,9 +38,6 @@ const easeCinematic = [0.22, 1, 0.36, 1] as const
 export function HeroSection({
   config,
   guestName,
-  isMusicPlaying,
-  onToggleMusic,
-  musicEnabled,
   isRevealed,
 }: HeroSectionProps) {
   const reduce = useReducedMotion()
@@ -84,10 +80,10 @@ export function HeroSection({
       onPointerMove={handlePointerMove}
       onPointerLeave={resetParallax}
     >
-      <div className="grid min-h-[100svh] grid-cols-1 lg:grid-cols-[minmax(25rem,0.88fr)_minmax(0,1.12fr)]">
+      <div className="grid min-h-[100svh] grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-[minmax(25rem,0.88fr)_minmax(0,1.12fr)] lg:grid-rows-1">
         {/* The portrait owns a separate canvas. Nothing textual is ever placed
             over it, so both faces remain clear at every breakpoint. */}
-        <div className="relative order-1 min-h-[44svh] overflow-hidden border-b border-gold-light/35 sm:min-h-[54svh] lg:order-2 lg:min-h-[100svh] lg:border-b-0 lg:border-l">
+        <div className="relative order-1 h-[40svh] min-h-[18rem] max-h-[24rem] overflow-hidden border-b border-gold-light/35 sm:h-[48svh] sm:max-h-[32rem] lg:order-2 lg:h-auto lg:min-h-[100svh] lg:max-h-none lg:border-b-0 lg:border-l">
           <motion.div
             className="pointer-events-none absolute -inset-x-5 -inset-y-16"
             style={{ y: reduce ? 0 : photoDepth }}
@@ -177,25 +173,15 @@ export function HeroSection({
             aria-hidden="true"
           />
 
-          {musicEnabled && (
-            <div className="absolute right-4 top-4 z-30 sm:right-7 sm:top-7">
-              <MusicToggle
-                isPlaying={isMusicPlaying}
-                onToggle={onToggleMusic}
-                variant="inline"
-              />
-            </div>
-          )}
-
           <motion.div
-            className="relative z-20 mx-auto flex w-full max-w-[39rem] flex-col justify-center px-5 py-14 sm:px-10 sm:py-16 lg:px-[clamp(2.5rem,5vw,5rem)] lg:py-20"
+            className="relative z-20 mx-auto flex w-full max-w-[39rem] flex-col justify-center px-4 py-9 min-[380px]:px-5 sm:px-9 sm:py-12 lg:px-[clamp(2.5rem,5vw,5rem)] lg:py-16"
             variants={staggerContainer}
             initial={reduce ? 'visible' : 'hidden'}
             animate={reduce || isRevealed ? 'visible' : 'hidden'}
           >
             <motion.div
               variants={fadeUp}
-              className="flex items-center gap-2.5 pr-14 text-sky-soft/80"
+              className="flex items-center gap-2.5 text-sky-soft/80"
             >
               <span className="h-px w-9 bg-gold-light/55" />
               <Plane
@@ -207,15 +193,15 @@ export function HeroSection({
               </span>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="mt-7 sm:mt-9">
+            <motion.div variants={fadeUp} className="mt-5 sm:mt-7">
               <p className="label-caps text-[10px] text-gold-light/90 sm:text-[11px]">
                 {t.hero.kicker}
               </p>
-              <h1 className="mt-2 font-display font-normal leading-[0.82] tracking-[-0.025em] text-warm-white">
-                <span className="block text-[clamp(3.25rem,15vw,5.75rem)] lg:text-[clamp(4rem,6.3vw,6.4rem)]">
+              <h1 className="mt-1.5 font-display font-normal leading-[0.84] tracking-[-0.025em] text-warm-white sm:mt-2">
+                <span className="block text-[clamp(2.65rem,13vw,4.5rem)] sm:text-[clamp(3.4rem,10vw,5.25rem)] lg:text-[clamp(4rem,6.3vw,6.4rem)]">
                   Flight to
                 </span>
-                <span className="text-gold-shimmer block pb-2 pl-[0.04em] text-[clamp(4.1rem,18vw,7.25rem)] italic lg:text-[clamp(5.2rem,7.7vw,8rem)]">
+                <span className="text-gold-shimmer block pb-1.5 pl-[0.04em] text-[clamp(3.35rem,15.5vw,5.7rem)] italic sm:text-[clamp(4.4rem,12vw,6.8rem)] lg:text-[clamp(5.2rem,7.7vw,8rem)]">
                   Forever
                 </span>
               </h1>
@@ -223,9 +209,10 @@ export function HeroSection({
 
             <motion.div
               variants={fadeUp}
-              className="mt-4 flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 font-script text-[clamp(2.15rem,10vw,3.2rem)] leading-none text-warm-white sm:gap-x-4 lg:text-[clamp(2.6rem,3.8vw,3.65rem)]"
+              className="mt-2.5 grid w-full grid-cols-[minmax(0,1fr)_1.65rem_minmax(0,1fr)] items-center font-script text-[clamp(1.35rem,6.8vw,2.65rem)] leading-none text-warm-white sm:mt-3 sm:grid-cols-[minmax(0,1fr)_2.25rem_minmax(0,1fr)] sm:text-[clamp(2rem,6vw,3.15rem)] lg:text-[clamp(2.25rem,3.25vw,3.35rem)]"
             >
               <motion.span
+                className="min-w-0 whitespace-nowrap text-center"
                 initial={false}
                 animate={
                   reduce || isRevealed
@@ -242,7 +229,7 @@ export function HeroSection({
               </motion.span>
 
               <motion.span
-                className="relative grid h-9 w-9 shrink-0 place-items-center"
+                className="relative grid h-7 w-7 shrink-0 place-items-center justify-self-center sm:h-9 sm:w-9"
                 initial={false}
                 animate={
                   reduce || isRevealed
@@ -279,6 +266,7 @@ export function HeroSection({
               </motion.span>
 
               <motion.span
+                className="min-w-0 whitespace-nowrap text-center"
                 initial={false}
                 animate={
                   reduce || isRevealed
@@ -297,26 +285,26 @@ export function HeroSection({
 
             <motion.p
               variants={fadeUp}
-              className="label-caps mt-4 text-[10px] text-sky-soft/85 sm:text-[11px]"
+              className="label-caps mt-3 text-center text-[9px] text-sky-soft/85 sm:mt-4 sm:text-[11px] lg:text-left"
             >
               {weekday} · {date.displayDate}
             </motion.p>
 
             <motion.div
               variants={fadeUp}
-              className="mt-6 border-y border-gold-light/20 py-4 sm:mt-7 sm:py-5"
+              className="mt-4 border-y border-gold-light/20 py-3 sm:mt-6 sm:py-4"
             >
               {guestName ? (
                 <>
                   <span className="label-caps text-[9px] text-sky-soft/65 sm:text-[10px]">
                     {t.hero.inviteLabel}
                   </span>
-                  <span className="mt-0.5 block font-script text-[1.9rem] leading-snug text-gold-light sm:text-[2.15rem]">
+                  <span className="mt-0.5 block font-script text-[1.65rem] leading-snug text-gold-light sm:text-[2.05rem]">
                     {guestName}
                   </span>
                 </>
               ) : (
-                <span className="font-display text-xl font-medium text-gold-light sm:text-2xl">
+                <span className="font-display text-lg font-medium text-gold-light sm:text-2xl">
                   {t.hero.inviteFallback}
                 </span>
               )}
@@ -325,17 +313,17 @@ export function HeroSection({
               </p>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="mt-6 w-full sm:mt-7">
+            <motion.div variants={fadeUp} className="mt-4 w-full sm:mt-6">
               <Countdown
                 iso={date.iso}
                 tone="light"
-                className="w-full gap-1.5 sm:gap-2.5 [&>div]:min-w-0 [&>div]:flex-1 [&>div]:rounded-[1rem] [&>div]:border-gold-light/20 [&>div]:bg-white/[0.055] [&>div]:px-1.5 [&>div]:py-2.5 sm:[&>div]:px-2 sm:[&>div]:py-3 [&>div>span:first-child]:font-display [&>div>span:first-child]:text-[1.7rem] [&>div>span:first-child]:font-medium [&>div>span:first-child]:leading-none [&>div>span:first-child]:tracking-[0.035em] [&>div>span:first-child]:tabular-nums sm:[&>div>span:first-child]:text-[2rem]"
+                className="w-full gap-1 sm:gap-2.5 [&>div]:min-w-0 [&>div]:flex-1 [&>div]:rounded-[0.85rem] [&>div]:border-gold-light/20 [&>div]:bg-white/[0.055] [&>div]:px-1 [&>div]:py-2 sm:[&>div]:rounded-[1rem] sm:[&>div]:px-2 sm:[&>div]:py-3 [&>div>span:first-child]:font-display [&>div>span:first-child]:text-[1.45rem] [&>div>span:first-child]:font-medium [&>div>span:first-child]:leading-none [&>div>span:first-child]:tracking-[0.035em] [&>div>span:first-child]:tabular-nums sm:[&>div>span:first-child]:text-[2rem]"
               />
             </motion.div>
 
             <motion.div
               variants={fadeUp}
-              className="mt-8 flex flex-col items-center gap-2.5 sm:mt-9 lg:items-start"
+              className="mt-5 flex flex-col items-center gap-1.5 sm:mt-7 sm:gap-2.5 lg:items-start"
             >
               <RunwayLights
                 count={10}
