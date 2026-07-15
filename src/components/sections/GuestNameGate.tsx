@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { Plane, Ticket } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { pickGalleryPhotos } from '../../lib/galleryPhotos'
 import { MAX_GUEST_NAME_LENGTH } from '../../lib/guest'
 import { useI18n } from '../../i18n/LanguageContext'
+import { SmartImage } from '../ui/SmartImage'
+
+const [GATE_PHOTO] = pickGalleryPhotos(['cuoi2_dsc09678.jpg'])
 
 interface GuestNameGateProps {
   open: boolean
@@ -17,6 +21,7 @@ interface GuestNameGateProps {
  */
 export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
   const { t } = useI18n()
+  const reduce = useReducedMotion()
   const [value, setValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -64,65 +69,101 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
       aria-hidden={!open}
       inert={open ? undefined : true}
     >
-          {/* Dark elegant backdrop with blur */}
+          {/* The first glimpse of the journey sits behind the boarding call. */}
           <motion.div
-            className="absolute inset-0 bg-navy/75 backdrop-blur-md"
+            className="absolute inset-0 overflow-hidden bg-navy"
             onClick={onSkip}
             aria-hidden="true"
-            initial={{ opacity: 0 }}
+            initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-          />
+            transition={{ duration: reduce ? 0 : 0.7 }}
+          >
+            {GATE_PHOTO && (
+              <motion.div
+                className="absolute inset-0"
+                animate={
+                  reduce || !open
+                    ? { scale: 1.03 }
+                    : { scale: [1.08, 1.03], x: [8, 0] }
+                }
+                transition={{ duration: 8, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <SmartImage
+                  src={GATE_PHOTO.display}
+                  alt=""
+                  loading="eager"
+                  fit="cover"
+                  placeholder="bare"
+                  className="h-full w-full"
+                  imgClassName="object-[54%_58%]"
+                />
+              </motion.div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-navy/78 via-navy/70 to-navy/92" />
+            <div className="absolute inset-0 backdrop-blur-[2px]" />
+          </motion.div>
+
+          <div
+            className={cn(
+              'pointer-events-none absolute left-1/2 top-1/2 h-[min(82vw,46rem)] w-[min(82vw,46rem)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-gold/25',
+              open && !reduce && 'animate-gentle-rotate',
+            )}
+            aria-hidden="true"
+          >
+            <Plane className="absolute left-1/2 top-[-0.7rem] h-6 w-6 -translate-x-1/2 rotate-45 text-gold" strokeWidth={1.4} />
+          </div>
 
           {/* Floating ambient sparkles behind the card. CSS-animated on
               purpose: infinite Motion loops inside an AnimatePresence subtree
               block exit completion, so the dialog would never unmount. */}
-          <span className="animate-twinkle absolute left-1/4 top-1/4 h-2 w-2 rounded-full bg-gold/40" />
-          <span
-            className="animate-twinkle absolute right-1/4 top-1/3 h-1.5 w-1.5 rounded-full bg-gold-light/50"
-            style={{ animationDelay: '0.8s', animationDuration: '3.5s' }}
-          />
-          <span
-            className="animate-twinkle absolute bottom-1/3 left-1/3 h-1 w-1 rounded-full bg-gold/30"
-            style={{ animationDelay: '1.5s', animationDuration: '5s' }}
-          />
+          {open && !reduce && (
+            <>
+              <span className="animate-twinkle absolute left-1/4 top-1/4 h-2 w-2 rounded-full bg-gold/40" />
+              <span
+                className="animate-twinkle absolute right-1/4 top-1/3 h-1.5 w-1.5 rounded-full bg-gold-light/50"
+                style={{ animationDelay: '0.8s', animationDuration: '3.5s' }}
+              />
+              <span
+                className="animate-twinkle absolute bottom-1/3 left-1/3 h-1 w-1 rounded-full bg-gold/30"
+                style={{ animationDelay: '1.5s', animationDuration: '5s' }}
+              />
+            </>
+          )}
 
           {/* Card */}
           <motion.form
             onSubmit={handleSubmit}
-            className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-gold/30 bg-warm-white shadow-2xl"
-            style={{ boxShadow: '0 25px 60px -15px rgba(27, 42, 74, 0.4), 0 0 40px rgba(200, 164, 92, 0.1)' }}
-            initial={{ opacity: 0, y: 40, scale: 0.92, rotateX: 8 }}
+            className="paper-grain relative w-full max-w-md overflow-hidden rounded-[2rem] border border-gold/45 bg-warm-white/95 shadow-2xl backdrop-blur-xl"
+            style={{ boxShadow: '0 34px 85px -24px rgba(6, 15, 34, 0.78), 0 0 55px rgba(200, 164, 92, 0.15)' }}
+            initial={reduce ? false : { opacity: 0, y: 44, scale: 0.9, rotateX: 9 }}
             animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+            transition={{ duration: reduce ? 0 : 0.75, ease: [0.22, 1, 0.36, 1], delay: reduce ? 0 : 0.12 }}
           >
+            <span className="absolute left-0 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-navy" aria-hidden="true" />
+            <span className="absolute right-0 top-1/2 h-7 w-7 translate-x-1/2 -translate-y-1/2 rounded-full bg-navy" aria-hidden="true" />
             {/* Ticket header strip with subtle gradient */}
             <motion.div
-              className="flex items-center justify-between bg-gradient-to-r from-ivory-deep via-cream to-ivory-deep px-6 py-3 text-navy border-b border-gold/20"
-              initial={{ opacity: 0, x: -20 }}
+              className="flex items-center justify-between border-b border-gold/30 bg-gradient-to-r from-navy via-navy-700 to-navy px-6 py-4 text-warm-white"
+              initial={reduce ? false : { opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.35 }}
             >
-              <span className="label-caps text-[10px] text-navy-400 font-medium">
-                Boarding Pass
+              <span className="label-caps text-[10px] font-medium text-gold-light">
+                First Class Love
               </span>
-              <span className="animate-float inline-flex" style={{ animationDuration: '3s' }}>
-                <Plane className="h-4 w-4 rotate-45 text-gold" strokeWidth={1.5} />
-              </span>
+              <span className="font-mono text-[10px] tracking-[0.22em] text-gold-light">LOVE · 1220</span>
             </motion.div>
 
             <div className="flex flex-col items-center gap-4 px-6 py-8 text-center">
               {/* Icon with glow ring animation */}
               <motion.span
-                className="grid h-16 w-16 place-items-center rounded-full border-2 border-gold/30 text-gold"
-                initial={{ opacity: 0, scale: 0.5 }}
+                className="relative grid h-20 w-20 place-items-center rounded-full border border-gold/45 bg-gradient-to-br from-ivory to-gold-light/25 text-gold-dark shadow-[0_0_28px_rgba(200,164,92,0.2)]"
+                initial={reduce ? false : { opacity: 0, scale: 0.5, rotate: -18 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.4, type: 'spring', stiffness: 200 }}
-                style={{ boxShadow: '0 0 20px rgba(200, 164, 92, 0.15)' }}
               >
-                <span className="animate-float inline-flex" style={{ animationDuration: '4s' }}>
-                  <Ticket className="h-7 w-7" strokeWidth={1.4} />
-                </span>
+                <Ticket className="h-8 w-8" strokeWidth={1.35} />
+                <span className="absolute -bottom-2 rounded-full border border-gold/30 bg-warm-white px-2 py-0.5 font-mono text-[8px] tracking-[0.2em] text-navy">VIP</span>
               </motion.span>
 
               <motion.div

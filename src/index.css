@@ -255,6 +255,10 @@
   animation-name: photo-marquee-reverse;
 }
 
+.photo-marquee-track--paused {
+  animation-play-state: paused;
+}
+
 .photo-marquee-segment {
   display: flex;
   flex: none;
@@ -314,7 +318,6 @@
       radial-gradient(ellipse 130% 80% at 50% -12%, var(--bg-aura-1) 0%, transparent 50%),
       radial-gradient(ellipse 100% 60% at 20% 50%, var(--bg-aura-2) 0%, transparent 45%),
       radial-gradient(ellipse 110% 70% at 50% 110%, var(--bg-aura-3) 0%, transparent 55%);
-    background-attachment: fixed;
     transition: background-color 0.6s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

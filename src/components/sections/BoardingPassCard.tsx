@@ -151,10 +151,8 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
                  or a placeholder BEFORE export — a pending 404 <img> would make
                  html-to-image reject. */
               loading="eager"
-              /* Width stays fixed; the height is trimmed a touch below the
-                 photo's natural 3:2, gently squeezing (never cropping) it. */
-              fit="fill"
-              className="aspect-[5/3] w-full"
+              fit="cover"
+              className="aspect-[3/2] w-full"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-cream/25 to-transparent" />
           </div>

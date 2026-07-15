@@ -125,13 +125,7 @@ function App() {
         }}
       />
 
-      {/* The cinematic blur intro lives on <main> (no fixed descendants). */}
-      <motion.main
-        className="relative z-10"
-        initial={reduce ? false : { filter: 'blur(8px)' }}
-        animate={{ filter: 'blur(0px)' }}
-        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <main className="relative z-10">
         <HeroSection
           config={weddingConfig}
           guestName={guestName}
@@ -156,7 +150,7 @@ function App() {
         <GuestLinkGenerator />
 
         <FinalThankYou config={weddingConfig} />
-      </motion.main>
+      </main>
 
       {/* Floating controls */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">

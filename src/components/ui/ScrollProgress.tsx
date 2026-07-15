@@ -16,7 +16,7 @@ export function ScrollProgress() {
     restDelta: 0.001,
   })
   // Keep the plane inside the viewport at both ends of the flight.
-  const planeLeft = useTransform(progress, (v) => `calc(${v * 100}vw - ${v * 30}px)`)
+  const planeX = useTransform(progress, (v) => `calc(${v * 100}vw - ${v * 30}px)`)
 
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-50">
@@ -27,8 +27,8 @@ export function ScrollProgress() {
       />
       {/* The little plane riding the tip of the trail */}
       <motion.span
-        style={{ left: planeLeft }}
-        className="absolute -top-[7px] text-gold-dark drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+        style={{ x: planeX }}
+        className="absolute -top-[7px] left-0 text-gold-dark drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
       >
         <Plane className="h-4 w-4 rotate-45" strokeWidth={2} fill="currentColor" />
       </motion.span>

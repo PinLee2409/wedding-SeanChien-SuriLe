@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ZoomIn, ZoomOut } from 'lucide-react'
-import { useReducedMotion } from 'motion/react'
+import { useInView, useReducedMotion } from 'motion/react'
 import { cn } from '../../lib/cn'
 import {
   galleryPhotos,
@@ -131,11 +131,13 @@ function MarqueeLane({
   reverse = false,
   duration,
   reduce,
+  active,
 }: {
   photos: GalleryPhoto[]
   reverse?: boolean
   duration: number
   reduce: boolean
+  active: boolean
 }) {
   if (photos.length === 0) return null
 
@@ -157,6 +159,7 @@ function MarqueeLane({
         className={cn(
           'photo-marquee-track',
           reverse && 'photo-marquee-track--reverse',
+          !active && 'photo-marquee-track--paused',
         )}
         style={{ '--marquee-duration': `${duration}s` } as CSSProperties}
       >
@@ -284,6 +287,8 @@ function GalleryLightbox({
 export function MediaGallery() {
   const { t } = useI18n()
   const reduce = useReducedMotion()
+  const sectionRef = useRef<HTMLElement>(null)
+  const marqueeActive = useInView(sectionRef, { margin: '240px 0px' })
   const [lightboxImage, setLightboxImage] = useState<GalleryLightboxImage | null>(
     null,
   )
@@ -292,6 +297,7 @@ export function MediaGallery() {
 
   return (
     <section
+      ref={sectionRef}
       id="gallery"
       className="relative overflow-hidden bg-gradient-to-b from-warm-white via-ivory to-ivory py-12 sm:py-16 lg:py-20"
       aria-label={t.gallery.title}
@@ -348,12 +354,18 @@ export function MediaGallery() {
 
       <Reveal delay={0.08} className="relative z-10 mt-10 sm:mt-14">
         <div className="flex flex-col gap-3 sm:gap-4">
-          <MarqueeLane photos={LANE_A} duration={72} reduce={!!reduce} />
+          <MarqueeLane
+            photos={LANE_A}
+            duration={72}
+            reduce={!!reduce}
+            active={marqueeActive}
+          />
           <MarqueeLane
             photos={LANE_B}
             reverse
             duration={68}
             reduce={!!reduce}
+            active={marqueeActive}
           />
         </div>
       </Reveal>
