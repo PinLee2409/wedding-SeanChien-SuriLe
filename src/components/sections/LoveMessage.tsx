@@ -77,10 +77,12 @@ function OrnamentalCorners() {
 }
 
 export function LoveMessage({ config }: { config: WeddingConfig }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const reduce = !!useReducedMotion()
   const [firstPartner, secondPartner] = getOrderedCouple(config)
   const displayDate = config.date.displayDate.replace(/\s·\s/g, ' / ')
+  const titleLines =
+    lang === 'vi' ? ['Đôi lời từ', 'cô dâu và chú rể'] : [t.love.title]
 
   return (
     <section
@@ -181,9 +183,18 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
 
               <motion.h2
                 variants={contentVariants}
-                className="mx-auto mt-3 max-w-[18ch] text-balance font-display text-[clamp(2rem,8.6vw,3.8rem)] font-medium leading-[1.02] tracking-[-0.025em] text-navy"
+                className="mx-auto mt-3 max-w-[20ch] text-balance font-display text-[clamp(1.85rem,8vw,3.8rem)] font-medium leading-[1.02] tracking-[-0.025em] text-navy"
               >
-                {t.love.title}
+                {titleLines.map((line) => (
+                  <span
+                    key={line}
+                    className={
+                      lang === 'vi' ? 'block whitespace-nowrap' : 'block'
+                    }
+                  >
+                    {line}
+                  </span>
+                ))}
               </motion.h2>
 
               <motion.div

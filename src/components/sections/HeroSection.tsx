@@ -317,20 +317,20 @@ export function HeroSection({
               <Countdown
                 iso={date.iso}
                 tone="light"
-                className="w-full gap-1 sm:gap-2.5 [&>div]:min-w-0 [&>div]:flex-1 [&>div]:rounded-[0.85rem] [&>div]:border-gold-light/20 [&>div]:bg-white/[0.055] [&>div]:px-1 [&>div]:py-2 sm:[&>div]:rounded-[1rem] sm:[&>div]:px-2 sm:[&>div]:py-3 [&>div>span:first-child]:font-display [&>div>span:first-child]:text-[1.45rem] [&>div>span:first-child]:font-medium [&>div>span:first-child]:leading-none [&>div>span:first-child]:tracking-[0.035em] [&>div>span:first-child]:tabular-nums sm:[&>div>span:first-child]:text-[2rem]"
+                className="w-full gap-1 sm:gap-2.5 [&>div]:min-w-0 [&>div]:flex-1 [&>div]:rounded-[0.85rem] [&>div]:border-gold-light/20 [&>div]:bg-white/[0.055] [&>div]:px-1 [&>div]:py-2 sm:[&>div]:rounded-[1rem] sm:[&>div]:px-2 sm:[&>div]:py-3 [&>div>span:first-child]:font-mono [&>div>span:first-child]:text-[1.2rem] [&>div>span:first-child]:font-normal [&>div>span:first-child]:leading-none [&>div>span:first-child]:tracking-[0.02em] [&>div>span:first-child]:tabular-nums sm:[&>div>span:first-child]:text-[1.65rem]"
               />
             </motion.div>
 
             <motion.div
               variants={fadeUp}
-              className="mt-5 flex flex-col items-center gap-1.5 sm:mt-7 sm:gap-2.5 lg:items-start"
+              className="mt-5 flex w-full flex-col items-center gap-1.5 text-center sm:mt-7 sm:gap-2.5"
             >
               <RunwayLights
                 count={10}
                 className="scale-x-90 text-gold-light opacity-70"
               />
               <motion.div
-                className="flex flex-col items-center text-warm-white/60 lg:items-start"
+                className="flex flex-col items-center text-warm-white/60"
                 animate={reduce ? undefined : { y: [0, 4, 0] }}
                 transition={{
                   duration: 2.2,
@@ -339,7 +339,7 @@ export function HeroSection({
                 }}
               >
                 <span className="label-caps text-[8px]">{t.hero.scroll}</span>
-                <ChevronDown className="h-4 w-4 lg:ml-2" />
+                <ChevronDown className="h-4 w-4" />
               </motion.div>
             </motion.div>
           </motion.div>

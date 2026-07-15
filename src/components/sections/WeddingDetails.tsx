@@ -43,7 +43,7 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
             <span className="label-caps text-[10px] text-gold-dark">
               {t.details.departure}
             </span>
-            <p className="mt-1 font-display text-5xl font-semibold text-navy">
+            <p className="mt-2 font-mono text-[2rem] font-normal tracking-[0.08em] text-navy sm:text-[2.65rem]">
               {date.displayDate}
             </p>
             <p className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-navy-500">
