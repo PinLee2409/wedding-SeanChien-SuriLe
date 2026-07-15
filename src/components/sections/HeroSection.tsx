@@ -80,10 +80,10 @@ export function HeroSection({
       onPointerMove={handlePointerMove}
       onPointerLeave={resetParallax}
     >
-      <div className="grid min-h-[100svh] grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-[minmax(25rem,0.88fr)_minmax(0,1.12fr)] lg:grid-rows-1">
+      <div className="grid min-h-[100svh] grid-cols-1 grid-rows-[auto_auto] lg:grid-cols-[minmax(25rem,0.88fr)_minmax(0,1.12fr)] lg:grid-rows-1">
         {/* The portrait owns a separate canvas. Nothing textual is ever placed
             over it, so both faces remain clear at every breakpoint. */}
-        <div className="relative order-1 h-[40svh] min-h-[18rem] max-h-[24rem] overflow-hidden border-b border-gold-light/35 sm:h-[48svh] sm:max-h-[32rem] lg:order-2 lg:h-auto lg:min-h-[100svh] lg:max-h-none lg:border-b-0 lg:border-l">
+        <div className="relative order-2 h-[40svh] min-h-[18rem] max-h-[24rem] overflow-hidden border-t border-gold-light/35 sm:h-[48svh] sm:max-h-[32rem] lg:h-auto lg:min-h-[100svh] lg:max-h-none lg:border-b-0 lg:border-l lg:border-t-0">
           <motion.div
             className="pointer-events-none absolute -inset-x-5 -inset-y-16"
             style={{ y: reduce ? 0 : photoDepth }}
@@ -155,7 +155,7 @@ export function HeroSection({
 
         {/* Editorial invitation panel: independent from the photograph rather
             than a glass card floating on top of the couple. */}
-        <div className="relative order-2 flex overflow-hidden bg-[linear-gradient(145deg,var(--color-navy)_0%,#223557_58%,var(--color-navy)_100%)] lg:order-1">
+        <div className="relative order-1 flex overflow-hidden bg-[linear-gradient(145deg,var(--color-navy)_0%,#223557_58%,var(--color-navy)_100%)]">
           <div
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(232,213,160,0.15),transparent_32%),radial-gradient(circle_at_82%_86%,rgba(196,216,232,0.12),transparent_34%)]"
             aria-hidden="true"
@@ -181,7 +181,7 @@ export function HeroSection({
           >
             <motion.div
               variants={fadeUp}
-              className="flex items-center gap-2.5 text-sky-soft/80"
+              className="flex items-center justify-center gap-2.5 text-sky-soft/80 lg:justify-start"
             >
               <span className="h-px w-9 bg-gold-light/55" />
               <Plane
@@ -193,7 +193,7 @@ export function HeroSection({
               </span>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="mt-5 sm:mt-7">
+            <motion.div variants={fadeUp} className="mt-5 text-center sm:mt-7 lg:text-left">
               <p className="label-caps text-[10px] text-gold-light/90 sm:text-[11px]">
                 {t.hero.kicker}
               </p>
@@ -292,7 +292,7 @@ export function HeroSection({
 
             <motion.div
               variants={fadeUp}
-              className="mt-4 border-y border-gold-light/20 py-3 sm:mt-6 sm:py-4"
+              className="mt-4 border-y border-gold-light/20 py-3 text-center sm:mt-6 sm:py-4 lg:text-left"
             >
               {guestName ? (
                 <>
@@ -308,7 +308,7 @@ export function HeroSection({
                   {t.hero.inviteFallback}
                 </span>
               )}
-              <p className="mt-1 max-w-lg text-[11px] leading-relaxed text-sky-soft/80 sm:text-xs">
+              <p className="mx-auto mt-1 max-w-lg text-[11px] leading-relaxed text-sky-soft/80 sm:text-xs lg:mx-0">
                 {t.hero.inviteLine}
               </p>
             </motion.div>

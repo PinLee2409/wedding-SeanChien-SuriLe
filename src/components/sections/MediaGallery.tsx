@@ -21,40 +21,65 @@ interface GalleryLightboxImage {
 
 interface FeatureSpec {
   filename: string
-  role: 'hero' | 'portrait'
+  tabletSlot: string
   desktopSlot: string
   focus?: string
 }
 
-/** One generous centrepiece with four quiet portraits around its edges. */
+/**
+ * Return to the earlier, balanced album rhythm: portrait pairs are broken up
+ * by landscape frames so the grid stays full at every breakpoint.
+ */
 const FEATURE_SPECS: FeatureSpec[] = [
   {
-    filename: 'cuoi2_dsc09678.jpg',
-    role: 'hero',
-    desktopSlot:
-      'lg:left-[16%] lg:top-[13%] lg:z-10 lg:w-[68%]',
-  },
-  {
     filename: 'cuoi1_t04-04-032.jpg',
-    role: 'portrait',
-    desktopSlot: 'lg:left-0 lg:top-[2%] lg:z-20 lg:w-[22%]',
+    tabletSlot: 'md:col-start-1 md:row-start-1 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-1 lg:row-start-1 lg:row-span-4',
   },
   {
-    filename: 'cuoi2_dsc09667.jpg',
-    role: 'portrait',
-    desktopSlot: 'lg:right-0 lg:top-[2%] lg:z-20 lg:w-[22%]',
+    filename: 'cuoi2_dsc09644.jpg',
+    tabletSlot: 'md:col-start-3 md:row-start-1 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-7 lg:row-start-1 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi2_dsc09678.jpg',
+    tabletSlot: 'md:col-start-1 md:row-start-4 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-4 lg:row-start-1 lg:row-span-2',
+  },
+  {
+    filename: 'cuoi1_t04-04-293.jpg',
+    tabletSlot: 'md:col-start-4 md:row-start-4 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-4 lg:row-start-3 lg:row-span-2',
   },
   {
     filename: 'cuoi1_t04-04-193.jpg',
-    role: 'portrait',
-    desktopSlot: 'lg:bottom-[2%] lg:left-0 lg:z-20 lg:w-[22%]',
-    focus: 'object-[50%_38%]',
+    tabletSlot: 'md:col-start-5 md:row-start-1 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-10 lg:row-start-1 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi2_dsc09667.jpg',
+    tabletSlot: 'md:col-start-1 md:row-start-6 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-1 lg:row-start-5 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi1_t04-04-151.jpg',
+    tabletSlot: 'md:col-start-3 md:row-start-6 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-4 lg:row-start-5 lg:row-span-4',
   },
   {
     filename: 'cuoi2_dsc09717.jpg',
-    role: 'portrait',
-    desktopSlot: 'lg:bottom-[2%] lg:right-0 lg:z-20 lg:w-[22%]',
-    focus: 'object-[50%_42%]',
+    tabletSlot: 'md:col-start-5 md:row-start-6 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-10 lg:row-start-5 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi1_t04-04-248.jpg',
+    tabletSlot: 'md:col-start-1 md:row-start-9 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-7 lg:row-start-5 lg:row-span-2',
+  },
+  {
+    filename: 'cuoi1_t04-04-327.jpg',
+    tabletSlot: 'md:col-start-4 md:row-start-9 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-7 lg:row-start-7 lg:row-span-2',
   },
 ]
 
@@ -114,13 +139,32 @@ const MIXED_MARQUEE_PHOTOS = weaveSources(
     galleryPhotos.filter((photo) => photo.filename.startsWith('cuoi2_')),
     0x4d5e6f,
   ),
-).slice(0, 28)
+).slice(0, 24)
 
-function MarqueePhotoCard({ photo }: { photo: GalleryPhoto }) {
+const SOFT_TILTS = [
+  'rotate-[-0.65deg]',
+  'rotate-[0.55deg]',
+  'rotate-[-0.25deg]',
+  'rotate-[0.35deg]',
+] as const
+
+function MarqueePhotoCard({
+  photo,
+  index,
+}: {
+  photo: GalleryPhoto
+  index: number
+}) {
   return (
     <figure
       aria-hidden="true"
-      className="group/tile relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-[1.35rem] border border-white/95 bg-white p-1 shadow-[0_16px_34px_-22px_rgba(27,42,74,0.68)] ring-1 ring-gold/15 transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_22px_42px_-20px_rgba(27,42,74,0.76)] sm:h-28 sm:w-[5.25rem] sm:rounded-[1.6rem] sm:p-1.5 lg:h-32 lg:w-24"
+      className={cn(
+        'group/tile relative h-24 shrink-0 overflow-hidden rounded-[1.15rem] border-[3px] border-white/95 bg-white shadow-[0_16px_34px_-22px_rgba(27,42,74,0.68)] ring-1 ring-gold/15 transition-[transform,box-shadow] duration-500 ease-out hover:z-10 hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_22px_42px_-20px_rgba(27,42,74,0.76)] sm:h-28 sm:rounded-[1.4rem] lg:h-32',
+        photo.orientation === 'landscape'
+          ? 'w-36 sm:w-[10.5rem] lg:w-48'
+          : 'w-[4.9rem] sm:w-[5.75rem] lg:w-[6.6rem]',
+        SOFT_TILTS[index % SOFT_TILTS.length],
+      )}
     >
       <SmartImage
         src={photo.thumb}
@@ -136,20 +180,24 @@ function MarqueePhotoCard({ photo }: { photo: GalleryPhoto }) {
 
 function HeartDivider() {
   return (
-    <Heart
-      className="h-3.5 w-3.5 shrink-0 fill-rose/45 text-rosegold/75 sm:h-4 sm:w-4"
-      strokeWidth={1.25}
+    <span
+      className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/65 shadow-[0_8px_20px_-12px_rgba(122,63,104,0.72)] ring-1 ring-rosegold/10"
       aria-hidden="true"
-    />
+    >
+      <Heart
+        className="h-3 w-3 fill-rose/55 text-rosegold/75"
+        strokeWidth={1.25}
+      />
+    </span>
   )
 }
 
 function MarqueeSegment({ photos }: { photos: GalleryPhoto[] }) {
   return (
     <div className="photo-marquee-segment">
-      {photos.map((photo) => (
+      {photos.map((photo, index) => (
         <Fragment key={photo.filename}>
-          <MarqueePhotoCard photo={photo} />
+          <MarqueePhotoCard photo={photo} index={index} />
           <HeartDivider />
         </Fragment>
       ))}
@@ -176,10 +224,10 @@ function MarqueeLane({
         className="flex snap-x snap-mandatory items-center gap-3 overflow-x-auto px-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4"
         aria-label="Photo strip"
       >
-        {photos.map((photo) => (
+        {photos.map((photo, index) => (
           <Fragment key={photo.filename}>
             <div className="snap-center">
-              <MarqueePhotoCard photo={photo} />
+              <MarqueePhotoCard photo={photo} index={index} />
             </div>
             <HeartDivider />
           </Fragment>
@@ -334,82 +382,73 @@ export function MediaGallery() {
     <section
       ref={sectionRef}
       id="gallery"
-      className="relative overflow-hidden bg-gradient-to-b from-warm-white via-ivory to-ivory py-16 sm:py-24 lg:py-28"
+      className="relative overflow-hidden bg-gradient-to-b from-warm-white via-ivory to-ivory py-12 sm:py-16 lg:py-20"
       aria-label={t.gallery.title}
     >
       <h2 className="sr-only">{t.gallery.title}</h2>
 
       <div
-        className="pointer-events-none absolute inset-x-0 top-[18%] h-[62%] bg-[radial-gradient(ellipse_60%_70%_at_50%_50%,var(--color-rose)_0%,transparent_72%)] opacity-[0.12]"
+        className="pointer-events-none absolute inset-x-0 top-1/4 h-1/2 bg-[radial-gradient(ellipse_60%_70%_at_50%_50%,var(--color-rose)_0%,transparent_72%)] opacity-[0.12]"
         aria-hidden="true"
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative isolate overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/55 p-3 pb-6 shadow-[0_34px_90px_-54px_rgba(27,42,74,0.52)] ring-1 ring-gold/15 backdrop-blur-[2px] sm:rounded-[3rem] sm:p-7 sm:pb-8 lg:p-12 lg:pb-10">
-          <div
-            className="pointer-events-none absolute left-1/2 top-[42%] h-[70%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,var(--color-warm-white)_0%,transparent_70%)] opacity-75 blur-2xl"
-            aria-hidden="true"
-          />
+      <SectionReveal className="relative z-10 mx-auto grid max-w-7xl grid-cols-2 gap-3 px-5 py-1 sm:gap-4 sm:px-7 md:grid-cols-6 md:auto-rows-[clamp(7.125rem,15vw,9.5rem)] lg:grid-cols-12 lg:auto-rows-[clamp(5rem,6.6vw,5.75rem)] lg:gap-5 lg:px-10">
+        {FEATURED_PHOTOS.map(({ photo, spec }, index) => {
+          const label = `${t.gallery.photo} ${index + 1}`
 
-          <SectionReveal className="relative z-10 grid grid-cols-2 gap-3 sm:gap-5 lg:block lg:h-[clamp(36rem,52vw,43rem)]">
-            {FEATURED_PHOTOS.map(({ photo, spec }, index) => {
-              const label = `${t.gallery.photo} ${index + 1}`
-              const hero = spec.role === 'hero'
-
-              return (
-                <RevealItem
-                  key={photo.filename}
-                  className={cn(
-                    hero
-                      ? 'col-span-2 aspect-[3/2]'
-                      : 'col-span-1 aspect-[2/3]',
-                    'min-h-0 lg:absolute',
-                    spec.desktopSlot,
+          return (
+            <RevealItem
+              key={photo.filename}
+              className={cn(
+                'min-h-0',
+                photo.orientation === 'landscape'
+                  ? 'col-span-2 aspect-[3/2]'
+                  : 'col-span-1 aspect-[2/3]',
+                'md:aspect-auto',
+                spec.tabletSlot,
+                'lg:col-span-3',
+                spec.desktopSlot,
+              )}
+            >
+              <button
+                type="button"
+                aria-label={label}
+                onClick={() =>
+                  setLightboxImage({ src: photo.full, alt: label })
+                }
+                className={cn(
+                  'group block h-full w-full overflow-hidden rounded-[1.25rem] border-[3px] border-white/95 bg-white shadow-[0_20px_48px_-28px_rgba(27,42,74,0.68)] ring-1 ring-gold/15 transition-[transform,box-shadow] duration-500 hover:z-20 hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_28px_58px_-26px_rgba(27,42,74,0.74)] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ivory sm:rounded-[1.65rem] sm:border-4',
+                  SOFT_TILTS[index % SOFT_TILTS.length],
+                )}
+              >
+                <SmartImage
+                  src={photo.display}
+                  alt={label}
+                  fit="cover"
+                  placeholder="bare"
+                  className="h-full w-full rounded-[inherit]"
+                  imgClassName={cn(
+                    'transition-transform duration-700 ease-out group-hover:scale-[1.03]',
+                    spec.focus,
                   )}
-                >
-                  <button
-                    type="button"
-                    aria-label={label}
-                    onClick={() =>
-                      setLightboxImage({ src: photo.full, alt: label })
-                    }
-                    className={cn(
-                      'group block h-full w-full overflow-hidden border-[4px] border-white/95 bg-white shadow-[0_24px_58px_-30px_rgba(27,42,74,0.62)] ring-1 ring-gold/20 transition-[transform,box-shadow] duration-500 hover:-translate-y-1 hover:shadow-[0_32px_68px_-28px_rgba(27,42,74,0.7)] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ivory sm:border-[6px]',
-                      hero
-                        ? 'rounded-[1.75rem] sm:rounded-[2.5rem]'
-                        : 'rounded-t-[999px] rounded-b-[1.5rem] sm:rounded-b-[2rem]',
-                    )}
-                  >
-                    <SmartImage
-                      src={photo.display}
-                      alt={label}
-                      fit="cover"
-                      placeholder="bare"
-                      className="h-full w-full"
-                      imgClassName={cn(
-                        'transition-transform duration-700 ease-out group-hover:scale-[1.025]',
-                        spec.focus,
-                      )}
-                    />
-                  </button>
-                </RevealItem>
-              )
-            })}
-          </SectionReveal>
+                />
+              </button>
+            </RevealItem>
+          )
+        })}
+      </SectionReveal>
 
-          <Reveal
-            delay={0.08}
-            className="relative z-10 mt-7 border-t border-gold/15 pt-5 sm:mt-10 sm:pt-7 lg:mt-12 lg:pt-8"
-          >
-            <MarqueeLane
-              photos={MIXED_MARQUEE_PHOTOS}
-              duration={78}
-              reduce={reduce}
-              active={marqueeActive}
-            />
-          </Reveal>
-        </div>
-      </div>
+      <Reveal
+        delay={0.08}
+        className="relative z-10 mt-9 border-y border-gold/10 bg-white/25 py-2 sm:mt-12 sm:py-3"
+      >
+        <MarqueeLane
+          photos={MIXED_MARQUEE_PHOTOS}
+          duration={74}
+          reduce={reduce}
+          active={marqueeActive}
+        />
+      </Reveal>
 
       <GalleryLightbox
         key={lightboxImage?.src ?? 'closed'}

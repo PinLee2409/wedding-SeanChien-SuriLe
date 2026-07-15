@@ -11,7 +11,7 @@ import {
   useInView,
   useReducedMotion,
 } from 'motion/react'
-import { Heart, Pause, Plane, Play } from 'lucide-react'
+import { Heart, Plane } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import {
   pickGalleryPhotos,
@@ -129,18 +129,12 @@ const DEFAULT_PRESENTATION: PhotoPresentation = {
 
 const CONTROL_COPY = {
   vi: {
-    pause: 'Tạm dừng trình chiếu ảnh',
-    resume: 'Tiếp tục trình chiếu ảnh',
     show: (index: number) => `Xem ảnh ${index + 1}`,
   },
   en: {
-    pause: 'Pause photo slideshow',
-    resume: 'Resume photo slideshow',
     show: (index: number) => `Show photo ${index + 1}`,
   },
   tw: {
-    pause: '暫停照片播放',
-    resume: '繼續照片播放',
     show: (index: number) => `查看第 ${index + 1} 張照片`,
   },
 } as const
@@ -487,8 +481,7 @@ export function FlightPhotoStory() {
   const pageVisible = usePageVisible()
   const sectionRef = useRef<HTMLElement>(null)
   const inView = useInView(sectionRef, { amount: 'some' })
-  const [userPaused, setUserPaused] = useState(false)
-  const ambientActive = inView && pageVisible && !reduced && !userPaused
+  const ambientActive = inView && pageVisible && !reduced
   const { index: activeIndex, selectIndex } = useRotatingPhotoIndex({
     count: WINDOW_PHOTOS.length,
     active: ambientActive,
@@ -580,21 +573,6 @@ export function FlightPhotoStory() {
                   </button>
                 ))}
 
-                {!reduced && (
-                  <button
-                    type="button"
-                    onClick={() => setUserPaused((paused) => !paused)}
-                    aria-label={userPaused ? controls.resume : controls.pause}
-                    aria-pressed={userPaused}
-                    className="ml-0.5 grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                  >
-                    {userPaused ? (
-                      <Play className="h-3.5 w-3.5 fill-current" />
-                    ) : (
-                      <Pause className="h-3.5 w-3.5 fill-current" />
-                    )}
-                  </button>
-                )}
               </div>
             </WindowShell>
           </motion.div>
