@@ -54,7 +54,7 @@ export function Countdown({ iso, tone = 'navy', className }: CountdownProps) {
             tileClass,
           )}
         >
-          <span className="font-mono text-2xl font-bold tabular-nums sm:text-3xl">
+          <span className="font-display text-[2rem] font-medium leading-none tracking-[0.035em] tabular-nums sm:text-[2.35rem]">
             {value}
           </span>
           <span className={cn('label-caps mt-1 text-[9px]', labelClass)}>

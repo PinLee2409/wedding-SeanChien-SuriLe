@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { getOrderedCouple } from '../../lib/couple'
+import { pickGalleryPhotos } from '../../lib/galleryPhotos'
 import { buildCardViewUrl } from '../../lib/guest'
 import { useI18n } from '../../i18n/LanguageContext'
 import { formatWeekday } from '../../i18n/translations'
@@ -20,6 +21,10 @@ interface BoardingPassCardProps {
    */
   fontPx?: number
 }
+
+const [boardingPassGalleryPhoto] = pickGalleryPhotos([
+  'cuoi1_t04-04-293.jpg',
+])
 
 /* ── Decorative CSS barcode (widths in em → fully fluid) ─────────────────── */
 const BAR_WIDTHS = [
@@ -144,7 +149,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
         <div className="px-[1.1em] pt-[1.1em]">
           <div className="relative overflow-hidden rounded-[0.9em] ring-1 ring-gold/30">
             <SmartImage
-              src={boardingPass.poster}
+              src={boardingPassGalleryPhoto?.full ?? boardingPass.poster}
               alt={`${firstPartner.person.name} & ${secondPartner.person.name}`}
               label={t.pass.photoLabel}
               /* Eager so the (possibly missing) poster resolves to a real image

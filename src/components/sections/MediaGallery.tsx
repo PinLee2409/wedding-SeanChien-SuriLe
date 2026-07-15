@@ -34,12 +34,12 @@ const FEATURE_SPECS: FeatureSpec[] = [
     desktopSlot: 'lg:col-start-1 lg:row-start-1 lg:row-span-4',
   },
   {
-    filename: 'cuoi1_t04-04-193.jpg',
+    filename: 'cuoi2_dsc09644.jpg',
     tabletSlot: 'md:col-start-3 md:row-start-1 md:col-span-2 md:row-span-3',
     desktopSlot: 'lg:col-start-7 lg:row-start-1 lg:row-span-4',
   },
   {
-    filename: 'cuoi1_t04-04-248.jpg',
+    filename: 'cuoi2_dsc09678.jpg',
     tabletSlot: 'md:col-start-1 md:row-start-4 md:col-span-3 md:row-span-2',
     desktopSlot: 'lg:col-start-4 lg:row-start-1 lg:row-span-2',
   },
@@ -49,7 +49,7 @@ const FEATURE_SPECS: FeatureSpec[] = [
     desktopSlot: 'lg:col-start-4 lg:row-start-3 lg:row-span-2',
   },
   {
-    filename: 'cuoi2_dsc09644.jpg',
+    filename: 'cuoi1_t04-04-193.jpg',
     tabletSlot: 'md:col-start-5 md:row-start-1 md:col-span-2 md:row-span-3',
     desktopSlot: 'lg:col-start-10 lg:row-start-1 lg:row-span-4',
   },
@@ -59,10 +59,9 @@ const FEATURE_SPECS: FeatureSpec[] = [
     desktopSlot: 'lg:col-start-1 lg:row-start-5 lg:row-span-4',
   },
   {
-    filename: 'cuoi2_dsc09704.jpg',
+    filename: 'cuoi1_t04-04-151.jpg',
     tabletSlot: 'md:col-start-3 md:row-start-6 md:col-span-2 md:row-span-3',
     desktopSlot: 'lg:col-start-4 lg:row-start-5 lg:row-span-4',
-    focus: 'object-[50%_62%]',
   },
   {
     filename: 'cuoi2_dsc09717.jpg',
@@ -70,7 +69,7 @@ const FEATURE_SPECS: FeatureSpec[] = [
     desktopSlot: 'lg:col-start-10 lg:row-start-5 lg:row-span-4',
   },
   {
-    filename: 'cuoi2_dsc09678.jpg',
+    filename: 'cuoi1_t04-04-248.jpg',
     tabletSlot: 'md:col-start-1 md:row-start-9 md:col-span-3 md:row-span-2',
     desktopSlot: 'lg:col-start-7 lg:row-start-5 lg:row-span-2',
   },
@@ -86,20 +85,93 @@ const FEATURED_PHOTOS = FEATURE_SPECS.flatMap((spec) => {
   return photo ? [{ spec, photo }] : []
 })
 
-const LANE_A = galleryPhotos.filter((_, index) => index % 2 === 0)
-const LANE_B = galleryPhotos
-  .filter((_, index) => index % 2 === 1)
-  .reverse()
+function stablePhotoScore(photo: GalleryPhoto, seed: number) {
+  let value = seed
+  for (const character of photo.filename) {
+    value = Math.imul(value ^ character.charCodeAt(0), 16_777_619)
+  }
+  return value >>> 0
+}
+
+/** A deterministic shuffle keeps the cinematic rhythm stable between loads. */
+function mixPhotos(photos: GalleryPhoto[], seed: number) {
+  return [...photos].sort(
+    (first, second) =>
+      stablePhotoScore(first, seed) - stablePhotoScore(second, seed),
+  )
+}
+
+/**
+ * Proportionally weave both shoots instead of appending the shorter set first.
+ * With 33 Cuoi1 and 40 Cuoi2 photos this produces a continuous 1–2 card
+ * alternation, including near the loop seam.
+ */
+function weaveSources(first: GalleryPhoto[], second: GalleryPhoto[]) {
+  const result: GalleryPhoto[] = []
+  const total = first.length + second.length
+  let firstIndex = 0
+  let secondIndex = 0
+
+  for (let position = 0; position < total; position++) {
+    const desiredFirstCount = Math.round(
+      ((position + 1) * first.length) / total,
+    )
+    if (firstIndex < desiredFirstCount && firstIndex < first.length) {
+      result.push(first[firstIndex])
+      firstIndex += 1
+    } else if (secondIndex < second.length) {
+      result.push(second[secondIndex])
+      secondIndex += 1
+    } else if (firstIndex < first.length) {
+      result.push(first[firstIndex])
+      firstIndex += 1
+    }
+  }
+
+  return result
+}
+
+const CUOI1_PHOTOS = mixPhotos(
+  galleryPhotos.filter((photo) => photo.filename.startsWith('cuoi1_')),
+  0x1a2b3c,
+)
+const CUOI2_PHOTOS = mixPhotos(
+  galleryPhotos.filter((photo) => photo.filename.startsWith('cuoi2_')),
+  0x4d5e6f,
+)
+
+const LANE_A = weaveSources(
+  CUOI1_PHOTOS.filter((_, index) => index % 2 === 0),
+  CUOI2_PHOTOS.filter((_, index) => index % 2 === 0),
+)
+const LANE_B = weaveSources(
+  CUOI2_PHOTOS.filter((_, index) => index % 2 === 1),
+  CUOI1_PHOTOS.filter((_, index) => index % 2 === 1),
+).reverse()
 
 function MarqueePhotoCard({ photo, index }: { photo: GalleryPhoto; index: number }) {
+  const heightClass =
+    index % 7 === 0
+      ? 'h-32 sm:h-40'
+      : index % 5 === 0
+        ? 'h-24 sm:h-32'
+        : 'h-28 sm:h-36'
+  const poseClass =
+    index % 4 === 0
+      ? '-translate-y-1 rotate-[-0.65deg]'
+      : index % 4 === 1
+        ? 'translate-y-1 rotate-[0.55deg]'
+        : index % 4 === 2
+          ? '-translate-y-0.5 rotate-[0.25deg]'
+          : 'translate-y-0.5 rotate-[-0.3deg]'
+
   return (
-    <SmartImage
-      src={photo.thumb}
-      alt=""
-      fit="cover"
-      placeholder="bare"
+    <figure
+      aria-hidden="true"
       className={cn(
-        'group/tile relative h-28 shrink-0 overflow-hidden border border-white/80 shadow-[0_16px_34px_-22px_rgba(27,42,74,0.72)] ring-1 ring-gold/15 sm:h-36',
+        'group/tile relative shrink-0 overflow-hidden border border-white/90 bg-white p-1 shadow-[0_18px_38px_-22px_rgba(27,42,74,0.72)] ring-1 ring-gold/15 transition-[transform,box-shadow] duration-500 ease-out hover:z-10 hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_24px_46px_-20px_rgba(27,42,74,0.78)] sm:p-1.5',
+        heightClass,
+        poseClass,
         photo.orientation === 'landscape' ? 'aspect-[3/2]' : 'aspect-[2/3]',
         index % 3 === 0
           ? 'rounded-[1.35rem]'
@@ -107,8 +179,19 @@ function MarqueePhotoCard({ photo, index }: { photo: GalleryPhoto; index: number
             ? 'rounded-t-[3rem] rounded-b-[1.1rem]'
             : 'rounded-[1.1rem]',
       )}
-      imgClassName="transition-transform duration-700 ease-out group-hover/tile:scale-[1.035]"
-    />
+    >
+      <SmartImage
+        src={photo.thumb}
+        alt=""
+        fit="cover"
+        placeholder="bare"
+        className="h-full w-full rounded-[inherit]"
+        imgClassName="transition-transform duration-700 ease-out group-hover/tile:scale-[1.045]"
+      />
+      <span
+        className="pointer-events-none absolute left-1/2 top-1.5 h-px w-7 -translate-x-1/2 bg-gradient-to-r from-transparent via-gold/55 to-transparent opacity-80"
+      />
+    </figure>
   )
 }
 
@@ -154,7 +237,7 @@ function MarqueeLane({
   }
 
   return (
-    <div className="photo-marquee">
+    <div className="photo-marquee py-2 sm:py-3">
       <div
         className={cn(
           'photo-marquee-track',
@@ -356,14 +439,14 @@ export function MediaGallery() {
         <div className="flex flex-col gap-3 sm:gap-4">
           <MarqueeLane
             photos={LANE_A}
-            duration={72}
+            duration={68}
             reduce={!!reduce}
             active={marqueeActive}
           />
           <MarqueeLane
             photos={LANE_B}
             reverse
-            duration={68}
+            duration={72}
             reduce={!!reduce}
             active={marqueeActive}
           />
