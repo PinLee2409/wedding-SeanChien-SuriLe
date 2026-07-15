@@ -206,13 +206,84 @@
   }
 }
 
-/* Seamless film-strip scroll — content is duplicated, so -50% loops cleanly. */
-@keyframes marquee {
+/* Two equal photo segments create a seamless loop at exactly the midpoint. */
+@keyframes photo-marquee-forward {
   from {
     transform: translate3d(0, 0, 0);
   }
   to {
     transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes photo-marquee-reverse {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.photo-marquee {
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
+}
+
+.photo-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: photo-marquee-forward var(--marquee-duration, 70s) linear infinite;
+}
+
+.photo-marquee-track--reverse {
+  animation-name: photo-marquee-reverse;
+}
+
+.photo-marquee-segment {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.photo-marquee:focus-within .photo-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .photo-marquee:hover .photo-marquee-track {
+    animation-play-state: paused;
+  }
+}
+
+@media (min-width: 640px) {
+  .photo-marquee-segment {
+    gap: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-marquee-track {
+    animation: none;
+    transform: none;
   }
 }
 

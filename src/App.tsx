@@ -9,6 +9,7 @@ import { HeroSection } from './components/sections/HeroSection'
 import { GuestNameGate } from './components/sections/GuestNameGate'
 import { DownloadInvitation } from './components/sections/DownloadInvitation'
 import { MediaGallery } from './components/sections/MediaGallery'
+import { FlightPhotoStory } from './components/sections/FlightPhotoStory'
 import { WeddingDetails } from './components/sections/WeddingDetails'
 import { LoveMessage } from './components/sections/LoveMessage'
 import { GuestLinkGenerator } from './components/sections/GuestLinkGenerator'
@@ -147,6 +148,8 @@ function App() {
         <RouteDivider className="bg-gradient-to-b from-ivory to-warm-white" />
 
         <MediaGallery />
+
+        <FlightPhotoStory />
 
         <LoveMessage config={weddingConfig} />
 

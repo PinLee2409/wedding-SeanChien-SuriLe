@@ -1,150 +1,169 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useReducedMotion } from 'motion/react'
 import { cn } from '../../lib/cn'
+import {
+  galleryPhotos,
+  pickGalleryPhotos,
+  type GalleryPhoto,
+} from '../../lib/galleryPhotos'
 import { useI18n } from '../../i18n/LanguageContext'
 import { Reveal } from '../ui/Reveal'
 import { RevealItem, SectionReveal } from '../ui/SectionReveal'
 import { SmartImage } from '../ui/SmartImage'
-
-interface PhotoEntry {
-  filename: string
-  src: string
-}
 
 interface GalleryLightboxImage {
   src: string
   alt: string
 }
 
-const PHOTO_ENTRIES = Object.entries(
-  import.meta.glob('../../assets/marquee/*.jpg', {
-    eager: true,
-    query: '?url',
-    import: 'default',
-  }),
-)
-  .sort(([a], [b]) => a.localeCompare(b))
-  .map(([path, src]) => ({
-    filename: path.split('/').pop() ?? path,
-    src: src as string,
-  })) satisfies PhotoEntry[]
+interface FeatureSpec {
+  filename: string
+  tabletSlot: string
+  desktopSlot: string
+  focus?: string
+}
 
-const PHOTO_POOL = PHOTO_ENTRIES.map(({ src }) => src)
+/** Mobile order is P, P, L, L, P, P, P, P, L, L so every row closes. */
+const FEATURE_SPECS: FeatureSpec[] = [
+  {
+    filename: 'cuoi1_t04-04-032.jpg',
+    tabletSlot: 'md:col-start-1 md:row-start-1 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-1 lg:row-start-1 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi1_t04-04-193.jpg',
+    tabletSlot: 'md:col-start-3 md:row-start-1 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-7 lg:row-start-1 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi1_t04-04-248.jpg',
+    tabletSlot: 'md:col-start-1 md:row-start-4 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-4 lg:row-start-1 lg:row-span-2',
+  },
+  {
+    filename: 'cuoi1_t04-04-293.jpg',
+    tabletSlot: 'md:col-start-4 md:row-start-4 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-4 lg:row-start-3 lg:row-span-2',
+  },
+  {
+    filename: 'cuoi2_dsc09644.jpg',
+    tabletSlot: 'md:col-start-5 md:row-start-1 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-10 lg:row-start-1 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi2_dsc09667.jpg',
+    tabletSlot: 'md:col-start-1 md:row-start-6 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-1 lg:row-start-5 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi2_dsc09704.jpg',
+    tabletSlot: 'md:col-start-3 md:row-start-6 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-4 lg:row-start-5 lg:row-span-4',
+    focus: 'object-[50%_62%]',
+  },
+  {
+    filename: 'cuoi2_dsc09717.jpg',
+    tabletSlot: 'md:col-start-5 md:row-start-6 md:col-span-2 md:row-span-3',
+    desktopSlot: 'lg:col-start-10 lg:row-start-5 lg:row-span-4',
+  },
+  {
+    filename: 'cuoi2_dsc09678.jpg',
+    tabletSlot: 'md:col-start-1 md:row-start-9 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-7 lg:row-start-5 lg:row-span-2',
+  },
+  {
+    filename: 'cuoi1_t04-04-327.jpg',
+    tabletSlot: 'md:col-start-4 md:row-start-9 md:col-span-3 md:row-span-2',
+    desktopSlot: 'lg:col-start-7 lg:row-start-7 lg:row-span-2',
+  },
+]
 
-/**
- * A small editorial selection anchors the section. The complete photo set
- * remains available in the two moving lanes below, so every visit feels a
- * little different without changing the carefully balanced first view.
- */
-const FEATURED_FILENAMES = [
-  'cuoi1_t04-04-032.jpg',
-  'cuoi1_t04-04-193.jpg',
-  'cuoi1_t04-04-248.jpg',
-  'cuoi1_t04-04-293.jpg',
-  'cuoi2_dsc09644.jpg',
-  'cuoi2_dsc09667.jpg',
-  'cuoi2_dsc09668.jpg',
-  'cuoi2_dsc09678.jpg',
-  'cuoi2_dsc09704.jpg',
-  'cuoi2_dsc09717.jpg',
-] as const
+const FEATURED_PHOTOS = FEATURE_SPECS.flatMap((spec) => {
+  const [photo] = pickGalleryPhotos([spec.filename])
+  return photo ? [{ spec, photo }] : []
+})
 
-const FEATURED_PHOTOS = (() => {
-  const byName = new Map(PHOTO_ENTRIES.map((entry) => [entry.filename, entry]))
-  const picked = FEATURED_FILENAMES.map((name) => byName.get(name)).filter(
-    (entry): entry is PhotoEntry => Boolean(entry),
+const LANE_A = galleryPhotos.filter((_, index) => index % 2 === 0)
+const LANE_B = galleryPhotos
+  .filter((_, index) => index % 2 === 1)
+  .reverse()
+
+function MarqueePhotoCard({ photo, index }: { photo: GalleryPhoto; index: number }) {
+  return (
+    <SmartImage
+      src={photo.thumb}
+      alt=""
+      fit="cover"
+      placeholder="bare"
+      className={cn(
+        'group/tile relative h-28 shrink-0 overflow-hidden border border-white/80 shadow-[0_16px_34px_-22px_rgba(27,42,74,0.72)] ring-1 ring-gold/15 sm:h-36',
+        photo.orientation === 'landscape' ? 'aspect-[3/2]' : 'aspect-[2/3]',
+        index % 3 === 0
+          ? 'rounded-[1.35rem]'
+          : index % 3 === 1
+            ? 'rounded-t-[3rem] rounded-b-[1.1rem]'
+            : 'rounded-[1.1rem]',
+      )}
+      imgClassName="transition-transform duration-700 ease-out group-hover/tile:scale-[1.035]"
+    />
   )
+}
 
-  // Keep the section useful if the selected source files are renamed later.
-  if (picked.length < 8) {
-    const used = new Set(picked.map(({ src }) => src))
-    for (const entry of PHOTO_ENTRIES) {
-      if (!used.has(entry.src)) {
-        picked.push(entry)
-        used.add(entry.src)
-      }
-      if (picked.length === 10) break
-    }
-  }
-
-  return picked
-})()
-
-const FRAME_STYLES = [
-  'rounded-[1.75rem]',
-  'rounded-t-[5rem] rounded-b-[1.5rem]',
-  'rounded-[1.25rem]',
-  'rounded-t-[1.5rem] rounded-b-[4rem]',
-] as const
-
-function drawRandom<T>(pool: T[], count: number): T[] {
-  const deck = [...pool]
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[deck[i], deck[j]] = [deck[j], deck[i]]
-  }
-  return deck.slice(0, count)
+function MarqueeSegment({ photos }: { photos: GalleryPhoto[] }) {
+  return (
+    <div className="photo-marquee-segment">
+      {photos.map((photo, index) => (
+        <MarqueePhotoCard
+          key={`${photo.filename}-${index}`}
+          photo={photo}
+          index={index}
+        />
+      ))}
+    </div>
+  )
 }
 
 function MarqueeLane({
-  srcs,
+  photos,
   reverse = false,
   duration,
   reduce,
 }: {
-  srcs: string[]
+  photos: GalleryPhoto[]
   reverse?: boolean
   duration: number
   reduce: boolean
 }) {
-  if (srcs.length === 0) return null
+  if (photos.length === 0) return null
 
-  const lane = reduce ? srcs : [...srcs, ...srcs]
+  if (reduce) {
+    return (
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:gap-4 sm:px-6">
+        {photos.map((photo, index) => (
+          <div key={photo.filename} className="snap-center">
+            <MarqueePhotoCard photo={photo} index={index} />
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
-    <div
-      className={cn(
-        'group relative',
-        !reduce &&
-          '[mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]',
-      )}
-    >
+    <div className="photo-marquee">
       <div
         className={cn(
-          'flex items-center gap-3 sm:gap-4',
-          reduce
-            ? 'w-full overflow-x-auto px-4 pb-2 sm:px-6'
-            : 'w-max animate-marquee will-change-transform group-hover:[animation-play-state:paused]',
+          'photo-marquee-track',
+          reverse && 'photo-marquee-track--reverse',
         )}
-        style={
-          reduce
-            ? undefined
-            : {
-                animationDuration: `${duration}s`,
-                animationDirection: reverse ? 'reverse' : 'normal',
-              }
-        }
+        style={{ '--marquee-duration': `${duration}s` } as CSSProperties}
       >
-        {lane.map((src, index) => (
-          <SmartImage
-            key={`${src}-${index}`}
-            src={src}
-            alt=""
-            fit="natural-h"
-            placeholder="bare"
-            className={cn(
-              'h-28 w-auto shrink-0 border border-white/70 shadow-[0_14px_35px_-22px_rgba(27,42,74,0.6)] ring-1 ring-gold/15 transition duration-500 group-hover:rotate-0 sm:h-36',
-              index % 3 === 0
-                ? 'rotate-[0.8deg] rounded-[1.5rem]'
-                : index % 3 === 1
-                  ? '-rotate-[0.8deg] rounded-t-[3rem] rounded-b-[1rem]'
-                  : 'rounded-[1rem]',
-            )}
-            imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-          />
-        ))}
+        <MarqueeSegment photos={photos} />
+        <div className="shrink-0" aria-hidden="true">
+          <MarqueeSegment photos={photos} />
+        </div>
       </div>
     </div>
   )
@@ -159,21 +178,49 @@ function GalleryLightbox({
 }) {
   const { t } = useI18n()
   const [zoomed, setZoomed] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!image) return undefined
 
     const previousOverflow = document.body.style.overflow
+    const previousFocus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>('button') ?? [],
+      ).filter((element) => !element.hasAttribute('disabled'))
+      const first = focusable[0]
+      const last = focusable.at(-1)
+      if (!first || !last) return
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', handleKeyDown)
+    closeButtonRef.current?.focus()
 
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
+      previousFocus?.focus()
     }
   }, [image, onClose])
 
@@ -183,13 +230,15 @@ function GalleryLightbox({
 
   return createPortal(
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label={image.alt}
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-navy/85 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-navy/88 p-4 backdrop-blur-md"
       onClick={onClose}
     >
       <button
+        ref={closeButtonRef}
         type="button"
         aria-label={t.ui.close}
         onClick={onClose}
@@ -206,7 +255,7 @@ function GalleryLightbox({
           setZoomed((value) => !value)
         }}
         className={cn(
-          'relative max-h-[84vh] max-w-[94vw] overflow-hidden rounded-2xl border border-gold/25 bg-navy/30 shadow-2xl',
+          'relative max-h-[88vh] max-w-[96vw] overflow-hidden rounded-2xl border border-gold/25 bg-navy/30 shadow-2xl',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-navy',
           zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in',
         )}
@@ -215,8 +264,8 @@ function GalleryLightbox({
           src={image.src}
           alt={image.alt}
           className={cn(
-            'block max-h-[84vh] max-w-[94vw] object-contain transition-transform duration-300 ease-out',
-            zoomed && 'scale-[1.8]',
+            'block max-h-[88vh] max-w-[96vw] object-contain transition-transform duration-300 ease-out',
+            zoomed && 'scale-[1.65]',
           )}
         />
         <span className="absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-warm-white/95 text-navy shadow-md">
@@ -238,11 +287,8 @@ export function MediaGallery() {
   const [lightboxImage, setLightboxImage] = useState<GalleryLightboxImage | null>(
     null,
   )
-  const [laneSrcs] = useState(() => drawRandom(PHOTO_POOL, 30))
-  const laneA = laneSrcs.slice(0, Math.ceil(laneSrcs.length / 2))
-  const laneB = laneSrcs.slice(Math.ceil(laneSrcs.length / 2))
 
-  if (PHOTO_ENTRIES.length === 0) return null
+  if (FEATURED_PHOTOS.length === 0) return null
 
   return (
     <section
@@ -253,35 +299,46 @@ export function MediaGallery() {
       <h2 className="sr-only">{t.gallery.title}</h2>
 
       <div
-        className="pointer-events-none absolute inset-x-0 top-1/3 -z-0 h-1/2 bg-[radial-gradient(ellipse_65%_75%_at_50%_50%,var(--color-rose)_0%,transparent_72%)] opacity-[0.12]"
+        className="pointer-events-none absolute inset-x-0 top-1/4 h-1/2 bg-[radial-gradient(ellipse_60%_70%_at_50%_50%,var(--color-rose)_0%,transparent_72%)] opacity-[0.12]"
         aria-hidden="true"
       />
 
-      <SectionReveal className="relative z-10 mx-auto columns-2 max-w-6xl gap-3 px-4 sm:columns-3 sm:gap-4 sm:px-6 lg:columns-4">
-        {FEATURED_PHOTOS.map((photo, index) => {
+      <SectionReveal className="relative z-10 mx-auto grid max-w-6xl grid-cols-2 gap-3 px-4 sm:gap-4 sm:px-6 md:grid-cols-6 md:auto-rows-[clamp(7.125rem,15vw,9.5rem)] lg:grid-cols-12 lg:auto-rows-[clamp(5rem,6.6vw,5.75rem)]">
+        {FEATURED_PHOTOS.map(({ photo, spec }, index) => {
           const label = `${t.gallery.photo} ${index + 1}`
 
           return (
             <RevealItem
-              key={photo.src}
-              className="mb-3 break-inside-avoid sm:mb-4"
+              key={photo.filename}
+              className={cn(
+                'min-h-0',
+                photo.orientation === 'landscape'
+                  ? 'col-span-2 aspect-[3/2]'
+                  : 'col-span-1 aspect-[2/3]',
+                'md:aspect-auto',
+                spec.tabletSlot,
+                'lg:col-span-3',
+                spec.desktopSlot,
+              )}
             >
               <button
                 type="button"
                 aria-label={label}
-                onClick={() => setLightboxImage({ src: photo.src, alt: label })}
-                className="group block w-full transition-transform duration-500 hover:-translate-y-1 focus:outline-none focus-visible:rounded-[1.75rem] focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ivory"
+                onClick={() =>
+                  setLightboxImage({ src: photo.full, alt: label })
+                }
+                className="group block h-full w-full overflow-hidden rounded-[1.35rem] border border-white/85 shadow-[0_22px_52px_-28px_rgba(27,42,74,0.62)] ring-1 ring-gold/15 transition duration-500 hover:-translate-y-1 hover:shadow-[0_28px_58px_-26px_rgba(27,42,74,0.72)] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ivory sm:rounded-[1.8rem]"
               >
                 <SmartImage
-                  src={photo.src}
+                  src={photo.display}
                   alt={label}
-                  fit="natural-w"
+                  fit="cover"
                   placeholder="bare"
-                  className={cn(
-                    'w-full border border-white/80 shadow-[0_20px_45px_-26px_rgba(27,42,74,0.65)] ring-1 ring-gold/15',
-                    FRAME_STYLES[index % FRAME_STYLES.length],
+                  className="h-full w-full"
+                  imgClassName={cn(
+                    'transition-transform duration-700 ease-out group-hover:scale-[1.025]',
+                    spec.focus,
                   )}
-                  imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.025]"
                 />
               </button>
             </RevealItem>
@@ -291,11 +348,11 @@ export function MediaGallery() {
 
       <Reveal delay={0.08} className="relative z-10 mt-10 sm:mt-14">
         <div className="flex flex-col gap-3 sm:gap-4">
-          <MarqueeLane srcs={laneA} duration={62} reduce={!!reduce} />
+          <MarqueeLane photos={LANE_A} duration={72} reduce={!!reduce} />
           <MarqueeLane
-            srcs={laneB}
+            photos={LANE_B}
             reverse
-            duration={76}
+            duration={68}
             reduce={!!reduce}
           />
         </div>
