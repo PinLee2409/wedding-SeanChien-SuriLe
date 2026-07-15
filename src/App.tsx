@@ -8,7 +8,6 @@ import { useTheme } from './hooks/useTheme'
 import { HeroSection } from './components/sections/HeroSection'
 import { GuestNameGate } from './components/sections/GuestNameGate'
 import { DownloadInvitation } from './components/sections/DownloadInvitation'
-import { FlightTimeline } from './components/sections/FlightTimeline'
 import { MediaGallery } from './components/sections/MediaGallery'
 import { WeddingDetails } from './components/sections/WeddingDetails'
 import { LoveMessage } from './components/sections/LoveMessage'
@@ -143,13 +142,11 @@ function App() {
 
         <DownloadInvitation config={weddingConfig} guestName={guestName} />
 
-        <RouteDivider className="bg-gradient-to-b from-cream to-ivory" />
-
-        <FlightTimeline config={weddingConfig} />
-
-        <MediaGallery config={weddingConfig} />
-
         <WeddingDetails config={weddingConfig} />
+
+        <RouteDivider className="bg-gradient-to-b from-ivory to-warm-white" />
+
+        <MediaGallery />
 
         <LoveMessage config={weddingConfig} />
 

@@ -1,68 +1,84 @@
-import { Fragment, useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Heart, Plane, Play, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useReducedMotion } from 'motion/react'
-import type { WeddingConfig } from '../../config/wedding.config'
-import type { GalleryImage } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
-import { getOrderedCouple } from '../../lib/couple'
 import { useI18n } from '../../i18n/LanguageContext'
-import { SectionHeading } from '../ui/SectionHeading'
-import { SmartImage } from '../ui/SmartImage'
 import { Reveal } from '../ui/Reveal'
-import { SectionReveal, RevealItem } from '../ui/SectionReveal'
+import { RevealItem, SectionReveal } from '../ui/SectionReveal'
+import { SmartImage } from '../ui/SmartImage'
 
-/**
- * Each photo gets its own frame personality — arch, oval, tilted polaroid,
- * wide panorama, postage stamp — so the wall reads like a curated exhibition
- * rather than a uniform grid.
- */
-type FrameKind = 'arch' | 'wide' | 'oval' | 'polaroid' | 'stamp'
-
-interface FrameDef {
-  kind: FrameKind
-  /** The photo's natural aspect — the frame hugs it, nothing is squeezed. */
-  aspect: string
-  /** md+ width share, proportional to the aspect, so each row lines up. */
-  share: string
-  /** Placement tweaks for the 2-column mobile grid. */
-  mobile?: string
-  /** Index into the localised polaroid captions (t.gallery.captions). */
-  captionIdx?: 0 | 1
-  /** Resting angle; straightens on hover. */
-  tilt?: string
+interface PhotoEntry {
+  filename: string
+  src: string
 }
 
 interface GalleryLightboxImage {
   src: string
   alt: string
-  label: string
 }
 
-type WallCell =
-  | { panel: true }
-  | {
-      panel: false
-      frame: FrameDef
-      image: GalleryImage | undefined
-      index: number
-    }
-
-/**
- * Every optimized thumbnail in src/assets/marquee — Vite turns the folder
- * into a list of URLs at build time, so adding/removing files there is all
- * it takes to change the pool. A fresh random hand is drawn on every visit.
- */
-const MARQUEE_POOL = Object.values(
+const PHOTO_ENTRIES = Object.entries(
   import.meta.glob('../../assets/marquee/*.jpg', {
     eager: true,
     query: '?url',
     import: 'default',
   }),
-) as string[]
+)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([path, src]) => ({
+    filename: path.split('/').pop() ?? path,
+    src: src as string,
+  })) satisfies PhotoEntry[]
 
-/** Fisher–Yates shuffle, returning the first `count` cards. */
+const PHOTO_POOL = PHOTO_ENTRIES.map(({ src }) => src)
+
+/**
+ * A small editorial selection anchors the section. The complete photo set
+ * remains available in the two moving lanes below, so every visit feels a
+ * little different without changing the carefully balanced first view.
+ */
+const FEATURED_FILENAMES = [
+  'cuoi1_t04-04-032.jpg',
+  'cuoi1_t04-04-193.jpg',
+  'cuoi1_t04-04-248.jpg',
+  'cuoi1_t04-04-293.jpg',
+  'cuoi2_dsc09644.jpg',
+  'cuoi2_dsc09667.jpg',
+  'cuoi2_dsc09668.jpg',
+  'cuoi2_dsc09678.jpg',
+  'cuoi2_dsc09704.jpg',
+  'cuoi2_dsc09717.jpg',
+] as const
+
+const FEATURED_PHOTOS = (() => {
+  const byName = new Map(PHOTO_ENTRIES.map((entry) => [entry.filename, entry]))
+  const picked = FEATURED_FILENAMES.map((name) => byName.get(name)).filter(
+    (entry): entry is PhotoEntry => Boolean(entry),
+  )
+
+  // Keep the section useful if the selected source files are renamed later.
+  if (picked.length < 8) {
+    const used = new Set(picked.map(({ src }) => src))
+    for (const entry of PHOTO_ENTRIES) {
+      if (!used.has(entry.src)) {
+        picked.push(entry)
+        used.add(entry.src)
+      }
+      if (picked.length === 10) break
+    }
+  }
+
+  return picked
+})()
+
+const FRAME_STYLES = [
+  'rounded-[1.75rem]',
+  'rounded-t-[5rem] rounded-b-[1.5rem]',
+  'rounded-[1.25rem]',
+  'rounded-t-[1.5rem] rounded-b-[4rem]',
+] as const
+
 function drawRandom<T>(pool: T[], count: number): T[] {
   const deck = [...pool]
   for (let i = deck.length - 1; i > 0; i--) {
@@ -72,221 +88,19 @@ function drawRandom<T>(pool: T[], count: number): T[] {
   return deck.slice(0, count)
 }
 
-const PORTRAIT = { aspect: 'aspect-[2/3]', share: 'md:flex-[2]' }
-const LANDSCAPE = {
-  aspect: 'aspect-[3/2]',
-  share: 'md:flex-[4.5]',
-  mobile: 'max-md:order-last max-md:col-span-2',
-}
-
-function PhotoButton({
-  label,
-  onOpen,
-  disabled,
-  className,
-  children,
-}: {
-  label: string
-  onOpen?: () => void
-  disabled?: boolean
-  className?: string
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      disabled={disabled}
-      onClick={disabled ? undefined : onOpen}
-      className={cn(
-        'group block cursor-zoom-in appearance-none border-0 bg-transparent p-0 text-inherit',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ivory',
-        'disabled:cursor-default',
-        className,
-      )}
-    >
-      {children}
-    </button>
-  )
-}
-
-/**
- * Exhibition wall: three balanced rows. Widths are shared proportionally to
- * each photo's aspect ratio, so every frame in a row renders the same height
- * and no photo is ever distorted. 'panel' is the decorative centre plaque
- * between the two bottom-corner stamp frames.
- */
-const WALL_ROWS: (FrameDef | 'panel')[][] = [
-  [
-    { kind: 'arch', ...PORTRAIT },
-    { kind: 'wide', ...LANDSCAPE },
-    { kind: 'oval', ...PORTRAIT },
-  ],
-  [
-    { kind: 'polaroid', ...PORTRAIT, captionIdx: 0, tilt: '-rotate-2' },
-    { kind: 'wide', ...LANDSCAPE },
-    { kind: 'polaroid', ...PORTRAIT, captionIdx: 1, tilt: 'rotate-2' },
-  ],
-  [
-    { kind: 'stamp', ...PORTRAIT, tilt: '-rotate-1' },
-    'panel',
-    { kind: 'stamp', ...PORTRAIT, tilt: 'rotate-1' },
-  ],
-]
-
-function buildWallRows(images: GalleryImage[]): WallCell[][] {
-  let wallIdx = 0
-
-  return WALL_ROWS.map((row) =>
-    row.map((item) => {
-      if (item === 'panel') return { panel: true as const }
-
-      const cell: WallCell = {
-        panel: false,
-        frame: item,
-        image: images[wallIdx],
-        index: wallIdx,
-      }
-      wallIdx += 1
-      return cell
-    }),
-  )
-}
-
-function GalleryFrame({
-  frame,
-  index,
-  src,
-  alt,
-  focus,
-  onOpen,
-}: {
-  frame: FrameDef
-  index: number
-  src?: string
-  alt: string
-  /** object-position class when the photo and frame aspects differ. */
-  focus?: string
-  onOpen?: () => void
-}) {
-  const { t } = useI18n()
-  const label = `${t.gallery.photo} ${index + 1}`
-  const viewLabel = `${t.ui.viewPhoto}: ${alt || label}`
-  const canOpen = Boolean(src && onOpen)
-  // A photo with its own zoom keeps it — the hover zoom would undo it.
-  const hasZoom = focus?.includes('scale-')
-  const imgClass = cn(
-    'transition-transform duration-700 ease-out',
-    !hasZoom && 'group-hover:scale-[1.04]',
-    focus,
-  )
-
-  if (frame.kind === 'polaroid') {
-    // A white-bordered polaroid resting at a slight angle; straightens on hover.
-    return (
-      <figure
-        className={cn(
-          'group flex flex-col rounded-lg bg-warm-white p-2.5 pb-2 shadow-[0_14px_30px_-16px_rgba(27,42,74,0.35)] transition-transform duration-500 ease-out hover:rotate-0',
-          frame.tilt,
-        )}
-      >
-        <PhotoButton label={viewLabel} onOpen={onOpen} disabled={!canOpen} className="w-full">
-          <SmartImage
-            src={src}
-            alt={alt}
-            label={label}
-            className={cn('w-full rounded-sm', frame.aspect)}
-            imgClassName={imgClass}
-          />
-        </PhotoButton>
-        <figcaption className="shrink-0 pt-2 text-center font-script text-xl leading-none text-navy-600">
-          {t.gallery.captions[frame.captionIdx ?? 0]}
-        </figcaption>
-      </figure>
-    )
-  }
-
-  if (frame.kind === 'stamp') {
-    // A postage-stamp frame — white mat with a dashed gold inner border,
-    // a little nod to love letters sent across the sky.
-    return (
-      <figure
-        className={cn(
-          'group rounded-md bg-warm-white p-2 shadow-[0_14px_30px_-16px_rgba(27,42,74,0.35)] transition-transform duration-500 ease-out hover:rotate-0',
-          frame.tilt,
-        )}
-      >
-        <div className="rounded-sm border border-dashed border-gold/50 p-1.5">
-          <PhotoButton label={viewLabel} onOpen={onOpen} disabled={!canOpen} className="w-full">
-            <SmartImage
-              src={src}
-              alt={alt}
-              label={label}
-              className={cn('w-full rounded-sm', frame.aspect)}
-              imgClassName={imgClass}
-            />
-          </PhotoButton>
-        </div>
-      </figure>
-    )
-  }
-
-  return (
-    <PhotoButton label={viewLabel} onOpen={onOpen} disabled={!canOpen} className="w-full">
-      <SmartImage
-        src={src}
-        alt={alt}
-        label={label}
-        className={cn(
-          'w-full border border-gold/15 shadow-sm transition-shadow duration-500 group-hover:shadow-[0_18px_36px_-20px_rgba(71,35,59,0.5)]',
-          frame.aspect,
-          frame.kind === 'arch' && 'rounded-t-[999px] rounded-b-3xl',
-          frame.kind === 'oval' && 'rounded-[50%]',
-          frame.kind === 'wide' && 'rounded-3xl',
-        )}
-        imgClassName={imgClass}
-      />
-    </PhotoButton>
-  )
-}
-
-/** Decorative plaque between the two bottom-corner stamps. */
-function WallPanel({ config }: { config: WeddingConfig }) {
-  const { couple, date } = config
-  const [firstPartner, secondPartner] = getOrderedCouple(config)
-  return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2.5 rounded-3xl border border-gold/25 bg-gradient-to-br from-sky-soft/70 via-warm-white to-ivory p-6 text-center shadow-sm max-md:py-10 md:aspect-[3/2]">
-      <Plane className="h-5 w-5 rotate-45 text-gold" strokeWidth={1.4} />
-      <p className="font-script text-[clamp(1.7rem,4vw,2.6rem)] leading-tight text-navy-600">
-        {firstPartner.person.name}
-        <span className="mx-2 text-rose">♥</span>
-        {secondPartner.person.name}
-      </p>
-      <span className="label-caps text-[10px] text-gold-dark">{date.displayDate}</span>
-      {couple.hashtag && (
-        <span className="text-xs text-navy-400">{couple.hashtag}</span>
-      )}
-    </div>
-  )
-}
-
-/**
- * One marquee lane of photos. The content is duplicated so the -50% keyframe
- * loops seamlessly; `reverse` flips the direction so two stacked lanes glide
- * past each other. Hovering a lane pauses it so a photo can be admired.
- */
 function MarqueeLane({
   srcs,
   reverse = false,
-  duration = 32,
+  duration,
   reduce,
 }: {
   srcs: string[]
   reverse?: boolean
-  duration?: number
+  duration: number
   reduce: boolean
 }) {
-  const { t } = useI18n()
+  if (srcs.length === 0) return null
+
   const lane = reduce ? srcs : [...srcs, ...srcs]
 
   return (
@@ -294,14 +108,14 @@ function MarqueeLane({
       className={cn(
         'group relative',
         !reduce &&
-          '[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]',
+          '[mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]',
       )}
     >
       <div
         className={cn(
-          'flex items-center gap-3',
+          'flex items-center gap-3 sm:gap-4',
           reduce
-            ? 'w-full overflow-x-auto pb-2'
+            ? 'w-full overflow-x-auto px-4 pb-2 sm:px-6'
             : 'w-max animate-marquee will-change-transform group-hover:[animation-play-state:paused]',
         )}
         style={
@@ -313,27 +127,23 @@ function MarqueeLane({
               }
         }
       >
-        {lane.map((src, i) => (
-          <Fragment key={src + i}>
-            <div className="w-auto shrink-0 rounded-xl">
-              <SmartImage
-                src={src}
-                alt=""
-                label={`${t.gallery.photo} ${(i % srcs.length) + 1}`}
-                fit="natural-h"
-                className={cn(
-                  'h-24 w-auto rounded-xl border border-gold/20 ring-1 ring-rose/20 shadow-sm transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105 sm:h-28',
-                  i % 2 === 0 ? 'rotate-1' : '-rotate-1',
-                )}
-              />
-            </div>
-            {/* A little heart resting between every pair of memories. */}
-            <Heart
-              className="h-3.5 w-3.5 shrink-0 fill-current text-rose/70"
-              strokeWidth={0}
-              aria-hidden="true"
-            />
-          </Fragment>
+        {lane.map((src, index) => (
+          <SmartImage
+            key={`${src}-${index}`}
+            src={src}
+            alt=""
+            fit="natural-h"
+            placeholder="bare"
+            className={cn(
+              'h-28 w-auto shrink-0 border border-white/70 shadow-[0_14px_35px_-22px_rgba(27,42,74,0.6)] ring-1 ring-gold/15 transition duration-500 group-hover:rotate-0 sm:h-36',
+              index % 3 === 0
+                ? 'rotate-[0.8deg] rounded-[1.5rem]'
+                : index % 3 === 1
+                  ? '-rotate-[0.8deg] rounded-t-[3rem] rounded-b-[1rem]'
+                  : 'rounded-[1rem]',
+            )}
+            imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+          />
         ))}
       </div>
     </div>
@@ -375,7 +185,7 @@ function GalleryLightbox({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={image.alt || image.label}
+      aria-label={image.alt}
       className="fixed inset-0 z-[80] flex items-center justify-center bg-navy/85 p-4 backdrop-blur-md"
       onClick={onClose}
     >
@@ -388,167 +198,104 @@ function GalleryLightbox({
         <X className="h-5 w-5" strokeWidth={1.8} />
       </button>
 
-      <figure
-        className="relative max-w-[94vw] text-center"
-        onClick={(event) => event.stopPropagation()}
+      <button
+        type="button"
+        aria-label={zoomLabel}
+        onClick={(event) => {
+          event.stopPropagation()
+          setZoomed((value) => !value)
+        }}
+        className={cn(
+          'relative max-h-[84vh] max-w-[94vw] overflow-hidden rounded-2xl border border-gold/25 bg-navy/30 shadow-2xl',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-navy',
+          zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in',
+        )}
       >
-        <button
-          type="button"
-          aria-label={zoomLabel}
-          onClick={() => setZoomed((value) => !value)}
+        <img
+          src={image.src}
+          alt={image.alt}
           className={cn(
-            'relative max-h-[84vh] max-w-[94vw] overflow-hidden rounded-2xl border border-gold/25 bg-navy/30 shadow-2xl',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-navy',
-            zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in',
+            'block max-h-[84vh] max-w-[94vw] object-contain transition-transform duration-300 ease-out',
+            zoomed && 'scale-[1.8]',
           )}
-        >
-          <img
-            src={image.src}
-            alt={image.alt || image.label}
-            className={cn(
-              'block max-h-[84vh] max-w-[94vw] object-contain transition-transform duration-300 ease-out',
-              zoomed && 'scale-[1.9]',
-            )}
-          />
-          <span className="absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-warm-white/95 text-navy shadow-md">
-            {zoomed ? (
-              <ZoomOut className="h-4 w-4" strokeWidth={1.8} />
-            ) : (
-              <ZoomIn className="h-4 w-4" strokeWidth={1.8} />
-            )}
-          </span>
-        </button>
-      </figure>
+        />
+        <span className="absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-warm-white/95 text-navy shadow-md">
+          {zoomed ? (
+            <ZoomOut className="h-4 w-4" strokeWidth={1.8} />
+          ) : (
+            <ZoomIn className="h-4 w-4" strokeWidth={1.8} />
+          )}
+        </span>
+      </button>
     </div>,
     document.body,
   )
 }
 
-export function MediaGallery({ config }: { config: WeddingConfig }) {
-  const { images, video, videoPoster } = config.gallery
+export function MediaGallery() {
   const { t } = useI18n()
   const reduce = useReducedMotion()
   const [lightboxImage, setLightboxImage] = useState<GalleryLightboxImage | null>(
     null,
   )
-
-  // Draw 30 random memories from the marquee pool on every page load and
-  // deal them across the two lanes, so each visit scrolls a different mix.
-  const [laneSrcs] = useState(() => drawRandom(MARQUEE_POOL, 30))
+  const [laneSrcs] = useState(() => drawRandom(PHOTO_POOL, 30))
   const laneA = laneSrcs.slice(0, Math.ceil(laneSrcs.length / 2))
   const laneB = laneSrcs.slice(Math.ceil(laneSrcs.length / 2))
 
-  // Pair each wall slot with the next photo from the config, reading order.
-  const wallRows = buildWallRows(images)
+  if (PHOTO_ENTRIES.length === 0) return null
 
   return (
     <section
       id="gallery"
-      className="overflow-hidden bg-gradient-to-b from-warm-white to-ivory px-5 py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-warm-white via-ivory to-ivory py-12 sm:py-16 lg:py-20"
       aria-label={t.gallery.title}
     >
-      <div className="mx-auto max-w-5xl">
-        <Reveal>
-          <SectionHeading
-            kicker={t.gallery.kicker}
-            title={t.gallery.title}
-            subtitle={t.gallery.subtitle}
-          />
-        </Reveal>
+      <h2 className="sr-only">{t.gallery.title}</h2>
 
-        {/* Feature video frame */}
-        {video && (
-          <Reveal delay={0.05} className="mx-auto mt-12 max-w-3xl">
-            <figure className="group relative overflow-hidden rounded-3xl border border-gold/25 bg-navy shadow-xl">
-              <video
-                className="aspect-video w-full object-cover"
-                src={video}
-                poster={videoPoster}
-                controls
-                playsInline
-                preload="metadata"
-              />
-              <figcaption className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full bg-navy/70 px-3 py-1 text-warm-white backdrop-blur-sm">
-                <Play className="h-3.5 w-3.5 fill-current text-gold" />
-                <span className="label-caps text-[9px]">Pre-wedding Film</span>
-              </figcaption>
-            </figure>
-          </Reveal>
-        )}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-1/3 -z-0 h-1/2 bg-[radial-gradient(ellipse_65%_75%_at_50%_50%,var(--color-rose)_0%,transparent_72%)] opacity-[0.12]"
+        aria-hidden="true"
+      />
 
-        {/* Exhibition wall: three balanced rows — arch, panorama, oval,
-            polaroids, and two stamp frames flanking a centre plaque. Every
-            frame hugs its photo's natural ratio, so nothing is distorted. */}
-        <SectionReveal className="mt-10 flex flex-col gap-4">
-          {wallRows.map((row, r) => (
-            <div key={r} className="grid grid-cols-2 gap-4 md:flex md:items-center">
-              {row.map((cell, c) => {
-                if (cell.panel) {
-                  return (
-                    <RevealItem
-                      key={c}
-                      className="max-md:order-last max-md:col-span-2 md:flex-[4.5]"
-                    >
-                      <WallPanel config={config} />
-                    </RevealItem>
-                  )
-                }
+      <SectionReveal className="relative z-10 mx-auto columns-2 max-w-6xl gap-3 px-4 sm:columns-3 sm:gap-4 sm:px-6 lg:columns-4">
+        {FEATURED_PHOTOS.map((photo, index) => {
+          const label = `${t.gallery.photo} ${index + 1}`
 
-                const image = cell.image
+          return (
+            <RevealItem
+              key={photo.src}
+              className="mb-3 break-inside-avoid sm:mb-4"
+            >
+              <button
+                type="button"
+                aria-label={label}
+                onClick={() => setLightboxImage({ src: photo.src, alt: label })}
+                className="group block w-full transition-transform duration-500 hover:-translate-y-1 focus:outline-none focus-visible:rounded-[1.75rem] focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ivory"
+              >
+                <SmartImage
+                  src={photo.src}
+                  alt={label}
+                  fit="natural-w"
+                  placeholder="bare"
+                  className={cn(
+                    'w-full border border-white/80 shadow-[0_20px_45px_-26px_rgba(27,42,74,0.65)] ring-1 ring-gold/15',
+                    FRAME_STYLES[index % FRAME_STYLES.length],
+                  )}
+                  imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+                />
+              </button>
+            </RevealItem>
+          )
+        })}
+      </SectionReveal>
 
-                return (
-                  <RevealItem
-                    key={c}
-                    className={cn('group', cell.frame.share, cell.frame.mobile)}
-                  >
-                    <GalleryFrame
-                      frame={cell.frame}
-                      index={cell.index}
-                      src={image?.src}
-                      alt={image?.alt ?? ''}
-                      focus={image?.focus}
-                      onOpen={
-                        image?.src
-                          ? () =>
-                              setLightboxImage({
-                                src: image.src,
-                                alt: image.alt,
-                                label: `${t.gallery.photo} ${cell.index + 1}`,
-                              })
-                          : undefined
-                      }
-                    />
-                  </RevealItem>
-                )
-              })}
-            </div>
-          ))}
-        </SectionReveal>
-      </div>
-
-      {/* Memory lanes: two marquees gliding past each other — one drifts left,
-          the other right — over a soft rose glow, with a heart tucked between
-          every pair of photos. Static scrollable rows under reduced motion. */}
-      <Reveal delay={0.1} className="relative mt-12">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-1/2 -z-10 h-[130%] -translate-y-1/2 bg-[radial-gradient(ellipse_70%_100%_at_50%_50%,var(--color-rose)_0%,transparent_70%)] opacity-25"
-          aria-hidden="true"
-        />
-        <p className="label-caps mb-4 text-center text-[10px] text-navy-400">
-          <Heart className="mr-1.5 inline h-3 w-3 fill-current text-rose" strokeWidth={0} />
-          {t.gallery.memoryLane}
-          <Heart className="ml-1.5 inline h-3 w-3 fill-current text-rose" strokeWidth={0} />
-        </p>
-        <div className="flex flex-col gap-4">
-          <MarqueeLane
-            srcs={laneA}
-            duration={60}
-            reduce={!!reduce}
-          />
+      <Reveal delay={0.08} className="relative z-10 mt-10 sm:mt-14">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <MarqueeLane srcs={laneA} duration={62} reduce={!!reduce} />
           <MarqueeLane
             srcs={laneB}
             reverse
-            duration={75}
+            duration={76}
             reduce={!!reduce}
           />
         </div>

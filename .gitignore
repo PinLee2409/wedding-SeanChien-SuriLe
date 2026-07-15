@@ -15,6 +15,10 @@ dist-ssr
 # Full-resolution photo masters (huge; the site uses public/images/web/)
 photos-original/
 
+# Local full-resolution marquee selections (optimized copies live at folder root)
+src/assets/marquee/Cuoi1/
+src/assets/marquee/Cuoi2/
+
 # Claude Code workspace (local tooling — never commit)
 .claude/
 
