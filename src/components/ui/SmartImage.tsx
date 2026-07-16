@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Plane } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
@@ -9,6 +9,8 @@ interface SmartImageProps {
   className?: string
   /** Classes for the <img> itself. */
   imgClassName?: string
+  /** Inline styles for the <img> (e.g. a per-photo object-position). */
+  imgStyle?: CSSProperties
   /** Caption shown on the elegant fallback when the image is missing. */
   label?: string
   /** Loading strategy for the underlying image. */
@@ -35,6 +37,7 @@ export function SmartImage({
   alt,
   className,
   imgClassName,
+  imgStyle,
   label,
   loading = 'lazy',
   placeholder = 'full',
@@ -77,6 +80,7 @@ export function SmartImage({
           loading={loading}
           decoding="async"
           onError={() => setFailed(true)}
+          style={imgStyle}
           className={cn(
             'block',
             fit === 'cover' && 'h-full w-full object-cover',

@@ -48,103 +48,42 @@ const PORTRAIT_PHOTOS = pickGalleryPhotos([
   'cuoi2_dsc09704.jpg',
 ])
 
-interface PhotoPresentation {
-  /** Focus for the soft background used behind uncropped foreground photos. */
-  backdropFocus: string
-  /** Tablet/desktop crop for landscape photos inside the 16:10 window. */
-  landscapeFocus: string
-  /** Near-native 2:3 crop used by the side polaroids. */
-  polaroidFocus: string
+interface PhotoFocus {
+  /** Horizontal centre of the couple, as an object-position percentage. */
+  x: number
+  /** Vertical centre biased to the faces, as an object-position percentage. */
+  y: number
 }
 
 /**
- * Each image was inspected at its rendered 1600px tier. Portraits are always
- * shown uncropped over a blurred cover; landscapes are also uncropped on the
- * narrow mobile window, then use these focal points for the very shallow crop
- * required by the tablet/desktop 16:10 window.
+ * Every image was inspected by eye at its rendered 1600px tier and the
+ * couple's faces marked. Used as object-position so the full-bleed cover
+ * crop keeps the subjects framed on every window aspect (phone 4:5,
+ * tablet/desktop 16:10, polaroid 2:3).
  */
-const PHOTO_PRESENTATION: Record<string, PhotoPresentation> = {
-  'cuoi1_t04-04-248.jpg': {
-    backdropFocus: 'object-[50%_48%]',
-    landscapeFocus: 'sm:object-[50%_48%] lg:object-[50%_50%]',
-    polaroidFocus: 'object-center',
-  },
-  'cuoi2_dsc09678.jpg': {
-    backdropFocus: 'object-[51%_60%]',
-    landscapeFocus: 'sm:object-[51%_58%] lg:object-[51%_60%]',
-    polaroidFocus: 'object-center',
-  },
-  'cuoi1_t04-04-032.jpg': {
-    backdropFocus: 'object-[50%_45%]',
-    landscapeFocus: 'object-center',
-    polaroidFocus: 'object-[50%_50%]',
-  },
-  'cuoi2_dsc09667.jpg': {
-    backdropFocus: 'object-[50%_52%]',
-    landscapeFocus: 'object-center',
-    polaroidFocus: 'object-[50%_50%]',
-  },
-  'cuoi1_t04-04-293.jpg': {
-    backdropFocus: 'object-[50%_48%]',
-    landscapeFocus: 'sm:object-[50%_48%] lg:object-[50%_50%]',
-    polaroidFocus: 'object-center',
-  },
-  'cuoi2_dsc09717.jpg': {
-    backdropFocus: 'object-[50%_64%]',
-    landscapeFocus: 'object-center',
-    polaroidFocus: 'object-[50%_52%]',
-  },
-  'cuoi1_t04-04-193.jpg': {
-    backdropFocus: 'object-[50%_48%]',
-    landscapeFocus: 'object-center',
-    polaroidFocus: 'object-[50%_50%]',
-  },
-  'cuoi2_dsc09644.jpg': {
-    backdropFocus: 'object-[50%_52%]',
-    landscapeFocus: 'object-center',
-    polaroidFocus: 'object-[50%_50%]',
-  },
-  'cuoi1_t04-04-327.jpg': {
-    backdropFocus: 'object-[50%_60%]',
-    landscapeFocus: 'sm:object-[50%_58%] lg:object-[50%_61%]',
-    polaroidFocus: 'object-center',
-  },
-  'cuoi2_dsc09704.jpg': {
-    backdropFocus: 'object-[50%_66%]',
-    landscapeFocus: 'object-center',
-    polaroidFocus: 'object-[50%_55%]',
-  },
-  'cuoi1_t04-04-151.jpg': {
-    backdropFocus: 'object-[46%_50%]',
-    landscapeFocus: 'object-center',
-    polaroidFocus: 'object-[50%_50%]',
-  },
+const PHOTO_FOCUS: Record<string, PhotoFocus> = {
+  'cuoi1_t04-04-248.jpg': { x: 52, y: 38 },
+  'cuoi2_dsc09678.jpg': { x: 51, y: 50 },
+  'cuoi1_t04-04-032.jpg': { x: 52, y: 28 },
+  'cuoi2_dsc09667.jpg': { x: 50, y: 50 },
+  'cuoi1_t04-04-293.jpg': { x: 55, y: 38 },
+  'cuoi2_dsc09717.jpg': { x: 48, y: 52 },
+  'cuoi1_t04-04-193.jpg': { x: 47, y: 36 },
+  'cuoi2_dsc09644.jpg': { x: 56, y: 48 },
+  'cuoi1_t04-04-327.jpg': { x: 45, y: 30 },
+  'cuoi2_dsc09704.jpg': { x: 52, y: 60 },
+  'cuoi1_t04-04-151.jpg': { x: 45, y: 30 },
 }
 
-const DEFAULT_PRESENTATION: PhotoPresentation = {
-  backdropFocus: 'object-center',
-  landscapeFocus: 'object-center',
-  polaroidFocus: 'object-center',
-}
-
-const CONTROL_COPY = {
-  vi: {
-    show: (index: number) => `Xem ảnh ${index + 1}`,
-  },
-  en: {
-    show: (index: number) => `Show photo ${index + 1}`,
-  },
-  tw: {
-    show: (index: number) => `查看第 ${index + 1} 張照片`,
-  },
-} as const
+const DEFAULT_FOCUS: PhotoFocus = { x: 50, y: 42 }
 
 const WINDOW_RADIUS = '44% 44% 38% 38% / 25% 25% 40% 40%'
 const WINDOW_INNER_RADIUS = '42% 42% 36% 36% / 23% 23% 38% 38%'
 const PHOTO_INTERVAL_MS = 5_000
 
-function getPresentation(photo: GalleryPhoto) {
-  return PHOTO_PRESENTATION[photo.filename] ?? DEFAULT_PRESENTATION
+function focusPosition(photo: GalleryPhoto): string {
+  const focus = PHOTO_FOCUS[photo.filename] ?? DEFAULT_FOCUS
+  return `${focus.x}% ${focus.y}%`
 }
 
 function WindowShell({
@@ -241,37 +180,6 @@ function useRotatingPhotoIndex({
   return { index, selectIndex }
 }
 
-function BlurredContainPhoto({
-  photo,
-  presentation,
-}: {
-  photo: GalleryPhoto
-  presentation: PhotoPresentation
-}) {
-  return (
-    <>
-      <img
-        src={photo.display}
-        alt=""
-        loading="eager"
-        decoding="async"
-        className={cn(
-          'absolute inset-0 h-full w-full scale-110 object-cover opacity-75 blur-2xl saturate-110',
-          presentation.backdropFocus,
-        )}
-      />
-      <div className="absolute inset-0 bg-navy/16" aria-hidden="true" />
-      <img
-        src={photo.display}
-        alt=""
-        loading="eager"
-        decoding="async"
-        className="absolute inset-[6%] z-10 h-[88%] w-[88%] object-contain drop-shadow-[0_18px_28px_rgba(9,22,46,0.28)] sm:inset-[4%] sm:h-[92%] sm:w-[92%]"
-      />
-    </>
-  )
-}
-
 function CinematicWindowImage({
   photo,
   alt,
@@ -281,9 +189,6 @@ function CinematicWindowImage({
   alt: string
   reduced: boolean
 }) {
-  const presentation = getPresentation(photo)
-  const alwaysContain = photo.orientation === 'portrait'
-
   return (
     <div className="absolute inset-0" role="img" aria-label={alt}>
       <AnimatePresence initial={false} mode="sync">
@@ -307,33 +212,16 @@ function CinematicWindowImage({
           }}
           aria-hidden="true"
         >
-          {alwaysContain ? (
-            <BlurredContainPhoto
-              photo={photo}
-              presentation={presentation}
-            />
-          ) : (
-            <>
-              {/* A portrait-shaped phone window keeps the whole landscape. */}
-              <div className="absolute inset-0 sm:hidden">
-                <BlurredContainPhoto
-                  photo={photo}
-                  presentation={presentation}
-                />
-              </div>
-              {/* 16:10 needs only a shallow, hand-tuned crop from tablet up. */}
-              <img
-                src={photo.display}
-                alt=""
-                loading="eager"
-                decoding="async"
-                className={cn(
-                  'hidden h-full w-full object-cover sm:block',
-                  presentation.landscapeFocus,
-                )}
-              />
-            </>
-          )}
+          {/* Full-bleed cover: the measured focal centre keeps the couple
+              framed in both the 4:5 phone window and the 16:10 desktop one. */}
+          <img
+            src={photo.display}
+            alt=""
+            loading="eager"
+            decoding="async"
+            className="h-full w-full object-cover"
+            style={{ objectPosition: focusPosition(photo) }}
+          />
         </motion.div>
       </AnimatePresence>
 
@@ -368,7 +256,6 @@ function PortraitPolaroid({
 }) {
   const reduced = !!useReducedMotion()
   const baseRotate = side === 'left' ? -5 : 5
-  const presentation = getPresentation(photo)
 
   return (
     <motion.figure
@@ -415,7 +302,7 @@ function PortraitPolaroid({
               fit="cover"
               placeholder="bare"
               className="h-full w-full"
-              imgClassName={presentation.polaroidFocus}
+              imgStyle={{ objectPosition: focusPosition(photo) }}
             />
           </motion.div>
         </AnimatePresence>
@@ -476,13 +363,13 @@ function FlightRoute({ active, reduced }: { active: boolean; reduced: boolean })
 }
 
 export function FlightPhotoStory() {
-  const { t, lang } = useI18n()
+  const { t } = useI18n()
   const reduced = !!useReducedMotion()
   const pageVisible = usePageVisible()
   const sectionRef = useRef<HTMLElement>(null)
   const inView = useInView(sectionRef, { amount: 'some' })
   const ambientActive = inView && pageVisible && !reduced
-  const { index: activeIndex, selectIndex } = useRotatingPhotoIndex({
+  const { index: activeIndex } = useRotatingPhotoIndex({
     count: WINDOW_PHOTOS.length,
     active: ambientActive,
     reduced,
@@ -511,7 +398,6 @@ export function FlightPhotoStory() {
 
   const sectionLabel = `${t.gallery.title} — Cabin Window Journey`
   const activeLabel = `${t.gallery.photo} ${activeIndex + 1}`
-  const controls = CONTROL_COPY[lang]
 
   return (
     <section
@@ -546,34 +432,6 @@ export function FlightPhotoStory() {
                 alt={activeLabel}
                 reduced={reduced}
               />
-
-              <div
-                className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/25 bg-navy/30 px-2 py-1 backdrop-blur-md sm:bottom-4"
-                role="group"
-                aria-label={sectionLabel}
-              >
-                {WINDOW_PHOTOS.map((photo, index) => (
-                  <button
-                    key={photo.filename}
-                    type="button"
-                    onClick={() => selectIndex(index)}
-                    aria-label={controls.show(index)}
-                    aria-current={index === activeIndex ? 'true' : undefined}
-                    className="grid h-8 w-4 place-items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-1 focus-visible:ring-offset-navy/60"
-                  >
-                    <motion.span
-                      className="h-1.5 rounded-full bg-white"
-                      animate={{
-                        width: index === activeIndex ? 14 : 5,
-                        opacity: index === activeIndex ? 0.98 : 0.42,
-                      }}
-                      transition={{ duration: reduced ? 0 : 0.4 }}
-                      aria-hidden="true"
-                    />
-                  </button>
-                ))}
-
-              </div>
             </WindowShell>
           </motion.div>
 
