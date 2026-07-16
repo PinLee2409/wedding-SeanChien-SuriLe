@@ -163,6 +163,266 @@
   }
 }
 
+/* Boarding-pass vignette: a contained romantic route with a gentler,
+   space-conscious choreography on phones. Individual transform properties
+   compose safely with Motion's entrance/tilt transforms. */
+.invitation-scene {
+  container-type: inline-size;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(232, 180, 184, 0.2), transparent 28%),
+    radial-gradient(circle at 88% 72%, rgba(196, 216, 232, 0.42), transparent 31%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(245, 240, 236, 0.68));
+}
+
+.invitation-scene::before,
+.invitation-scene::after {
+  position: absolute;
+  z-index: 0;
+  content: '';
+  pointer-events: none;
+}
+
+.invitation-scene::before {
+  inset: 0.75rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(200, 164, 92, 0.13);
+}
+
+.invitation-scene::after {
+  width: 15rem;
+  height: 15rem;
+  right: -7rem;
+  top: -8rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(232, 213, 160, 0.24), transparent 68%);
+}
+
+.invitation-photo-selector {
+  transition:
+    rotate 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease,
+    opacity 0.5s ease;
+  will-change: transform, translate, rotate;
+}
+
+.invitation-photo-selector--left {
+  rotate: -3.5deg;
+  animation: invitation-photo-bob-left 5.4s ease-in-out infinite;
+}
+
+.invitation-photo-selector--right {
+  rotate: 3.5deg;
+  animation: invitation-photo-bob-right 5.8s ease-in-out -1.6s infinite;
+}
+
+.invitation-route-plane {
+  position: absolute;
+  z-index: 15;
+  top: 26%;
+  left: -5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0;
+  pointer-events: none;
+  animation: invitation-plane-phone 13s linear 1.1s infinite;
+}
+
+.invitation-scene-heart {
+  position: absolute;
+  z-index: 1;
+  color: var(--color-rose);
+  opacity: 0.3;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 8px rgba(232, 180, 184, 0.28));
+  animation: invitation-heart-breathe 4.8s ease-in-out infinite;
+}
+
+.invitation-scene-heart--one {
+  left: 6%;
+  top: 44%;
+}
+
+.invitation-scene-heart--two {
+  right: 6%;
+  top: 56%;
+  color: var(--color-rosegold);
+  animation-delay: -1.7s;
+}
+
+.invitation-scene-heart--three {
+  left: 12%;
+  bottom: 7%;
+  color: var(--color-gold);
+  animation-delay: -3.1s;
+}
+
+@keyframes invitation-photo-bob-left {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -5px;
+  }
+}
+
+@keyframes invitation-photo-bob-right {
+  0%,
+  100% {
+    translate: 0 -3px;
+  }
+  50% {
+    translate: 0 3px;
+  }
+}
+
+@keyframes invitation-plane-phone {
+  0% {
+    translate: 0 8px;
+    opacity: 0;
+  }
+  9%,
+  82% {
+    opacity: 0.64;
+  }
+  46% {
+    translate: calc(54cqw + 4rem) -8px;
+  }
+  100% {
+    translate: calc(100cqw + 9rem) 5px;
+    opacity: 0;
+  }
+}
+
+@keyframes invitation-heart-breathe {
+  0%,
+  100% {
+    scale: 0.72;
+    translate: 0 4px;
+    opacity: 0.16;
+  }
+  50% {
+    scale: 1;
+    translate: 0 -5px;
+    opacity: 0.42;
+  }
+}
+
+@media (min-width: 640px) {
+  .invitation-scene::before {
+    border-radius: 2rem;
+  }
+
+  .invitation-photo-selector--left {
+    rotate: -5deg;
+  }
+
+  .invitation-photo-selector--right {
+    rotate: 5deg;
+  }
+
+  .invitation-route-plane {
+    top: 31%;
+    animation-name: invitation-plane-wide;
+    animation-duration: 16s;
+  }
+
+  .invitation-scene-heart--one {
+    left: 9%;
+    top: 33%;
+  }
+
+  .invitation-scene-heart--two {
+    right: 10%;
+    top: 66%;
+  }
+}
+
+@media (min-width: 768px) {
+  .invitation-scene {
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+  }
+
+  .invitation-photo-selector--left {
+    rotate: -9deg;
+    translate: 1rem 0;
+    animation: none;
+  }
+
+  .invitation-photo-selector--right {
+    rotate: 8deg;
+    translate: -1rem 0;
+    animation: none;
+  }
+
+  .invitation-photo-selector--left:hover {
+    rotate: -6deg;
+  }
+
+  .invitation-photo-selector--right:hover {
+    rotate: 5deg;
+  }
+}
+
+@media (min-width: 1024px) {
+  .invitation-photo-selector--left {
+    rotate: -11deg;
+    translate: 1.25rem 0;
+  }
+
+  .invitation-photo-selector--right {
+    rotate: 10deg;
+    translate: -1.25rem 0;
+  }
+
+  .invitation-photo-selector--left:hover {
+    rotate: -8deg;
+  }
+
+  .invitation-photo-selector--right:hover {
+    rotate: 7deg;
+  }
+}
+
+@keyframes invitation-plane-wide {
+  0% {
+    translate: 0 3.5rem;
+    opacity: 0;
+  }
+  10%,
+  86% {
+    opacity: 0.6;
+  }
+  52% {
+    translate: calc(54cqw + 4rem) -2.8rem;
+  }
+  100% {
+    translate: calc(100cqw + 9rem) -5.5rem;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invitation-photo-selector,
+  .invitation-scene-heart {
+    animation: none !important;
+  }
+
+  .invitation-scene-heart {
+    scale: 0.82;
+    translate: 0 0;
+    opacity: 0.22;
+  }
+
+  .invitation-route-plane {
+    display: none;
+    animation: none !important;
+  }
+}
+
 /* Spinning vinyl record for the music button. Frozen via animation-play-state
    when paused so it holds its current angle instead of rewinding. */
 @keyframes spin-disc {

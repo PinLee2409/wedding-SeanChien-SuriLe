@@ -7,7 +7,7 @@ import {
   useReducedMotion,
   useSpring,
 } from 'motion/react'
-import { Download, FileText, Heart, LoaderCircle } from 'lucide-react'
+import { Download, FileText, Heart, LoaderCircle, Plane } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { exportElementToPdf, exportElementToPng } from '../../lib/exportCard'
 import type { GalleryPhoto } from '../../lib/galleryPhotos'
@@ -15,7 +15,6 @@ import { pickGalleryPhotos } from '../../lib/galleryPhotos'
 import { cardEntrance } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
 import { RomanticAura } from '../decorations/RomanticAura'
-import { SectionRomance } from '../decorations/SectionRomance'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Reveal } from '../ui/Reveal'
 import { SmartImage } from '../ui/SmartImage'
@@ -110,11 +109,10 @@ export function DownloadInvitation({
   return (
     <section
       id="boarding-pass"
-      className="relative overflow-hidden bg-gradient-to-b from-cream via-ivory to-sky-soft/70 px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24"
+      className="relative overflow-hidden bg-gradient-to-b from-cream via-ivory to-sky-soft/70 px-2 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24"
       aria-label={t.download.title}
     >
       <RomanticAura className="opacity-70" />
-      <SectionRomance direction="ltr" planeTop="12%" />
 
       <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center gap-8 sm:gap-10">
         <Reveal>
@@ -125,9 +123,12 @@ export function DownloadInvitation({
           />
         </Reveal>
 
-        {/* First-class collectible scene: photographs fan open behind the pass. */}
+        {/*
+          A collectible travel scene. Phones use a compact photo rail above the
+          pass; the wider fan only returns when all three columns genuinely fit.
+        */}
         <motion.div
-          className="relative w-full py-12 sm:py-16 lg:py-20"
+          className="invitation-scene relative w-full overflow-hidden rounded-[1.75rem] border border-white/80 px-1.5 pb-7 pt-8 shadow-[0_28px_80px_-48px_rgba(27,42,74,0.58)] sm:rounded-[2.5rem] sm:px-6 sm:pb-11 sm:pt-12 lg:px-8 lg:py-16"
           variants={cardEntrance}
           initial={reduce ? false : 'hidden'}
           whileInView="visible"
@@ -135,11 +136,36 @@ export function DownloadInvitation({
           style={{ perspective: 1400 }}
         >
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[76%] w-[96%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-dashed border-gold/35"
+            className="pointer-events-none absolute left-1/2 top-[54%] h-[64%] w-[132%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-dashed border-gold/30 sm:top-[55%] sm:h-[68%] sm:w-[88%] lg:top-1/2 lg:h-[76%] lg:max-w-4xl"
             aria-hidden="true"
           />
+          <span className="invitation-route-plane" aria-hidden="true">
+            <span className="h-px w-10 bg-gradient-to-l from-gold/70 to-transparent sm:w-16" />
+            <Plane
+              className="h-4 w-4 rotate-45 text-gold-dark drop-shadow-[0_2px_5px_rgba(166,132,58,0.3)] sm:h-5 sm:w-5"
+              strokeWidth={1.5}
+            />
+          </span>
+          <span
+            className="invitation-scene-heart invitation-scene-heart--one"
+            aria-hidden="true"
+          >
+            <Heart className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
+          </span>
+          <span
+            className="invitation-scene-heart invitation-scene-heart--two"
+            aria-hidden="true"
+          >
+            <Heart className="h-4 w-4 fill-current" strokeWidth={0} />
+          </span>
+          <span
+            className="invitation-scene-heart invitation-scene-heart--three"
+            aria-hidden="true"
+          >
+            <Heart className="h-3 w-3 fill-current" strokeWidth={0} />
+          </span>
           <motion.div
-            className="absolute bottom-[7%] left-1/2 z-10 h-32 w-[min(94%,34rem)] -translate-x-1/2 rounded-[2rem] border border-gold/25 bg-gradient-to-br from-ivory-deep via-cream to-beige shadow-[0_28px_50px_-34px_rgba(27,42,74,0.5)]"
+            className="absolute bottom-[2.5%] left-1/2 z-10 h-24 w-[92%] max-w-[29rem] -translate-x-1/2 rounded-[1.6rem] border border-gold/20 bg-gradient-to-br from-ivory-deep via-cream to-beige shadow-[0_28px_50px_-34px_rgba(27,42,74,0.5)] sm:bottom-[4%] sm:h-28 sm:rounded-[2rem] lg:bottom-[7%] lg:h-32 lg:max-w-[34rem]"
             initial={reduce ? false : { y: 34, opacity: 0 }}
             whileInView={reduce ? undefined : { y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0.35 }}
@@ -147,7 +173,7 @@ export function DownloadInvitation({
             aria-hidden="true"
           />
 
-          <div className="relative z-20 grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-7 sm:grid-cols-[minmax(7rem,1fr)_minmax(0,440px)_minmax(7rem,1fr)] sm:gap-x-0 sm:gap-y-0">
+          <div className="relative z-20 grid grid-cols-2 items-end justify-items-center gap-x-2.5 gap-y-6 px-0.5 sm:gap-x-5 sm:gap-y-8 sm:px-2 md:grid-cols-[minmax(6rem,1fr)_minmax(0,425px)_minmax(6rem,1fr)] md:items-center md:gap-x-0 md:gap-y-0 md:px-0 lg:grid-cols-[minmax(9rem,1fr)_minmax(0,440px)_minmax(9rem,1fr)]">
             {SCENE_PHOTOS.map((photo, index) => {
               const isSelected = selectedPhoto?.filename === photo.filename
               return (
@@ -155,11 +181,11 @@ export function DownloadInvitation({
                   type="button"
                   key={photo.filename}
                   className={[
-                    'group relative z-10 row-start-1 w-24 cursor-pointer rounded-[1.15rem] bg-white p-1.5 pb-5 text-left shadow-[0_22px_48px_-25px_rgba(27,42,74,0.68)] transition-[box-shadow,opacity] duration-500 sm:w-36 sm:p-2 sm:pb-7 lg:w-48',
+                    'invitation-photo-selector group relative z-10 row-start-1 w-[clamp(4.75rem,24vw,6rem)] cursor-pointer rounded-[1.35rem] bg-white p-1.5 pb-4 text-left shadow-[0_22px_48px_-25px_rgba(27,42,74,0.68)] transition-[box-shadow,opacity] duration-500 sm:w-28 sm:rounded-[1.6rem] sm:p-2 sm:pb-6 md:w-[clamp(7.5rem,15vw,10rem)] lg:w-[clamp(10rem,17vw,12rem)] lg:pb-7',
                     'focus-visible:z-30 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/35',
                     index === 0
-                      ? 'col-start-1 -rotate-[8deg] sm:col-start-1 sm:translate-x-5 sm:-rotate-[11deg]'
-                      : 'col-start-2 rotate-[7deg] sm:col-start-3 sm:-translate-x-5 sm:rotate-[10deg]',
+                      ? 'invitation-photo-selector--left col-start-1 md:col-start-1'
+                      : 'invitation-photo-selector--right col-start-2 md:col-start-3',
                     isSelected
                       ? 'opacity-100 ring-2 ring-gold shadow-[0_26px_55px_-24px_rgba(157,105,46,0.6)]'
                       : 'opacity-90 ring-1 ring-gold/25 hover:opacity-100',
@@ -169,9 +195,9 @@ export function DownloadInvitation({
                       ? false
                       : {
                           opacity: 0,
-                          x: index === 0 ? 34 : -34,
-                          y: 20,
-                          rotate: 0,
+                          x: index === 0 ? 22 : -22,
+                          y: 16,
+                          scale: 0.96,
                         }
                   }
                   whileInView={
@@ -181,7 +207,7 @@ export function DownloadInvitation({
                           opacity: isSelected ? 1 : 0.9,
                           x: 0,
                           y: 0,
-                          rotate: index === 0 ? -11 : 10,
+                          scale: 1,
                         }
                   }
                   whileHover={
@@ -190,7 +216,6 @@ export function DownloadInvitation({
                       : {
                           scale: 1.045,
                           y: -5,
-                          rotate: index === 0 ? -8 : 7,
                         }
                   }
                   whileTap={
@@ -198,7 +223,6 @@ export function DownloadInvitation({
                       ? undefined
                       : {
                           scale: 0.975,
-                          rotate: index === 0 ? -8 : 7,
                         }
                   }
                   viewport={{ once: true, amount: 0.35 }}
@@ -217,7 +241,7 @@ export function DownloadInvitation({
                     alt=""
                     fit="cover"
                     placeholder="bare"
-                    className="aspect-[2/3] w-full rounded-[0.8rem]"
+                    className="aspect-[2/3] w-full rounded-[1rem] sm:rounded-[1.15rem]"
                     imgClassName="object-center transition-transform duration-700 group-hover:scale-[1.035]"
                   />
                   <AnimatePresence>
@@ -239,7 +263,7 @@ export function DownloadInvitation({
 
             <motion.div
               id="boarding-pass-preview"
-              className="relative z-20 col-span-2 col-start-1 row-start-2 mx-auto w-full max-w-[400px] rounded-[1.5em] [container-type:inline-size] sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:max-w-[440px]"
+              className="relative z-20 col-span-2 col-start-1 row-start-2 mx-auto w-[88vw] max-w-[21rem] rounded-[1.5rem] [container-type:inline-size] sm:w-full sm:max-w-[420px] sm:rounded-[1.75rem] md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-[clamp(400px,42vw,425px)] lg:max-w-[440px]"
               onPointerMove={handlePointerMove}
               onPointerLeave={resetTilt}
               style={{
@@ -255,13 +279,13 @@ export function DownloadInvitation({
                 selectedPhoto={selectedPhoto}
               />
               <motion.span
-                className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[1.5em] mix-blend-screen"
+                className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[1.5rem] mix-blend-screen sm:rounded-[1.75rem]"
                 style={{ background: glareBackground }}
                 aria-hidden="true"
               />
               {!reduce && (
                 <span
-                  className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.5em]"
+                  className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.5rem] sm:rounded-[1.75rem]"
                   aria-hidden="true"
                 >
                   <motion.span

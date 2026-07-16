@@ -178,7 +178,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
         ref={ref}
         style={fontPx ? { fontSize: `${fontPx}px` } : undefined}
         className={cn(
-          'relative isolate w-full overflow-hidden rounded-[1.5em] border border-gold/40 bg-cream font-sans text-navy',
+          'relative isolate w-full overflow-hidden rounded-[1.5rem] border border-gold/40 bg-cream font-sans text-navy sm:rounded-[1.75rem]',
           'text-[3cqw] shadow-[0_30px_60px_-30px_rgba(71,35,59,0.45),0_2px_6px_rgba(71,35,59,0.06)]',
           className,
         )}
@@ -205,7 +205,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
 
         {/* Poster */}
         <div className="px-[1.1em] pt-[1.1em]">
-          <div className="relative overflow-hidden rounded-[0.9em] ring-1 ring-gold/30">
+          <div className="relative overflow-hidden rounded-[1rem] ring-1 ring-gold/30 sm:rounded-[1.15rem]">
             <div
               className="relative aspect-[3/2] w-full overflow-hidden bg-ivory-deep"
               role="img"
