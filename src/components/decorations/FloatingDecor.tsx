@@ -2,13 +2,13 @@
  *  a soft vignette and paper grain. Purely decorative & non-interactive. */
 
 const SPARKLES = [
-  { top: '14%', left: '8%', size: 10, delay: 0 },
-  { top: '22%', left: '86%', size: 7, delay: 1.1 },
-  { top: '48%', left: '5%', size: 6, delay: 2.2 },
-  { top: '58%', left: '92%', size: 9, delay: 0.6 },
-  { top: '74%', left: '12%', size: 8, delay: 1.7 },
-  { top: '82%', left: '80%', size: 6, delay: 2.6 },
-  { top: '36%', left: '50%', size: 5, delay: 3.1 },
+  { top: '14%', left: '8%', size: 10, delay: 0, duration: 4.2 },
+  { top: '22%', left: '86%', size: 7, delay: 1.1, duration: 3.6 },
+  { top: '48%', left: '5%', size: 6, delay: 2.2, duration: 4.8 },
+  { top: '58%', left: '92%', size: 9, delay: 0.6, duration: 4.1 },
+  { top: '74%', left: '12%', size: 8, delay: 1.7, duration: 5.1 },
+  { top: '82%', left: '80%', size: 6, delay: 2.6, duration: 3.9 },
+  { top: '36%', left: '50%', size: 5, delay: 3.1, duration: 4.6 },
 ]
 
 function Sparkle({ size }: { size: number }) {
@@ -69,11 +69,16 @@ export function FloatingDecor() {
       {SPARKLES.map((s, i) => (
         <span
           key={i}
-          className="absolute animate-twinkle"
+          className={
+            i >= 4
+              ? 'absolute hidden animate-twinkle sm:block'
+              : 'absolute animate-twinkle'
+          }
           style={{
             top: s.top,
             left: s.left,
             animationDelay: `${s.delay}s`,
+            animationDuration: `${s.duration}s`,
           }}
         >
           <Sparkle size={s.size} />

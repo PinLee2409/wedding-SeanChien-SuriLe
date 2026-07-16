@@ -40,23 +40,18 @@ export function RouteDivider({ className }: { className?: string }) {
             viewport={{ once: true, amount: 0.65 }}
             transition={{ duration: 0.45, delay: 0.1 }}
           />
-          <motion.g
-            initial={reduce ? false : { opacity: 0.2, strokeDashoffset: 56 }}
-            whileInView={
-              reduce ? undefined : { opacity: 1, strokeDashoffset: 0 }
-            }
+          <motion.path
+            d="M12 30 Q 200 -4 388 30"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeDasharray="2 7"
+            strokeLinecap="round"
+            initial={reduce ? false : { opacity: 0.2, strokeDashoffset: 44 }}
+            whileInView={reduce ? undefined : { opacity: 1, strokeDashoffset: 0 }}
             viewport={{ once: true, amount: 0.65 }}
-            transition={{ duration: 1.35, ease: easeLux }}
-          >
-            <path
-              d="M12 30 Q 200 -4 388 30"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeDasharray="2 7"
-              strokeLinecap="round"
-            />
-          </motion.g>
+            transition={{ duration: 1.55, ease: easeLux }}
+          />
           <motion.circle
             cx="392"
             cy="30"
@@ -87,15 +82,25 @@ export function RouteDivider({ className }: { className?: string }) {
           initial={
             reduce
               ? { left: '50%', top: '26%' }
-              : { left: '8%', top: '68%', opacity: 0, scale: 0.75 }
+              : { left: '3%', top: '68%', opacity: 0, scale: 0.72 }
           }
           whileInView={
             reduce
               ? undefined
-              : { left: '50%', top: '26%', opacity: 1, scale: 1 }
+              : {
+                  left: ['3%', '50%', '97%'],
+                  top: ['68%', '20%', '68%'],
+                  opacity: [0, 1, 0.7],
+                  scale: [0.72, 1, 0.86],
+                }
           }
           viewport={{ once: true, amount: 0.65 }}
-          transition={{ duration: 1.1, ease: easeLux, delay: 0.18 }}
+          transition={{
+            duration: 1.65,
+            ease: easeLux,
+            delay: 0.12,
+            times: [0, 0.5, 1],
+          }}
         >
           <Plane className="h-5 w-5 rotate-45" strokeWidth={1.5} />
         </motion.span>

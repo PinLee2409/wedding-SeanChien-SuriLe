@@ -105,26 +105,18 @@ function mixPhotos(photos: GalleryPhoto[], seed: number) {
   )
 }
 
-/** Spread the two shoots proportionally, including at the loop boundary. */
-function weaveSources(first: GalleryPhoto[], second: GalleryPhoto[]) {
+/**
+ * Round-robin every shoot so the marquee feels like one shared album. Keeping
+ * equal opening runs also guarantees all eleven Cuoi3 moments are visible.
+ */
+function weaveSources(...sources: GalleryPhoto[][]) {
   const result: GalleryPhoto[] = []
-  const total = first.length + second.length
-  let firstIndex = 0
-  let secondIndex = 0
+  const longestSource = Math.max(0, ...sources.map((source) => source.length))
 
-  for (let position = 0; position < total; position++) {
-    const desiredFirstCount = Math.round(
-      ((position + 1) * first.length) / total,
-    )
-    if (firstIndex < desiredFirstCount && firstIndex < first.length) {
-      result.push(first[firstIndex])
-      firstIndex += 1
-    } else if (secondIndex < second.length) {
-      result.push(second[secondIndex])
-      secondIndex += 1
-    } else if (firstIndex < first.length) {
-      result.push(first[firstIndex])
-      firstIndex += 1
+  for (let index = 0; index < longestSource; index++) {
+    for (const source of sources) {
+      const photo = source[index]
+      if (photo) result.push(photo)
     }
   }
 
@@ -140,7 +132,11 @@ const MIXED_MARQUEE_PHOTOS = weaveSources(
     galleryPhotos.filter((photo) => photo.filename.startsWith('cuoi2_')),
     0x4d5e6f,
   ),
-).slice(0, 24)
+  mixPhotos(
+    galleryPhotos.filter((photo) => photo.filename.startsWith('cuoi3_')),
+    0x7a8b9c,
+  ),
+).slice(0, 33)
 
 const SOFT_TILTS = [
   'rotate-[-0.65deg]',

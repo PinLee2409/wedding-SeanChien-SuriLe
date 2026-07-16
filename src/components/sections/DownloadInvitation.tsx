@@ -27,7 +27,7 @@ const EXPORT_FONT_PX = 23
 
 const SCENE_PHOTOS = pickGalleryPhotos([
   'cuoi1_t04-04-032.jpg',
-  'cuoi2_dsc09667.jpg',
+  'cuoi3_dscf0954.jpg',
 ])
 
 /** Turn a (possibly Vietnamese) name into a safe file slug. */

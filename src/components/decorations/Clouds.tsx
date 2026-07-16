@@ -1,4 +1,5 @@
-import { useReducedMotion } from 'motion/react'
+import { useRef } from 'react'
+import { useInView, useReducedMotion } from 'motion/react'
 import { cn } from '../../lib/cn'
 
 interface CloudDef {
@@ -50,10 +51,17 @@ interface CloudsProps {
 /** Soft, drifting cloud field for the sky background. */
 export function Clouds({ className, tone = 'white' }: CloudsProps) {
   const reduce = useReducedMotion()
+  const cloudRef = useRef<HTMLDivElement>(null)
+  const inView = useInView(cloudRef, {
+    amount: 'some',
+    margin: '120px 0px 120px 0px',
+  })
+  const active = !reduce && inView
   const color = tone === 'white' ? 'text-white' : 'text-sky-soft'
 
   return (
     <div
+      ref={cloudRef}
       className={cn(
         'pointer-events-none absolute inset-0 overflow-hidden',
         color,
@@ -65,7 +73,11 @@ export function Clouds({ className, tone = 'white' }: CloudsProps) {
         // Outer layer owns the horizontal drift transform...
         <div
           key={i}
-          className={cn('absolute left-0 will-change-transform', !reduce && 'animate-drift-slow')}
+          className={cn(
+            'absolute left-0 will-change-transform',
+            i >= 3 && 'hidden sm:block',
+            !reduce && 'animate-drift-slow',
+          )}
           style={{
             top: cloud.top,
             ...(reduce
@@ -73,6 +85,7 @@ export function Clouds({ className, tone = 'white' }: CloudsProps) {
               : {
                   animationDuration: `${cloud.duration}s`,
                   animationDelay: `${cloud.delay}s`,
+                  animationPlayState: active ? 'running' : 'paused',
                 }),
           }}
         >

@@ -20,7 +20,7 @@ export function Reveal({
   children,
   className,
   delay = 0,
-  y = 26,
+  y = 20,
   blur = true,
   as = 'div',
 }: RevealProps) {
@@ -28,19 +28,19 @@ export function Reveal({
   const MotionTag = motion[as]
 
   const hidden = blur
-    ? { opacity: 0, y, filter: 'blur(6px)' }
-    : { opacity: 0, y }
+    ? { opacity: 0, y, scale: 0.988, filter: 'blur(4px)' }
+    : { opacity: 0, y, scale: 0.992 }
   const shown = blur
-    ? { opacity: 1, y: 0, filter: 'blur(0px)' }
-    : { opacity: 1, y: 0 }
+    ? { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
+    : { opacity: 1, y: 0, scale: 1 }
 
   return (
     <MotionTag
       className={cn(className)}
       initial={reduce ? false : hidden}
-      whileInView={shown}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.75, ease: easeLux, delay }}
+      whileInView={reduce ? undefined : shown}
+      viewport={{ once: true, amount: 0.16, margin: '0px 0px -6% 0px' }}
+      transition={{ duration: 0.84, ease: easeLux, delay }}
     >
       {children}
     </MotionTag>

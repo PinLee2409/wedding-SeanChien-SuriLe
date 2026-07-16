@@ -59,7 +59,11 @@ export function FallingPetals({ className }: { className?: string }) {
       {PETALS.map((p, i) => (
         <span
           key={i}
-          className={cn('absolute -top-6 animate-petal-fall', p.tone)}
+          className={cn(
+            'absolute -top-6 animate-petal-fall',
+            p.tone,
+            i >= 6 && 'hidden sm:block',
+          )}
           style={{
             left: p.left,
             animationDuration: `${p.duration}s`,

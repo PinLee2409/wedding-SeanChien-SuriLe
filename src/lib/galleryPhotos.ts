@@ -31,6 +31,13 @@ const LANDSCAPE_FILENAMES = new Set([
   'cuoi1_t04-04-293.jpg',
   'cuoi1_t04-04-327.jpg',
   'cuoi2_dsc09678.jpg',
+  'cuoi3_dscf0859.jpg',
+  'cuoi3_dscf9011.jpg',
+  'cuoi3_dscf9015.jpg',
+  'cuoi3_dscf9017.jpg',
+  'cuoi3_dscf9029.jpg',
+  'cuoi3_dscf9054.jpg',
+  'cuoi3_dscf9107.jpg',
 ])
 
 function filenameFromPath(path: string) {

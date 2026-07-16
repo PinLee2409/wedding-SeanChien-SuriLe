@@ -6,18 +6,19 @@ export const easeLux = [0.22, 1, 0.36, 1] as const
 
 /** Fade + rise + subtle blur — the house reveal. */
 export const fadeUpBlur: Variants = {
-  hidden: { opacity: 0, y: 26, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: 20, scale: 0.988, filter: 'blur(4px)' },
   visible: {
     opacity: 1,
     y: 0,
+    scale: 1,
     filter: 'blur(0px)',
-    transition: { duration: 0.75, ease: easeLux },
+    transition: { duration: 0.84, ease: easeLux },
   },
 }
 
 export const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: easeLux } },
+  hidden: { opacity: 0, y: 18 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: easeLux } },
 }
 
 export const fadeIn: Variants = {
@@ -27,20 +28,31 @@ export const fadeIn: Variants = {
 
 /** Premium card entrance: fade + lift + slight scale/tilt. */
 export const cardEntrance: Variants = {
-  hidden: { opacity: 0, y: 30, scale: 0.96 },
+  hidden: { opacity: 0, y: 22, scale: 0.975, filter: 'blur(3px)' },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.8, ease: easeLux },
+    filter: 'blur(0px)',
+    transition: { duration: 0.88, ease: easeLux },
   },
 }
 
 /** Parent that reveals children one after another. */
 export const staggerContainer: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
+  visible: {
+    transition: {
+      staggerChildren: 0.085,
+      delayChildren: 0.05,
+      when: 'beforeChildren',
+    },
+  },
 }
 
 /** Standard "reveal on scroll" viewport config. */
-export const viewportOnce = { once: true, amount: 0.25 } as const
+export const viewportOnce = {
+  once: true,
+  amount: 0.16,
+  margin: '0px 0px -6% 0px',
+} as const

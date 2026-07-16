@@ -50,6 +50,7 @@ const PHOTO_FOCUS: Record<string, string> = {
   'cuoi2_dsc09678.jpg': 'object-[51%_60%]',
   'cuoi1_t04-04-248.jpg': 'object-[50%_49%]',
   'cuoi1_t04-04-327.jpg': 'object-[50%_61%]',
+  'cuoi3_dscf0954.jpg': 'object-[50%_18%]',
 }
 
 /* ── Decorative CSS barcode (widths in em → fully fluid) ─────────────────── */

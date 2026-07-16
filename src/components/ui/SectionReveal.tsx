@@ -22,7 +22,7 @@ export function SectionReveal({
       className={cn(className)}
       variants={staggerContainer}
       initial={reduce ? 'visible' : 'hidden'}
-      whileInView="visible"
+      whileInView={reduce ? undefined : 'visible'}
       viewport={viewportOnce}
     >
       {children}

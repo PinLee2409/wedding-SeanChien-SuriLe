@@ -1,4 +1,5 @@
-import { useReducedMotion } from 'motion/react'
+import { useRef } from 'react'
+import { useInView, useReducedMotion } from 'motion/react'
 import { Heart } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
@@ -52,24 +53,37 @@ export function FloatingHearts({
   count?: number
 }) {
   const reduce = useReducedMotion()
+  const fieldRef = useRef<HTMLDivElement>(null)
+  const inView = useInView(fieldRef, {
+    amount: 'some',
+    margin: '100px 0px 100px 0px',
+  })
+  const active = !reduce && inView
   const field = HEARTS.slice(0, Math.max(0, Math.floor(count)))
   const hearts = reduce ? field.slice(0, STATIC_HEARTS.length) : field
 
   return (
     <div
+      ref={fieldRef}
       className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}
       aria-hidden="true"
     >
       {hearts.map((h, i) => (
         <span
           key={i}
-          className={cn('absolute', h.tone, !reduce && 'animate-heart-rise')}
+          className={cn(
+            'absolute',
+            h.tone,
+            i >= 9 && 'hidden sm:block',
+            !reduce && 'animate-heart-rise',
+          )}
           style={{
             left: h.left,
             top: h.top,
             opacity: reduce ? h.opacity * 0.7 : undefined,
             animationDuration: `${h.duration}s`,
             animationDelay: `${h.delay}s`,
+            animationPlayState: active ? 'running' : 'paused',
             // Consumed by the keyframes to fade in/out at the right peak.
             ['--heart-opacity' as string]: h.opacity,
           }}

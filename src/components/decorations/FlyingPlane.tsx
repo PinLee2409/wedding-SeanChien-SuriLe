@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from 'motion/react'
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
 import { Plane } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
@@ -39,6 +40,11 @@ export function FlyingPlane({
   trailWidth = 'w-28',
 }: FlyingPlaneProps) {
   const reduce = useReducedMotion()
+  const pathRef = useRef<HTMLDivElement>(null)
+  const pathInView = useInView(pathRef, {
+    amount: 'some',
+    margin: '120px 0px 120px 0px',
+  })
   const rtl = direction === 'rtl'
 
   const trail = trailWidth ? (
@@ -78,32 +84,59 @@ export function FlyingPlane({
   }
 
   return (
-    <motion.div
+    <div
+      ref={pathRef}
       className={cn(
-        'pointer-events-none absolute left-0 z-10 flex items-center gap-2',
+        'pointer-events-none absolute inset-x-0 z-10 h-10 overflow-visible',
         tone,
         className,
       )}
       style={{ top }}
       aria-hidden="true"
-      initial={{ x: rtl ? '118vw' : '-18vw' }}
-      animate={{ x: rtl ? '-18vw' : '118vw', y: [-10, 6, -10] }}
-      transition={{
-        x: { duration, repeat: Infinity, ease: 'linear', repeatDelay, delay },
-        y: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
-      }}
     >
-      {rtl ? (
-        <>
-          {planeIcon}
-          {trail}
-        </>
-      ) : (
-        <>
-          {trail}
-          {planeIcon}
-        </>
+      {pathInView && (
+        <motion.div
+          className="absolute left-0 will-change-transform"
+          initial={{ x: rtl ? '118vw' : '-18vw' }}
+          animate={{ x: rtl ? '-18vw' : '118vw' }}
+          transition={{
+            duration,
+            repeat: Infinity,
+            ease: 'linear',
+            repeatDelay,
+            delay,
+          }}
+        >
+          <motion.div
+            className="flex scale-[0.86] items-center gap-1.5 sm:scale-100 sm:gap-2"
+            initial={{ opacity: 0, y: 2 }}
+            animate={{
+              opacity: [0, 0.85, 1, 1, 0.85, 0],
+              y: [2, -3, 0, 2, -2, 2],
+            }}
+            transition={{
+              duration,
+              repeat: Infinity,
+              ease: 'linear',
+              repeatDelay,
+              delay,
+              times: [0, 0.08, 0.32, 0.68, 0.92, 1],
+            }}
+          >
+            {rtl ? (
+              <>
+                {planeIcon}
+                {trail}
+              </>
+            ) : (
+              <>
+                {trail}
+                {planeIcon}
+              </>
+            )}
+          </motion.div>
+        </motion.div>
       )}
-    </motion.div>
+    </div>
   )
 }
