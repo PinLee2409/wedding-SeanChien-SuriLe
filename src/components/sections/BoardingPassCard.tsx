@@ -1,4 +1,5 @@
-import { forwardRef } from 'react'
+import { forwardRef, useEffect, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Plane } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import type { WeddingConfig } from '../../config/wedding.config'
@@ -20,11 +21,28 @@ interface BoardingPassCardProps {
    * crop-free, high-resolution output.
    */
   fontPx?: number
+  /**
+   * Enables the five-second photo story used by the on-page preview. Export
+   * and QR destinations leave this disabled so their card stays deterministic.
+   */
+  animatePhoto?: boolean
 }
 
-const [boardingPassGalleryPhoto] = pickGalleryPhotos([
+const BOARDING_PASS_PHOTOS = pickGalleryPhotos([
   'cuoi1_t04-04-293.jpg',
+  'cuoi2_dsc09678.jpg',
+  'cuoi1_t04-04-248.jpg',
+  'cuoi1_t04-04-327.jpg',
 ])
+
+const PHOTO_INTERVAL_MS = 5_000
+
+const PHOTO_FOCUS: Record<string, string> = {
+  'cuoi1_t04-04-293.jpg': 'object-[50%_50%]',
+  'cuoi2_dsc09678.jpg': 'object-[51%_60%]',
+  'cuoi1_t04-04-248.jpg': 'object-[50%_49%]',
+  'cuoi1_t04-04-327.jpg': 'object-[50%_61%]',
+}
 
 /* ── Decorative CSS barcode (widths in em → fully fluid) ─────────────────── */
 const BAR_WIDTHS = [
@@ -106,14 +124,35 @@ function Field({
  * Rendered via forwardRef so the export helpers can capture the DOM node.
  */
 export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps>(
-  ({ config, guestName, className, fontPx }, ref) => {
+  ({ config, guestName, className, fontPx, animatePhoto = false }, ref) => {
     const { event, couple, date, venue, boardingPass } = config
     const { t, lang } = useI18n()
+    const reduce = !!useReducedMotion()
+    const [photoIndex, setPhotoIndex] = useState(0)
     const weekday = formatWeekday(date.iso, lang)
     const passenger = guestName.trim() || t.pass.passengerFallback
     const flightNo = `LOVE-${event.flightCode}`
     const [firstPartner, secondPartner] = getOrderedCouple(config)
     const qrUrl = buildCardViewUrl(guestName, lang, config.site.publicUrl)
+    const canAnimatePhoto =
+      animatePhoto && !reduce && BOARDING_PASS_PHOTOS.length > 1
+    const activePhoto =
+      BOARDING_PASS_PHOTOS[photoIndex % BOARDING_PASS_PHOTOS.length]
+
+    useEffect(() => {
+      if (!canAnimatePhoto) return undefined
+
+      for (const photo of BOARDING_PASS_PHOTOS) {
+        const preload = new Image()
+        preload.src = photo.full
+      }
+
+      const timer = window.setInterval(() => {
+        setPhotoIndex((current) => (current + 1) % BOARDING_PASS_PHOTOS.length)
+      }, PHOTO_INTERVAL_MS)
+
+      return () => window.clearInterval(timer)
+    }, [canAnimatePhoto])
 
     return (
       <div
@@ -148,17 +187,59 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
         {/* Poster */}
         <div className="px-[1.1em] pt-[1.1em]">
           <div className="relative overflow-hidden rounded-[0.9em] ring-1 ring-gold/30">
-            <SmartImage
-              src={boardingPassGalleryPhoto?.full ?? boardingPass.poster}
-              alt={`${firstPartner.person.name} & ${secondPartner.person.name}`}
-              label={t.pass.photoLabel}
-              /* Eager so the (possibly missing) poster resolves to a real image
-                 or a placeholder BEFORE export — a pending 404 <img> would make
-                 html-to-image reject. */
-              loading="eager"
-              fit="cover"
-              className="aspect-[3/2] w-full"
-            />
+            <div
+              className="relative aspect-[3/2] w-full overflow-hidden bg-ivory-deep"
+              role="img"
+              aria-label={`${firstPartner.person.name} & ${secondPartner.person.name}`}
+            >
+              {canAnimatePhoto && activePhoto ? (
+                <AnimatePresence initial={false} mode="sync">
+                  <motion.div
+                    key={activePhoto.filename}
+                    className="absolute inset-0 will-change-transform"
+                    initial={{ opacity: 0, scale: 1.025 }}
+                    animate={{
+                      opacity: 1,
+                      scale: photoIndex % 2 === 0 ? 1.075 : 1.045,
+                      x: photoIndex % 2 === 0 ? '-0.7%' : '0.7%',
+                    }}
+                    exit={{ opacity: 0 }}
+                    transition={{
+                      opacity: { duration: 1.05, ease: 'easeInOut' },
+                      scale: { duration: 5.8, ease: 'linear' },
+                      x: { duration: 5.8, ease: 'linear' },
+                    }}
+                    aria-hidden="true"
+                  >
+                    <SmartImage
+                      src={activePhoto.full}
+                      alt=""
+                      loading="eager"
+                      fit="cover"
+                      placeholder="bare"
+                      className="h-full w-full"
+                      imgClassName={PHOTO_FOCUS[activePhoto.filename] ?? 'object-center'}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <SmartImage
+                  src={activePhoto?.full ?? boardingPass.poster}
+                  alt=""
+                  label={t.pass.photoLabel}
+                  /* Export deliberately renders this static branch: the image
+                     cannot change halfway through html-to-image capture. */
+                  loading="eager"
+                  fit="cover"
+                  className="h-full w-full"
+                  imgClassName={
+                    activePhoto
+                      ? (PHOTO_FOCUS[activePhoto.filename] ?? 'object-center')
+                      : undefined
+                  }
+                />
+              )}
+            </div>
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-cream/25 to-transparent" />
           </div>
         </div>

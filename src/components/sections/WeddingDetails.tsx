@@ -7,6 +7,7 @@ import { SectionHeading } from '../ui/SectionHeading'
 import { Countdown } from '../ui/Countdown'
 import { Reveal } from '../ui/Reveal'
 import { RomanticAura } from '../decorations/RomanticAura'
+import { SectionRomance } from '../decorations/SectionRomance'
 
 /**
  * Flight details — one centred glass card. Deliberately light so the page
@@ -25,6 +26,7 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
       aria-label={t.details.title}
     >
       <RomanticAura className="opacity-75" />
+      <SectionRomance direction="rtl" planeTop="16%" />
 
       <div className="relative z-10 mx-auto max-w-5xl">
         <Reveal>

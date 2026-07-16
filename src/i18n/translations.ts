@@ -188,14 +188,14 @@ export const translations: Record<Lang, Translation> = {
       departed: 'Chuyến bay hạnh phúc đã cất cánh ♥',
     },
     download: {
-      kicker: 'Thiệp mời dành riêng',
-      title: 'Thiệp mời dành cho Quý khách',
+      kicker: 'Lời mời trân quý',
+      title: 'Hân hạnh đón Quý khách chung vui',
       subtitle:
         'Quý khách vui lòng lưu thẻ mời để thuận tiện khi tham dự ngày trọng đại.',
       png: 'Tải PNG',
       pdf: 'Tải PDF',
       generating: 'Đang tạo tệp…',
-      hint: 'Ảnh sắc nét, không cắt mép.',
+      hint: 'Lưu giữ tấm vé hạnh phúc — một kỷ niệm đẹp từ ngày chung vui.',
       error: 'Không thể tạo tệp. Vui lòng thử lại.',
     },
     timeline: {
@@ -332,13 +332,13 @@ export const translations: Record<Lang, Translation> = {
       departed: 'The flight to happiness has departed ♥',
     },
     download: {
-      kicker: 'Your Boarding Pass',
-      title: 'Your invitation card',
+      kicker: 'A Heartfelt Invitation',
+      title: 'We would be delighted to celebrate with you',
       subtitle: 'Please save your boarding pass for our wedding day.',
       png: 'Download PNG',
       pdf: 'Download PDF',
       generating: 'Generating…',
-      hint: 'Sharp image, never cropped.',
+      hint: 'Keep this ticket to happiness — a lovely memory of our celebration.',
       error: 'Could not create the file. Please try again.',
     },
     timeline: {
@@ -509,13 +509,13 @@ export const translations: Record<Lang, Translation> = {
       departed: '幸福航班已起飛 ♥',
     },
     download: {
-      kicker: '您的登機證',
-      title: '您的專屬喜帖',
+      kicker: '誠摯邀請',
+      title: '誠盼您蒞臨，共享喜悅',
       subtitle: '敬請惠存登機證，以備婚禮當日使用。',
       png: '下載 PNG',
       pdf: '下載 PDF',
       generating: '正在產生檔案…',
-      hint: '高畫質，絕不裁切。',
+      hint: '珍藏這張幸福之票——留下共度喜日的美好回憶。',
       error: '無法產生檔案，請再試一次。',
     },
     timeline: {

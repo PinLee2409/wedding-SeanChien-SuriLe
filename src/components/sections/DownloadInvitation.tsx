@@ -7,13 +7,14 @@ import {
   useReducedMotion,
   useSpring,
 } from 'motion/react'
-import { Download, FileText, LoaderCircle, Plane } from 'lucide-react'
+import { Download, FileText, LoaderCircle } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { exportElementToPdf, exportElementToPng } from '../../lib/exportCard'
 import { pickGalleryPhotos } from '../../lib/galleryPhotos'
 import { cardEntrance } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
 import { RomanticAura } from '../decorations/RomanticAura'
+import { SectionRomance } from '../decorations/SectionRomance'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Reveal } from '../ui/Reveal'
 import { SmartImage } from '../ui/SmartImage'
@@ -111,6 +112,7 @@ export function DownloadInvitation({
       aria-label={t.download.title}
     >
       <RomanticAura className="opacity-70" />
+      <SectionRomance direction="ltr" planeTop="12%" />
 
       <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center gap-8 sm:gap-10">
         <Reveal>
@@ -134,21 +136,6 @@ export function DownloadInvitation({
             className="pointer-events-none absolute left-1/2 top-1/2 h-[76%] w-[96%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-dashed border-gold/35"
             aria-hidden="true"
           />
-          <motion.span
-            className="pointer-events-none absolute left-1/2 top-[10%] z-10 text-gold-dark"
-            initial={reduce ? false : { x: -150, y: 24, opacity: 0, rotate: 38 }}
-            whileInView={
-              reduce
-                ? undefined
-                : { x: 150, y: -6, opacity: [0, 1, 1, 0], rotate: 48 }
-            }
-            viewport={{ once: true, amount: 0.45 }}
-            transition={{ duration: 2.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            aria-hidden="true"
-          >
-            <Plane className="h-7 w-7" strokeWidth={1.4} />
-          </motion.span>
-
           {SCENE_PHOTOS.map((photo, index) => (
             <motion.figure
               key={photo.filename}
@@ -205,7 +192,11 @@ export function DownloadInvitation({
               transformStyle: 'preserve-3d',
             }}
           >
-            <BoardingPassCard config={config} guestName={guestName} />
+            <BoardingPassCard
+              config={config}
+              guestName={guestName}
+              animatePhoto
+            />
             <motion.span
               className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[1.5em] mix-blend-screen"
               style={{ background: glareBackground }}

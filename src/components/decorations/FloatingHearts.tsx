@@ -43,9 +43,17 @@ const STATIC_HEARTS = HEARTS.slice(0, 8)
  * A drifting field of hearts that rise gently up the hero sky. Purely
  * decorative; falls back to a scattered static layout with reduced motion.
  */
-export function FloatingHearts({ className }: { className?: string }) {
+export function FloatingHearts({
+  className,
+  count = HEARTS.length,
+}: {
+  className?: string
+  /** Limit the field for quieter sections; the hero keeps the full set. */
+  count?: number
+}) {
   const reduce = useReducedMotion()
-  const hearts = reduce ? STATIC_HEARTS : HEARTS
+  const field = HEARTS.slice(0, Math.max(0, Math.floor(count)))
+  const hearts = reduce ? field.slice(0, STATIC_HEARTS.length) : field
 
   return (
     <div

@@ -10,6 +10,7 @@ import {
   type GalleryPhoto,
 } from '../../lib/galleryPhotos'
 import { useI18n } from '../../i18n/LanguageContext'
+import { SectionRomance } from '../decorations/SectionRomance'
 import { Reveal } from '../ui/Reveal'
 import { RevealItem, SectionReveal } from '../ui/SectionReveal'
 import { SmartImage } from '../ui/SmartImage'
@@ -386,6 +387,7 @@ export function MediaGallery() {
       aria-label={t.gallery.title}
     >
       <h2 className="sr-only">{t.gallery.title}</h2>
+      <SectionRomance direction="ltr" planeTop="47%" />
 
       <div
         className="pointer-events-none absolute inset-x-0 top-1/4 h-1/2 bg-[radial-gradient(ellipse_60%_70%_at_50%_50%,var(--color-rose)_0%,transparent_72%)] opacity-[0.12]"
