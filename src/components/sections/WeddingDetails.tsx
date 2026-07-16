@@ -1,4 +1,4 @@
-import { CalendarPlus, Clock, MapPin } from 'lucide-react'
+import { CalendarPlus, Clock, Heart, MapPin, Sparkles } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { downloadICS } from '../../lib/ics'
 import { useI18n } from '../../i18n/LanguageContext'
@@ -40,22 +40,38 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
 
         <Reveal
           delay={0.08}
-          className="mx-auto mt-12 flex max-w-xl flex-col items-center gap-6 rounded-3xl border border-gold/30 bg-white/70 p-8 text-center shadow-[0_24px_50px_-30px_rgba(27,42,74,0.35)] backdrop-blur-md"
+          className="relative mx-auto mt-12 flex max-w-xl flex-col items-center gap-6 overflow-hidden rounded-3xl border border-gold/30 bg-white/70 px-4 py-8 text-center shadow-[0_24px_50px_-30px_rgba(27,42,74,0.35)] backdrop-blur-md sm:p-8"
         >
-          <div>
-            <span className="label-caps text-[10px] text-gold-dark">
+          <div className="relative w-full">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-[12%] -inset-y-2 animate-pulse-soft rounded-full bg-[radial-gradient(closest-side,rgba(232,180,184,0.3),rgba(232,213,160,0.16)_58%,transparent_78%)] blur-lg"
+            />
+            <Sparkles
+              aria-hidden
+              className="absolute -top-1 right-[9%] h-4 w-4 animate-twinkle text-gold/80"
+            />
+            <Sparkles
+              aria-hidden
+              className="absolute bottom-6 left-[7%] h-3 w-3 animate-twinkle text-rose [animation-delay:-1.5s]"
+            />
+            <span className="label-caps relative text-[10px] text-gold-dark">
               {t.details.departure}
             </span>
-            <p className="mt-2 font-mono text-[2rem] font-normal tracking-[0.08em] text-navy sm:text-[2.65rem]">
+            <p className="relative mt-2 whitespace-nowrap font-mono text-[clamp(1.5rem,7.2vw,2.5rem)] font-normal leading-none tracking-[0.06em] text-navy sm:text-[2.65rem] sm:tracking-[0.08em]">
               {date.displayDate}
             </p>
-            <p className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-navy-500">
+            <p className="relative mt-2.5 flex items-center justify-center gap-1.5 text-sm text-navy-500">
               <Clock className="h-3.5 w-3.5 text-gold-dark" />
               {weekday} · {t.details.boardingAt} {date.time}
             </p>
           </div>
 
-          <div className="h-px w-24 bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+          <div aria-hidden className="flex items-center gap-2.5">
+            <span className="h-px w-14 bg-gradient-to-r from-transparent to-gold/60 sm:w-20" />
+            <Heart className="h-3.5 w-3.5 animate-heart-beat fill-rose/60 text-rose" />
+            <span className="h-px w-14 bg-gradient-to-l from-transparent to-gold/60 sm:w-20" />
+          </div>
 
           <div>
             <span className="label-caps text-[10px] text-gold-dark">
@@ -71,23 +87,23 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
           </div>
 
           {(date.ceremonyTime || date.banquetTime) && (
-            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
               {date.ceremonyTime && (
-                <div className="rounded-2xl border border-gold/25 bg-ivory/70 px-4 py-3.5">
+                <div className="rounded-2xl border border-gold/25 bg-ivory/70 px-3 py-3 sm:px-4 sm:py-3.5">
                   <span className="label-caps text-[9px] text-gold-dark">
                     {t.details.ceremony}
                   </span>
-                  <p className="mt-1 font-mono text-lg tracking-[0.06em] text-navy">
+                  <p className="mt-1 font-mono text-base tracking-[0.06em] text-navy sm:text-lg">
                     {date.ceremonyTime}
                   </p>
                 </div>
               )}
               {date.banquetTime && (
-                <div className="rounded-2xl border border-gold/25 bg-ivory/70 px-4 py-3.5">
+                <div className="rounded-2xl border border-gold/25 bg-ivory/70 px-3 py-3 sm:px-4 sm:py-3.5">
                   <span className="label-caps text-[9px] text-gold-dark">
                     {t.details.banquet}
                   </span>
-                  <p className="mt-1 font-mono text-lg tracking-[0.06em] text-navy">
+                  <p className="mt-1 font-mono text-base tracking-[0.06em] text-navy sm:text-lg">
                     {date.banquetTime}
                   </p>
                 </div>
@@ -95,7 +111,11 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
             </div>
           )}
 
-          <Countdown iso={date.iso} tone="navy" />
+          <Countdown
+            iso={date.iso}
+            tone="navy"
+            className="w-full max-w-[22rem] sm:w-auto sm:max-w-none"
+          />
 
           <div className="flex w-full flex-col gap-3 sm:flex-row">
             {venue.mapLink && (
@@ -125,6 +145,11 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
               {t.details.addCalendar}
             </button>
           </div>
+
+          <div
+            aria-hidden
+            className="card-sheen pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
+          />
         </Reveal>
       </div>
     </section>

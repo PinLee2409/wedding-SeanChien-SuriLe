@@ -50,12 +50,15 @@ export function Countdown({ iso, tone = 'navy', className }: CountdownProps) {
         <div
           key={label}
           className={cn(
-            'flex min-w-[62px] flex-col items-center rounded-xl border px-2 py-2.5 sm:min-w-[74px] sm:py-3',
+            'flex min-w-0 flex-1 basis-0 flex-col items-center rounded-xl border px-1 py-2.5 sm:min-w-[74px] sm:flex-none sm:basis-auto sm:px-2 sm:py-3',
             tileClass,
           )}
         >
-          <span className="font-mono text-[1.65rem] font-normal leading-none tracking-[0.02em] tabular-nums sm:text-[2rem]">
-            {value}
+          <span className="font-mono text-[1.3rem] font-normal leading-none tracking-[0.02em] tabular-nums sm:text-[2rem]">
+            {/* Remount per value so every flip rises in softly. */}
+            <span key={value} className="inline-block animate-tick-in">
+              {value}
+            </span>
           </span>
           <span className={cn('label-caps mt-1 text-[9px]', labelClass)}>
             {label}
