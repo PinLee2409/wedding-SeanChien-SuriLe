@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { getOrderedCouple } from '../../lib/couple'
+import type { GalleryPhoto } from '../../lib/galleryPhotos'
 import { pickGalleryPhotos } from '../../lib/galleryPhotos'
 import { buildCardViewUrl } from '../../lib/guest'
 import { useI18n } from '../../i18n/LanguageContext'
@@ -26,6 +27,11 @@ interface BoardingPassCardProps {
    * and QR destinations leave this disabled so their card stays deterministic.
    */
   animatePhoto?: boolean
+  /**
+   * Pins the poster to a user-selected gallery photo. The on-page preview may
+   * still crossfade to it, while export/QR renders remain entirely static.
+   */
+  selectedPhoto?: GalleryPhoto
 }
 
 const BOARDING_PASS_PHOTOS = pickGalleryPhotos([
@@ -38,6 +44,8 @@ const BOARDING_PASS_PHOTOS = pickGalleryPhotos([
 const PHOTO_INTERVAL_MS = 5_000
 
 const PHOTO_FOCUS: Record<string, string> = {
+  'cuoi1_t04-04-032.jpg': 'object-[52%_16%]',
+  'cuoi2_dsc09667.jpg': 'object-[50%_40%]',
   'cuoi1_t04-04-293.jpg': 'object-[50%_50%]',
   'cuoi2_dsc09678.jpg': 'object-[51%_60%]',
   'cuoi1_t04-04-248.jpg': 'object-[50%_49%]',
@@ -124,7 +132,17 @@ function Field({
  * Rendered via forwardRef so the export helpers can capture the DOM node.
  */
 export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps>(
-  ({ config, guestName, className, fontPx, animatePhoto = false }, ref) => {
+  (
+    {
+      config,
+      guestName,
+      className,
+      fontPx,
+      animatePhoto = false,
+      selectedPhoto,
+    },
+    ref,
+  ) => {
     const { event, couple, date, venue, boardingPass } = config
     const { t, lang } = useI18n()
     const reduce = !!useReducedMotion()
@@ -134,13 +152,14 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
     const flightNo = `LOVE-${event.flightCode}`
     const [firstPartner, secondPartner] = getOrderedCouple(config)
     const qrUrl = buildCardViewUrl(guestName, lang, config.site.publicUrl)
-    const canAnimatePhoto =
-      animatePhoto && !reduce && BOARDING_PASS_PHOTOS.length > 1
+    const canTransitionPhoto = animatePhoto && !reduce
+    const canAutoAdvance =
+      canTransitionPhoto && !selectedPhoto && BOARDING_PASS_PHOTOS.length > 1
     const activePhoto =
-      BOARDING_PASS_PHOTOS[photoIndex % BOARDING_PASS_PHOTOS.length]
+      selectedPhoto ?? BOARDING_PASS_PHOTOS[photoIndex % BOARDING_PASS_PHOTOS.length]
 
     useEffect(() => {
-      if (!canAnimatePhoto) return undefined
+      if (!canAutoAdvance) return undefined
 
       for (const photo of BOARDING_PASS_PHOTOS) {
         const preload = new Image()
@@ -152,7 +171,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
       }, PHOTO_INTERVAL_MS)
 
       return () => window.clearInterval(timer)
-    }, [canAnimatePhoto])
+    }, [canAutoAdvance])
 
     return (
       <div
@@ -192,7 +211,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
               role="img"
               aria-label={`${firstPartner.person.name} & ${secondPartner.person.name}`}
             >
-              {canAnimatePhoto && activePhoto ? (
+              {canTransitionPhoto && activePhoto ? (
                 <AnimatePresence initial={false} mode="sync">
                   <motion.div
                     key={activePhoto.filename}
@@ -200,8 +219,16 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
                     initial={{ opacity: 0, scale: 1.025 }}
                     animate={{
                       opacity: 1,
-                      scale: photoIndex % 2 === 0 ? 1.075 : 1.045,
-                      x: photoIndex % 2 === 0 ? '-0.7%' : '0.7%',
+                      scale: selectedPhoto
+                        ? 1.02
+                        : photoIndex % 2 === 0
+                          ? 1.075
+                          : 1.045,
+                      x: selectedPhoto
+                        ? '0%'
+                        : photoIndex % 2 === 0
+                          ? '-0.7%'
+                          : '0.7%',
                     }}
                     exit={{ opacity: 0 }}
                     transition={{

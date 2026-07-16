@@ -149,6 +149,17 @@ const SOFT_TILTS = [
   'rotate-[0.35deg]',
 ] as const
 
+/** A slightly more playful rhythm for the moving strip, repeated verbatim in
+ * both marquee segments so the infinite-loop seam stays perfectly aligned. */
+const MARQUEE_TILTS = [
+  '-rotate-[2.15deg] translate-y-1',
+  'rotate-[1.55deg] -translate-y-1',
+  '-rotate-[1.05deg] translate-y-0.5',
+  'rotate-[2.25deg] translate-y-1',
+  '-rotate-[1.65deg] -translate-y-0.5',
+  'rotate-[0.9deg] -translate-y-1',
+] as const
+
 function MarqueePhotoCard({
   photo,
   index,
@@ -160,11 +171,11 @@ function MarqueePhotoCard({
     <figure
       aria-hidden="true"
       className={cn(
-        'group/tile relative h-24 shrink-0 overflow-hidden rounded-[1.15rem] border-[3px] border-white/95 bg-white shadow-[0_16px_34px_-22px_rgba(27,42,74,0.68)] ring-1 ring-gold/15 transition-[transform,box-shadow] duration-500 ease-out hover:z-10 hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_22px_42px_-20px_rgba(27,42,74,0.76)] sm:h-28 sm:rounded-[1.4rem] lg:h-32',
+        'group/tile relative h-24 shrink-0 overflow-hidden rounded-[1.3rem] bg-gradient-to-br from-white via-white to-rose/20 p-[3px] shadow-[0_18px_38px_-22px_rgba(27,42,74,0.7)] ring-1 ring-rosegold/20 transition-[transform,box-shadow] duration-500 ease-out hover:z-10 hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_24px_46px_-20px_rgba(27,42,74,0.76)] sm:h-28 sm:rounded-[1.55rem] sm:p-1 lg:h-32',
         photo.orientation === 'landscape'
           ? 'w-36 sm:w-[10.5rem] lg:w-48'
           : 'w-[4.9rem] sm:w-[5.75rem] lg:w-[6.6rem]',
-        SOFT_TILTS[index % SOFT_TILTS.length],
+        MARQUEE_TILTS[index % MARQUEE_TILTS.length],
       )}
     >
       <SmartImage
@@ -172,8 +183,13 @@ function MarqueePhotoCard({
         alt=""
         fit="cover"
         placeholder="bare"
-        className="h-full w-full rounded-[inherit]"
-        imgClassName="transition-transform duration-700 ease-out group-hover/tile:scale-[1.04]"
+        className="h-full w-full rounded-[1.05rem] ring-1 ring-navy/5 sm:rounded-[1.25rem]"
+        imgClassName={cn(
+          'transition-transform duration-700 ease-out group-hover/tile:scale-[1.04]',
+          photo.orientation === 'portrait'
+            ? 'object-[center_35%]'
+            : 'object-center',
+        )}
       />
     </figure>
   )

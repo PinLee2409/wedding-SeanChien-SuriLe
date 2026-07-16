@@ -80,6 +80,8 @@ export interface Translation {
     subtitle: string
     departure: string
     boardingAt: string
+    ceremony: string
+    banquet: string
     venue: string
     openMaps: string
     addCalendar: string
@@ -206,7 +208,7 @@ export const translations: Record<Lang, Translation> = {
         { phase: 'Làm thủ tục', date: 'Mùa thu 2019', title: 'Lần đầu gặp gỡ', description: 'Hai người xa lạ chung một chuyến bay.' },
         { phase: 'Cất cánh', date: 'Xuân 2021', title: 'Chính thức cất cánh', description: 'Về chung một đội bay, chung một câu chuyện.' },
         { phase: 'Bay ổn định', date: '2021 — 2026', title: 'Những kỷ niệm đẹp', description: 'Bình minh và hoàng hôn khắp mọi nơi.' },
-        { phase: 'Hạ cánh', date: '20 · 12 · 2026', title: 'Ngày hạ cánh', description: 'Bến đỗ cuối — mãi mãi bên nhau.' },
+        { phase: 'Hạ cánh', date: '27 · 12 · 2026', title: 'Ngày hạ cánh', description: 'Bến đỗ cuối — mãi mãi bên nhau.' },
       ],
     },
     gallery: {
@@ -223,6 +225,8 @@ export const translations: Record<Lang, Translation> = {
       subtitle: 'Kính mong Quý khách có mặt đúng giờ tại cổng khởi hành.',
       departure: 'Ngày khởi hành',
       boardingAt: 'Đón khách lúc',
+      ceremony: 'Lễ cưới ngoài trời',
+      banquet: 'Tiệc cưới',
       venue: 'Địa điểm',
       openMaps: 'Mở Google Maps',
       addCalendar: 'Thêm vào lịch',
@@ -349,7 +353,7 @@ export const translations: Record<Lang, Translation> = {
         { phase: 'Check-in', date: 'Autumn 2019', title: 'First encounter', description: 'Two strangers on the same flight.' },
         { phase: 'Take-off', date: 'Spring 2021', title: 'Officially airborne', description: 'One crew, one story.' },
         { phase: 'Cruising Altitude', date: '2021 — 2026', title: 'Beautiful memories', description: 'Sunrises and sunsets everywhere.' },
-        { phase: 'Landing', date: '20 · 12 · 2026', title: 'Landing day', description: 'Our final stop — together, forever.' },
+        { phase: 'Landing', date: '27 · 12 · 2026', title: 'Landing day', description: 'Our final stop — together, forever.' },
       ],
     },
     gallery: {
@@ -365,7 +369,9 @@ export const translations: Record<Lang, Translation> = {
       title: 'Flight details',
       subtitle: 'We look forward to welcoming you at the gate.',
       departure: 'Departure date',
-      boardingAt: 'Boarding at',
+      boardingAt: 'Guests welcome from',
+      ceremony: 'Outdoor marriage ceremony',
+      banquet: 'Wedding banquet',
       venue: 'Venue',
       openMaps: 'Open Google Maps',
       addCalendar: 'Add to calendar',
@@ -526,7 +532,7 @@ export const translations: Record<Lang, Translation> = {
         { phase: '報到', date: '2019 秋', title: '初次相遇', description: '兩位陌生旅客，同一班機。' },
         { phase: '起飛', date: '2021 春', title: '正式起飛', description: '同一機組，同一個故事。' },
         { phase: '巡航', date: '2021 — 2026', title: '美好回憶', description: '世界各地的日出與日落。' },
-        { phase: '降落', date: '2026.12.20', title: '降落之日', description: '最後的停機坪——永遠相伴。' },
+        { phase: '降落', date: '2026.12.27', title: '降落之日', description: '最後的停機坪——永遠相伴。' },
       ],
     },
     gallery: {
@@ -542,7 +548,9 @@ export const translations: Record<Lang, Translation> = {
       title: '航班資訊',
       subtitle: '敬候您於良辰蒞臨，共襄盛舉。',
       departure: '啟程日期',
-      boardingAt: '登機時間',
+      boardingAt: '迎賓時間',
+      ceremony: '戶外證婚儀式',
+      banquet: '婚宴',
       venue: '地點',
       openMaps: '開啟 Google 地圖',
       addCalendar: '加入行事曆',

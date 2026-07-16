@@ -101,6 +101,7 @@ function App() {
 
       <GuestNameGate
         open={gateOpen}
+        flightCode={weddingConfig.event.flightCode}
         onSubmit={(name) => {
           // The gate click is the browser-approved gesture that starts the
           // playlist with sound. Playback then continues across all 3 songs.

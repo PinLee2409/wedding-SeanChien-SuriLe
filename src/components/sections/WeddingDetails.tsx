@@ -18,6 +18,7 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
   const { date, venue } = config
   const { t, lang } = useI18n()
   const weekday = formatWeekday(date.iso, lang)
+  const venueAddress = venue.addressTranslations?.[lang] ?? venue.address
 
   return (
     <section
@@ -64,7 +65,35 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
             {venue.hall && (
               <p className="mt-0.5 text-sm text-navy-500">{venue.hall}</p>
             )}
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-navy-500">
+              {venueAddress}
+            </p>
           </div>
+
+          {(date.ceremonyTime || date.banquetTime) && (
+            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+              {date.ceremonyTime && (
+                <div className="rounded-2xl border border-gold/25 bg-ivory/70 px-4 py-3.5">
+                  <span className="label-caps text-[9px] text-gold-dark">
+                    {t.details.ceremony}
+                  </span>
+                  <p className="mt-1 font-mono text-lg tracking-[0.06em] text-navy">
+                    {date.ceremonyTime}
+                  </p>
+                </div>
+              )}
+              {date.banquetTime && (
+                <div className="rounded-2xl border border-gold/25 bg-ivory/70 px-4 py-3.5">
+                  <span className="label-caps text-[9px] text-gold-dark">
+                    {t.details.banquet}
+                  </span>
+                  <p className="mt-1 font-mono text-lg tracking-[0.06em] text-navy">
+                    {date.banquetTime}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <Countdown iso={date.iso} tone="navy" />
 

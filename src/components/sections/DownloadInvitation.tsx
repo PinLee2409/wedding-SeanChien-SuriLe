@@ -7,9 +7,10 @@ import {
   useReducedMotion,
   useSpring,
 } from 'motion/react'
-import { Download, FileText, LoaderCircle } from 'lucide-react'
+import { Download, FileText, Heart, LoaderCircle } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { exportElementToPdf, exportElementToPng } from '../../lib/exportCard'
+import type { GalleryPhoto } from '../../lib/galleryPhotos'
 import { pickGalleryPhotos } from '../../lib/galleryPhotos'
 import { cardEntrance } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
@@ -58,6 +59,7 @@ export function DownloadInvitation({
   const exportRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState<Busy>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto>()
   const tiltX = useMotionValue(0)
   const tiltY = useMotionValue(0)
   const glareX = useMotionValue(50)
@@ -136,43 +138,6 @@ export function DownloadInvitation({
             className="pointer-events-none absolute left-1/2 top-1/2 h-[76%] w-[96%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-dashed border-gold/35"
             aria-hidden="true"
           />
-          {SCENE_PHOTOS.map((photo, index) => (
-            <motion.figure
-              key={photo.filename}
-              className={
-                index === 0
-                  ? 'pointer-events-none absolute left-[-1.5rem] top-[17%] z-0 w-36 -rotate-[11deg] bg-white p-2 pb-8 shadow-[0_26px_55px_-28px_rgba(27,42,74,0.7)] ring-1 ring-gold/20 sm:left-[3%] sm:w-52 lg:left-[8%] lg:w-60'
-                  : 'pointer-events-none absolute right-[-1.5rem] top-[13%] z-0 w-36 rotate-[10deg] bg-white p-2 pb-8 shadow-[0_26px_55px_-28px_rgba(27,42,74,0.7)] ring-1 ring-gold/20 sm:right-[3%] sm:w-52 lg:right-[8%] lg:w-60'
-              }
-              initial={
-                reduce
-                  ? false
-                  : { opacity: 0, x: index === 0 ? 54 : -54, y: 26, rotate: 0 }
-              }
-              whileInView={
-                reduce
-                  ? undefined
-                  : {
-                      opacity: 0.92,
-                      x: 0,
-                      y: 0,
-                      rotate: index === 0 ? -11 : 10,
-                    }
-              }
-              viewport={{ once: true, amount: 0.35 }}
-              transition={{ duration: 1, delay: 0.22 + index * 0.12, ease: [0.22, 1, 0.36, 1] }}
-              aria-hidden="true"
-            >
-              <SmartImage
-                src={photo.display}
-                alt=""
-                fit="cover"
-                placeholder="bare"
-                className="aspect-[2/3] w-full"
-              />
-            </motion.figure>
-          ))}
-
           <motion.div
             className="absolute bottom-[7%] left-1/2 z-10 h-32 w-[min(94%,34rem)] -translate-x-1/2 rounded-[2rem] border border-gold/25 bg-gradient-to-br from-ivory-deep via-cream to-beige shadow-[0_28px_50px_-34px_rgba(27,42,74,0.5)]"
             initial={reduce ? false : { y: 34, opacity: 0 }}
@@ -182,45 +147,138 @@ export function DownloadInvitation({
             aria-hidden="true"
           />
 
-          <motion.div
-            className="relative z-20 mx-auto w-full max-w-[400px] rounded-[1.5em] [container-type:inline-size] sm:max-w-[440px]"
-            onPointerMove={handlePointerMove}
-            onPointerLeave={resetTilt}
-            style={{
-              rotateX: reduce ? 0 : smoothTiltX,
-              rotateY: reduce ? 0 : smoothTiltY,
-              transformStyle: 'preserve-3d',
-            }}
-          >
-            <BoardingPassCard
-              config={config}
-              guestName={guestName}
-              animatePhoto
-            />
-            <motion.span
-              className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[1.5em] mix-blend-screen"
-              style={{ background: glareBackground }}
-              aria-hidden="true"
-            />
-            {!reduce && (
-              <span
-                className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.5em]"
-                aria-hidden="true"
-              >
-                <motion.span
-                  className="absolute -bottom-1/4 -top-1/4 w-[28%] -skew-x-12 bg-gradient-to-r from-transparent via-white/55 to-transparent mix-blend-screen"
-                  initial={{ left: '-45%', opacity: 0 }}
-                  whileInView={{ left: '125%', opacity: [0, 0.58, 0] }}
-                  viewport={{ once: true, amount: 0.45 }}
+          <div className="relative z-20 grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-7 sm:grid-cols-[minmax(7rem,1fr)_minmax(0,440px)_minmax(7rem,1fr)] sm:gap-x-0 sm:gap-y-0">
+            {SCENE_PHOTOS.map((photo, index) => {
+              const isSelected = selectedPhoto?.filename === photo.filename
+              return (
+                <motion.button
+                  type="button"
+                  key={photo.filename}
+                  className={[
+                    'group relative z-10 row-start-1 w-24 cursor-pointer rounded-[1.15rem] bg-white p-1.5 pb-5 text-left shadow-[0_22px_48px_-25px_rgba(27,42,74,0.68)] transition-[box-shadow,opacity] duration-500 sm:w-36 sm:p-2 sm:pb-7 lg:w-48',
+                    'focus-visible:z-30 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/35',
+                    index === 0
+                      ? 'col-start-1 -rotate-[8deg] sm:col-start-1 sm:translate-x-5 sm:-rotate-[11deg]'
+                      : 'col-start-2 rotate-[7deg] sm:col-start-3 sm:-translate-x-5 sm:rotate-[10deg]',
+                    isSelected
+                      ? 'opacity-100 ring-2 ring-gold shadow-[0_26px_55px_-24px_rgba(157,105,46,0.6)]'
+                      : 'opacity-90 ring-1 ring-gold/25 hover:opacity-100',
+                  ].join(' ')}
+                  initial={
+                    reduce
+                      ? false
+                      : {
+                          opacity: 0,
+                          x: index === 0 ? 34 : -34,
+                          y: 20,
+                          rotate: 0,
+                        }
+                  }
+                  whileInView={
+                    reduce
+                      ? undefined
+                      : {
+                          opacity: isSelected ? 1 : 0.9,
+                          x: 0,
+                          y: 0,
+                          rotate: index === 0 ? -11 : 10,
+                        }
+                  }
+                  whileHover={
+                    reduce
+                      ? undefined
+                      : {
+                          scale: 1.045,
+                          y: -5,
+                          rotate: index === 0 ? -8 : 7,
+                        }
+                  }
+                  whileTap={
+                    reduce
+                      ? undefined
+                      : {
+                          scale: 0.975,
+                          rotate: index === 0 ? -8 : 7,
+                        }
+                  }
+                  viewport={{ once: true, amount: 0.35 }}
                   transition={{
-                    duration: 1.25,
-                    delay: 0.55,
+                    duration: 0.75,
+                    delay: 0.18 + index * 0.1,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                />
-              </span>
-            )}
-          </motion.div>
+                  aria-label={`${t.pass.photoLabel} ${index + 1}`}
+                  aria-pressed={isSelected}
+                  aria-controls="boarding-pass-preview"
+                  onClick={() => setSelectedPhoto(photo)}
+                >
+                  <SmartImage
+                    src={photo.display}
+                    alt=""
+                    fit="cover"
+                    placeholder="bare"
+                    className="aspect-[2/3] w-full rounded-[0.8rem]"
+                    imgClassName="object-center transition-transform duration-700 group-hover:scale-[1.035]"
+                  />
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.span
+                        className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-white/80 bg-rose text-white shadow-md sm:right-3 sm:top-3 sm:h-8 sm:w-8"
+                        initial={reduce ? false : { opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        aria-hidden="true"
+                      >
+                        <Heart className="h-3.5 w-3.5 fill-current" strokeWidth={1.5} />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              )
+            })}
+
+            <motion.div
+              id="boarding-pass-preview"
+              className="relative z-20 col-span-2 col-start-1 row-start-2 mx-auto w-full max-w-[400px] rounded-[1.5em] [container-type:inline-size] sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:max-w-[440px]"
+              onPointerMove={handlePointerMove}
+              onPointerLeave={resetTilt}
+              style={{
+                rotateX: reduce ? 0 : smoothTiltX,
+                rotateY: reduce ? 0 : smoothTiltY,
+                transformStyle: 'preserve-3d',
+              }}
+            >
+              <BoardingPassCard
+                config={config}
+                guestName={guestName}
+                animatePhoto
+                selectedPhoto={selectedPhoto}
+              />
+              <motion.span
+                className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[1.5em] mix-blend-screen"
+                style={{ background: glareBackground }}
+                aria-hidden="true"
+              />
+              {!reduce && (
+                <span
+                  className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.5em]"
+                  aria-hidden="true"
+                >
+                  <motion.span
+                    className="absolute -bottom-1/4 -top-1/4 w-[28%] -skew-x-12 bg-gradient-to-r from-transparent via-white/55 to-transparent mix-blend-screen"
+                    initial={{ left: '-45%', opacity: 0 }}
+                    whileInView={{ left: '125%', opacity: [0, 0.58, 0] }}
+                    viewport={{ once: true, amount: 0.45 }}
+                    transition={{
+                      duration: 1.25,
+                      delay: 0.55,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  />
+                </span>
+              )}
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* Buttons */}
@@ -274,6 +332,7 @@ export function DownloadInvitation({
             config={config}
             guestName={guestName}
             fontPx={EXPORT_FONT_PX}
+            selectedPhoto={selectedPhoto}
           />
         </div>
       </div>

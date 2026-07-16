@@ -86,6 +86,9 @@ export interface WeddingConfig {
     weekday: string
     /** Boarding time text, e.g. "16:00" */
     time: string
+    /** Ceremony and reception time ranges shown in the event details. */
+    ceremonyTime?: string
+    banquetTime?: string
     /** How long to block on the calendar (hours) */
     durationHours: number
   }
@@ -94,6 +97,8 @@ export interface WeddingConfig {
     name: string
     hall?: string
     address: string
+    /** Optional translated street addresses keyed by the active language. */
+    addressTranslations?: Partial<Record<Lang, string>>
     /** Google Maps embed URL (…/maps/embed?...). Empty string hides the map. */
     mapEmbedUrl: string
     /** Google Maps share/place URL for the "Open in Maps" button. */
@@ -160,7 +165,7 @@ export const weddingConfig: WeddingConfig = {
     tagline: 'Flight to Forever',
     kicker: 'Save the Date',
     airline: 'Forever Airlines',
-    flightCode: '1220',
+    flightCode: '1227',
   },
 
   couple: {
@@ -180,21 +185,26 @@ export const weddingConfig: WeddingConfig = {
   },
 
   date: {
-    iso: '2026-12-20T16:00:00+07:00',
-    displayDate: '20 · 12 · 2026',
-    weekday: 'Chủ Nhật',
-    time: '16:00',
-    durationHours: 4,
+    iso: '2026-12-27T10:00:00+08:00',
+    displayDate: '27 · 12 · 2026',
+    weekday: 'Sunday',
+    time: '10:00',
+    ceremonyTime: '10:00–11:30',
+    banquetTime: '12:00–14:30',
+    durationHours: 4.5,
   },
 
   venue: {
-    name: 'Trung tâm Hội nghị & Tiệc cưới Diamond Palace',
-    hall: 'Sảnh Sapphire · Tầng 3',
-    address: '123 Đường Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',
-    // Replace with your own Google Maps "Embed a map" iframe src.
+    name: '亞果遊艇城 亞果薈 Argo Yacht Club',
+    address:
+      'No. 585, Sec. 2, Xingang Rd., Anping Dist., Tainan City 708013, Taiwan (R.O.C.)',
+    addressTranslations: {
+      tw: '台南市安平區新港路二段585號1樓',
+    },
     mapEmbedUrl:
-      'https://www.google.com/maps?q=Ho+Chi+Minh+City+Opera+House&output=embed',
-    mapLink: 'https://maps.google.com/?q=Ho+Chi+Minh+City+Opera+House',
+      'https://www.google.com/maps?q=%E4%BA%9E%E6%9E%9C%E9%81%8A%E8%89%87%E5%9F%8E%20%E4%BA%9E%E6%9E%9C%E8%96%88%20Argo%20Yacht%20Club%20%E5%8F%B0%E5%8D%97%E5%B8%82%E5%AE%89%E5%B9%B3%E5%8D%80%E6%96%B0%E6%B8%AF%E8%B7%AF%E4%BA%8C%E6%AE%B5585%E8%99%9F1%E6%A8%93&output=embed',
+    mapLink:
+      'https://www.google.com/maps/search/?api=1&query=%E4%BA%9E%E6%9E%9C%E9%81%8A%E8%89%87%E5%9F%8E%20%E4%BA%9E%E6%9E%9C%E8%96%88%20Argo%20Yacht%20Club%20%E5%8F%B0%E5%8D%97%E5%B8%82%E5%AE%89%E5%B9%B3%E5%8D%80%E6%96%B0%E6%B8%AF%E8%B7%AF%E4%BA%8C%E6%AE%B5585%E8%99%9F1%E6%A8%93',
   },
 
   hero: {
@@ -233,7 +243,7 @@ export const weddingConfig: WeddingConfig = {
     {
       phase: 'Landing',
       icon: 'plane-landing',
-      date: '20 · 12 · 2026',
+      date: '27 · 12 · 2026',
       title: 'Ngày hạ cánh',
       description:
         'Chuyến bay hạnh phúc đáp xuống bến đỗ cuối cùng — mãi mãi bên nhau.',

@@ -11,6 +11,7 @@ const [GATE_PHOTO] = pickGalleryPhotos(['cuoi2_dsc09678.jpg'])
 
 interface GuestNameGateProps {
   open: boolean
+  flightCode: string
   onSubmit: (name: string) => void
   onSkip: () => void
 }
@@ -19,7 +20,12 @@ interface GuestNameGateProps {
  * Elegant modal shown on every page load. Lets the visitor type
  * their name to "unlock" the personalised invitation.
  */
-export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
+export function GuestNameGate({
+  open,
+  flightCode,
+  onSubmit,
+  onSkip,
+}: GuestNameGateProps) {
   const { t } = useI18n()
   const reduce = useReducedMotion()
   const [value, setValue] = useState('')
@@ -151,7 +157,9 @@ export function GuestNameGate({ open, onSubmit, onSkip }: GuestNameGateProps) {
               <span className="label-caps text-[10px] font-medium text-gold-light">
                 First Class Love
               </span>
-              <span className="font-mono text-[10px] tracking-[0.22em] text-gold-light">LOVE · 1220</span>
+              <span className="font-mono text-[10px] tracking-[0.22em] text-gold-light">
+                LOVE · {flightCode}
+              </span>
             </motion.div>
 
             <div className="flex flex-col items-center gap-4 px-6 py-8 text-center">
