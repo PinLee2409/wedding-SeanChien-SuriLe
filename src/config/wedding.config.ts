@@ -303,9 +303,10 @@ export const weddingConfig: WeddingConfig = {
   },
 
   guestbook: {
-    // Paste a Google Apps Script web-app URL here to share wishes between
-    // every guest. See the notes above `guestbook` in the config interface.
-    endpoint: '',
+    // Google Apps Script "Loi chuc - Boarding wishes" — stores wishes in the
+    // couple's "Lời chúc" sheet and returns them for every guest.
+    endpoint:
+      'https://script.google.com/macros/s/AKfycbyVb26JgdKy9e3Xdj9Vb_SeghHsiLsBM7hkNKpdIQreoN1BsezqlxNMQ7LKnHOjLCuV/exec',
   },
 
   music: {
