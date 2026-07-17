@@ -2,13 +2,14 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type FormEvent,
 } from 'react'
-import { useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import confetti from 'canvas-confetti'
-import { Heart, Plane, Send } from 'lucide-react'
+import { Heart, Plane, Send, Sparkles } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { useI18n } from '../../i18n/LanguageContext'
@@ -184,6 +185,170 @@ function WishLane({
   )
 }
 
+/** Geometry (in px, relative to the section) captured the moment the guest
+ *  presses send, so the flight lines up with the form wherever it sits. */
+interface FlightState {
+  wish: Wish
+  startY: number
+  pickupX: number
+  pickupY: number
+  exitX: number
+  confettiOrigin: { x: number; y: number }
+}
+
+/** Shared timeline: pop out of the form → hover → the plane hooks the ticket
+ *  → both climb away. Plane and ticket use the same `times`, so they stay in
+ *  perfect sync without any per-frame coupling. */
+const FLIGHT_TIMES = [0, 0.16, 0.38, 0.46, 0.72, 1]
+const FLIGHT_DURATION = 2.7
+const PICKUP_AT_MS = FLIGHT_TIMES[3] * FLIGHT_DURATION * 1000
+
+/**
+ * The send-off: a little plane sweeps in, picks the guest's freshly written
+ * ticket off the form and tows it away into the sky.
+ */
+function WishFlight({
+  flight,
+  onDone,
+}: {
+  flight: FlightState
+  onDone: () => void
+}) {
+  const { t } = useI18n()
+  const { wish, startY, pickupX, pickupY, exitX, confettiOrigin } = flight
+
+  // Plane icon is 32px — offset so its centre rides the flight path.
+  const planeX = pickupX - 16
+  const planeY = pickupY - 16
+  // Ticket (w-44 ≈ 176px) hangs centred on a short rope under the plane.
+  const hangX = pickupX - 88
+  const hangY = pickupY + 32
+  const glide = exitX - pickupX
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      confetti({
+        particleCount: 26,
+        spread: 70,
+        startVelocity: 24,
+        scalar: 1.2,
+        origin: confettiOrigin,
+        shapes: [
+          confetti.shapeFromText({ text: '✈️', scalar: 1.2 }),
+          confetti.shapeFromText({ text: '💛', scalar: 1.2 }),
+        ],
+        disableForReducedMotion: true,
+        zIndex: 60,
+      })
+    }, PICKUP_AT_MS)
+    return () => window.clearTimeout(timer)
+  }, [confettiOrigin])
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
+      {/* The courier plane, with a soft light trail. */}
+      <motion.span
+        className="absolute left-0 top-0"
+        initial={false}
+        animate={{
+          x: [-180, -180, planeX, planeX + 26, planeX + glide * 0.5, exitX],
+          y: [
+            planeY + 46,
+            planeY + 46,
+            planeY,
+            planeY - 2,
+            planeY - 38,
+            planeY - 118,
+          ],
+          rotate: [6, 6, 0, -2, -6, -10],
+          opacity: [0, 0, 1, 1, 1, 0],
+        }}
+        transition={{
+          duration: FLIGHT_DURATION,
+          times: FLIGHT_TIMES,
+          ease: 'easeInOut',
+        }}
+      >
+        <span className="absolute right-full top-1/2 mr-1 h-px w-16 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
+        <Plane
+          className="h-8 w-8 rotate-45 text-gold-dark drop-shadow-[0_6px_10px_rgba(27,42,74,0.35)]"
+          strokeWidth={1.4}
+        />
+      </motion.span>
+
+      {/* Sparkle burst the instant the ticket is hooked. */}
+      {[
+        { dx: -26, dy: -6, delay: 0 },
+        { dx: 20, dy: -20, delay: 0.09 },
+        { dx: 4, dy: 18, delay: 0.16 },
+      ].map(({ dx, dy, delay }) => (
+        <motion.span
+          key={`${dx}-${dy}`}
+          className="absolute left-0 top-0 text-gold"
+          style={{ x: pickupX + dx, y: pickupY + dy }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: [0, 1.25, 0], opacity: [0, 1, 0] }}
+          transition={{
+            duration: 0.55,
+            delay: PICKUP_AT_MS / 1000 + delay,
+            ease: 'easeOut',
+          }}
+        >
+          <Sparkles className="h-4 w-4" />
+        </motion.span>
+      ))}
+
+      {/* The guest's ticket: rises from the form, then swings on the rope. */}
+      <motion.div
+        className="absolute left-0 top-0 w-44 origin-top"
+        initial={false}
+        animate={{
+          x: [hangX, hangX, hangX, hangX, hangX + glide * 0.5, hangX + glide],
+          y: [startY, hangY + 8, hangY + 14, hangY, hangY - 36, hangY - 116],
+          rotate: [-5, 2, -2, 0, 4, 7],
+          scale: [0.5, 1, 1, 1, 1, 0.9],
+          opacity: [0, 1, 1, 1, 1, 0],
+        }}
+        transition={{
+          duration: FLIGHT_DURATION,
+          times: FLIGHT_TIMES,
+          ease: 'easeInOut',
+        }}
+        onAnimationComplete={onDone}
+      >
+        {/* Tow rope + knot — appears the moment the plane hooks on. */}
+        <motion.span
+          className="absolute -top-12 left-1/2 h-12 w-px -translate-x-1/2 bg-gradient-to-b from-gold-dark/80 to-gold/40"
+          initial={false}
+          animate={{ opacity: [0, 0, 0, 1, 1, 1] }}
+          transition={{ duration: FLIGHT_DURATION, times: FLIGHT_TIMES }}
+        >
+          <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-gold-dark/80" />
+        </motion.span>
+
+        <div className="rounded-lg border border-gold/40 bg-white/95 px-3 py-2 shadow-[0_14px_30px_-14px_rgba(27,42,74,0.55)]">
+          <span className="label-caps flex items-center gap-1 text-[7px] text-gold-dark">
+            <Plane className="h-2.5 w-2.5 rotate-45" strokeWidth={1.6} />
+            {t.guestbook.wishLabel}
+          </span>
+          <p className="mt-1 truncate text-[11px] leading-snug text-navy">
+            {wish.message}
+          </p>
+          <span className="mt-0.5 flex items-center justify-between gap-2">
+            <span className="truncate font-script text-sm text-gold-dark">
+              {wish.name}
+            </span>
+            <Heart
+              className="h-2.5 w-2.5 shrink-0 fill-rose/60 text-rose"
+              strokeWidth={1.5}
+            />
+          </span>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 /**
  * Boarding messages — the guest book. Wishes drift past as little boarding
  * passes in two opposing marquee lanes; a small form lets every guest add
@@ -201,11 +366,17 @@ export function BoardingMessages({
   const reduced = !!useReducedMotion()
   const endpoint = config.guestbook.endpoint.trim()
 
+  const sectionRef = useRef<HTMLElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const deliveryRef = useRef<Promise<boolean>>(Promise.resolve(true))
+  const landedRef = useRef<string | null>(null)
+
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'thanks' | 'error'>(
     'idle',
   )
+  const [flight, setFlight] = useState<FlightState | null>(null)
   const [localWishes, setLocalWishes] = useState<Wish[]>(() =>
     typeof window === 'undefined' ? [] : readLocalWishes(),
   )
@@ -258,8 +429,49 @@ export function BoardingMessages({
     trimmedMessage.length > 1 &&
     status !== 'sending'
 
+  /** Posts to the shared endpoint in the background; resolves delivered? */
+  const dispatchWish = useCallback(
+    (wish: Wish): Promise<boolean> => {
+      if (!endpoint) return Promise.resolve(true)
+      // text/plain keeps the request "simple" (no CORS preflight) and
+      // no-cors lets an Apps Script endpoint accept it from any origin.
+      return fetch(endpoint, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          name: wish.name,
+          message: wish.message,
+          ts: wish.ts,
+        }),
+      })
+        .then(() => true)
+        .catch(() => false)
+    },
+    [endpoint],
+  )
+
+  /** Lands the wish: put it on the wall and show the outcome. Guarded so the
+   *  flight callback and its safety timer can't land the same wish twice. */
+  const finalizeWish = useCallback(
+    async (wish: Wish) => {
+      if (landedRef.current === wish.id) return
+      landedRef.current = wish.id
+      const delivered = await deliveryRef.current
+      setLocalWishes((prev) => {
+        const next = [...prev, wish].slice(-WISHES_MAX)
+        saveLocalWishes(next)
+        return next
+      })
+      setFlight(null)
+      setStatus(delivered ? 'thanks' : 'error')
+      window.setTimeout(() => setStatus('idle'), 4500)
+    },
+    [],
+  )
+
   const onSubmit = useCallback(
-    async (event: FormEvent) => {
+    (event: FormEvent) => {
       event.preventDefault()
       if (!canSubmit) return
 
@@ -269,65 +481,62 @@ export function BoardingMessages({
       if (!wish) return
 
       setStatus('sending')
+      setMessage('')
+      landedRef.current = null
+      deliveryRef.current = dispatchWish(wish)
+      // Safety net: if the tab is throttled mid-flight, land the wish anyway.
+      window.setTimeout(
+        () => void finalizeWish(wish),
+        (FLIGHT_DURATION + 1.6) * 1000,
+      )
 
-      // The wish appears on the wall immediately and survives reloads on
-      // this device even when no shared endpoint is configured.
-      setLocalWishes((prev) => {
-        const next = [...prev, wish].slice(-WISHES_MAX)
-        saveLocalWishes(next)
-        return next
+      const section = sectionRef.current
+      const form = formRef.current
+      if (reduced || !section || !form) {
+        // No theatrics: deliver straight to the wall.
+        void finalizeWish(wish)
+        return
+      }
+
+      const sectionRect = section.getBoundingClientRect()
+      const formRect = form.getBoundingClientRect()
+      const pickupX = formRect.left - sectionRect.left + formRect.width / 2
+      const pickupY = Math.max(96, formRect.top - sectionRect.top - 92)
+      setFlight({
+        wish,
+        startY: formRect.top - sectionRect.top + 90,
+        pickupX,
+        pickupY,
+        exitX: sectionRect.width + 200,
+        confettiOrigin: {
+          x: (formRect.left + formRect.width / 2) / window.innerWidth,
+          y: Math.max(0.05, (sectionRect.top + pickupY + 24) / window.innerHeight),
+        },
       })
-
-      let delivered = true
-      if (endpoint) {
-        try {
-          // text/plain keeps the request "simple" (no CORS preflight) and
-          // no-cors lets an Apps Script endpoint accept it from any origin.
-          await fetch(endpoint, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              name: wish.name,
-              message: wish.message,
-              ts: wish.ts,
-            }),
-          })
-        } catch {
-          delivered = false
-        }
-      }
-
-      setStatus(delivered ? 'thanks' : 'error')
-      if (delivered) {
-        setMessage('')
-        confetti({
-          particleCount: 36,
-          spread: 80,
-          startVelocity: 26,
-          scalar: 1.25,
-          origin: { x: 0.5, y: 0.72 },
-          shapes: [
-            confetti.shapeFromText({ text: '✈️', scalar: 1.25 }),
-            confetti.shapeFromText({ text: '💛', scalar: 1.25 }),
-          ],
-          disableForReducedMotion: true,
-          zIndex: 60,
-        })
-      }
-      window.setTimeout(() => setStatus('idle'), 4500)
     },
-    [canSubmit, endpoint, trimmedMessage, trimmedName],
+    [
+      canSubmit,
+      dispatchWish,
+      finalizeWish,
+      reduced,
+      trimmedMessage,
+      trimmedName,
+    ],
   )
 
   return (
     <section
+      ref={sectionRef}
       id="wishes"
       className="relative overflow-hidden bg-gradient-to-b from-warm-white via-sky-soft/55 to-ivory py-20"
       aria-label={t.guestbook.title}
     >
       <RomanticAura className="opacity-70" />
       <SectionRomance direction="ltr" planeTop="12%" />
+
+      {flight && (
+        <WishFlight flight={flight} onDone={() => finalizeWish(flight.wish)} />
+      )}
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <Reveal className="px-5">
@@ -349,6 +558,7 @@ export function BoardingMessages({
           className="relative mx-5 mt-8 sm:mx-auto sm:w-full sm:max-w-xl"
         >
           <form
+            ref={formRef}
             onSubmit={onSubmit}
             className="relative overflow-hidden rounded-3xl border border-gold/30 bg-white/80 px-4 py-6 shadow-[0_24px_50px_-30px_rgba(27,42,74,0.35)] backdrop-blur-md sm:px-8 sm:py-8"
           >
