@@ -103,9 +103,12 @@ function WishTicket({
   const { t } = useI18n()
 
   return (
+    // Deliberately no backdrop-filter: these cards animate constantly and
+    // re-sampling the backdrop every frame is what makes low-end phones drop
+    // frames. A near-opaque background reads the same at a fraction of cost.
     <article
       className={cn(
-        'relative overflow-hidden rounded-xl border border-gold/30 bg-white/90 text-left shadow-[0_16px_34px_-20px_rgba(27,42,74,0.5)] backdrop-blur-sm',
+        'relative overflow-hidden rounded-xl border border-gold/30 bg-[#fffdfa] text-left shadow-[0_14px_28px_-18px_rgba(27,42,74,0.45)]',
         compact ? 'w-52 px-3.5 pb-2 pt-2.5' : 'w-60 px-4 pb-2.5 pt-3 sm:w-64',
         className,
       )}
@@ -172,14 +175,15 @@ function WishSkySlot({
     '--wish-drift': `${((seed * 3) % 56) - 28}px`,
     '--wish-tilt': `${((seed * 7) % 9) - 4}deg`,
     '--wish-scale': far ? 0.82 : 1,
-    '--wish-opacity': far ? 0.78 : 1,
+    '--wish-opacity': far ? 0.72 : 1,
     zIndex: far ? 1 : 2,
-    filter: far ? 'blur(0.6px)' : undefined,
   } as CSSProperties
 
   return (
+    // The far layer stays desktop-only: phones get fewer animated layers,
+    // which is the difference between silky and stuttery on weak GPUs.
     <div
-      className="wish-float"
+      className={cn('wish-float', far && 'max-sm:hidden')}
       style={style}
       onAnimationIteration={() => setRound((value) => value + 1)}
     >
@@ -223,14 +227,28 @@ const FLIGHT_TIMES = [0, 0.13, 0.32, 0.4, 0.46, 0.6, 0.8, 1]
 const FLIGHT_EASE = [
   'linear',
   'easeOut',
-  'easeOut',
   'easeInOut',
-  'easeOut',
-  'easeIn',
+  'easeInOut',
+  'easeInOut',
+  'easeInOut',
   'easeIn',
 ] as const
 const FLIGHT_DURATION = 3
 const PICKUP_AT_MS = FLIGHT_TIMES[4] * FLIGHT_DURATION * 1000
+
+/** Emoji shapes are rasterised once up front — doing it inside the pickup
+ *  timeout caused a visible frame drop right at the snatch moment. */
+type WishConfettiShape = ReturnType<typeof confetti.shapeFromText>
+let wishConfettiShapes: WishConfettiShape[] | null = null
+function getWishConfettiShapes(): WishConfettiShape[] {
+  if (!wishConfettiShapes) {
+    wishConfettiShapes = [
+      confetti.shapeFromText({ text: '✈️', scalar: 1.2 }),
+      confetti.shapeFromText({ text: '💛', scalar: 1.2 }),
+    ]
+  }
+  return wishConfettiShapes
+}
 
 /**
  * The send-off: a courier plane swoops down, snatches the guest's freshly
@@ -256,17 +274,16 @@ function WishFlight({
   const glide = exitX - pickupX
 
   useEffect(() => {
+    // Warm the emoji rasters now, while the ticket is still rising.
+    const shapes = getWishConfettiShapes()
     const timer = window.setTimeout(() => {
       confetti({
-        particleCount: 26,
+        particleCount: 18,
         spread: 70,
         startVelocity: 24,
         scalar: 1.2,
         origin: confettiOrigin,
-        shapes: [
-          confetti.shapeFromText({ text: '✈️', scalar: 1.2 }),
-          confetti.shapeFromText({ text: '💛', scalar: 1.2 }),
-        ],
+        shapes,
         disableForReducedMotion: true,
         zIndex: 60,
       })
@@ -409,15 +426,15 @@ function WishFlight({
           ],
           y: [
             startY,
+            hangY + 6,
             hangY + 10,
-            hangY + 16,
-            hangY + 12,
+            hangY + 7,
             hangY,
             hangY - 24,
             hangY - 62,
             hangY - 152,
           ],
-          rotate: [-6, 3, -3, -1, 0, 5, 8, 10],
+          rotate: [-5, 2, -2, -1, 0, 4, 7, 9],
           scale: [0.45, 1, 1, 1, 1, 1, 1, 0.88],
           opacity: [0, 1, 1, 1, 1, 1, 1, 0],
         }}

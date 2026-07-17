@@ -114,7 +114,14 @@
     infinite;
 }
 
-.wish-float:hover,
+/* Pause-to-read only for real pointers — on touch screens a scrolling
+   finger would otherwise freeze tickets mid-air and read as jank. */
+@media (hover: hover) and (pointer: fine) {
+  .wish-float:hover {
+    animation-play-state: paused;
+  }
+}
+
 .wish-float:focus-within {
   animation-play-state: paused;
 }
