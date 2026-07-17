@@ -29,8 +29,8 @@ const STORAGE_KEY = 'wedding-boarding-wishes-v1'
 const NAME_MAX = 40
 const MESSAGE_MAX = 200
 const WISHES_MAX = 60
-/** Minimum tickets per lane so the marquee loop never looks sparse. */
-const LANE_MIN = 5
+/** Concurrent tickets drifting through the wish sky. */
+const SKY_SLOTS = 10
 const SEAT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'] as const
 
 function hashCode(text: string): number {
@@ -91,14 +91,23 @@ function saveLocalWishes(wishes: Wish[]): void {
   }
 }
 
-function WishTicket({ wish, tilt }: { wish: Wish; tilt: 'left' | 'right' }) {
+function WishTicket({
+  wish,
+  compact,
+  className,
+}: {
+  wish: Wish
+  compact?: boolean
+  className?: string
+}) {
   const { t } = useI18n()
 
   return (
     <article
       className={cn(
-        'relative w-60 shrink-0 self-stretch overflow-hidden rounded-xl border border-gold/30 bg-white/85 px-4 pb-2.5 pt-3 text-left shadow-[0_16px_34px_-22px_rgba(27,42,74,0.5)] backdrop-blur-sm sm:w-64',
-        tilt === 'left' ? 'rotate-[-1.1deg]' : 'rotate-[1.2deg]',
+        'relative overflow-hidden rounded-xl border border-gold/30 bg-white/90 text-left shadow-[0_16px_34px_-20px_rgba(27,42,74,0.5)] backdrop-blur-sm',
+        compact ? 'w-52 px-3.5 pb-2 pt-2.5' : 'w-60 px-4 pb-2.5 pt-3 sm:w-64',
+        className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -111,11 +120,16 @@ function WishTicket({ wish, tilt }: { wish: Wish; tilt: 'left' | 'right' }) {
         </span>
       </div>
 
-      <p className="mt-2 min-h-[3.75rem] text-[13px] leading-relaxed text-navy [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden">
+      <p
+        className={cn(
+          'mt-1.5 overflow-hidden text-[12.5px] leading-relaxed text-navy [display:-webkit-box] [-webkit-box-orient:vertical]',
+          compact ? '[-webkit-line-clamp:2]' : 'min-h-[3.5rem] [-webkit-line-clamp:3]',
+        )}
+      >
         {wish.message}
       </p>
 
-      <div className="mt-2.5 flex items-center justify-between gap-3 border-t border-dashed border-navy/15 pt-2">
+      <div className="mt-2 flex items-center justify-between gap-3 border-t border-dashed border-navy/15 pt-1.5">
         <span className="truncate font-script text-lg leading-snug text-gold-dark">
           {wish.name}
         </span>
@@ -135,52 +149,58 @@ function WishTicket({ wish, tilt }: { wish: Wish; tilt: 'left' | 'right' }) {
   )
 }
 
-function WishLane({
+/** One lane of the sky. When its ticket drifts off the top it comes back
+ *  around showing the next wish, so every message gets its turn aloft. */
+function WishSkySlot({
+  slot,
+  slots,
   wishes,
-  reverse,
-  duration,
-  paused,
 }: {
+  slot: number
+  slots: number
   wishes: Wish[]
-  reverse?: boolean
-  duration: string
-  paused: boolean
 }) {
-  if (wishes.length === 0) return null
+  const [round, setRound] = useState(0)
+  const wish = wishes[(slot + round * slots) % wishes.length]
+  const far = slot % 3 === 2
 
-  // Top up short lanes so the -50% loop point is never visibly empty.
-  const filled: Wish[] = []
-  while (filled.length < Math.max(LANE_MIN, wishes.length)) {
-    filled.push(...wishes.slice(0, LANE_MIN))
-  }
-
-  const segment = (hidden: boolean) => (
-    <div className="photo-marquee-segment py-3" aria-hidden={hidden || undefined}>
-      {filled.map((wish, index) => (
-        <WishTicket
-          key={`${wish.id}-${index}`}
-          wish={wish}
-          tilt={index % 2 === 0 ? 'left' : 'right'}
-        />
-      ))}
-    </div>
-  )
+  const seed = slot * 137 + 41
+  const style = {
+    '--wish-left': `min(${4 + ((slot * 61.8) % 72)}%, calc(100% - 14rem))`,
+    '--wish-duration': `${21 + (seed % 12)}s`,
+    '--wish-delay': `${-((slot * 173) % 29)}s`,
+    '--wish-drift': `${((seed * 3) % 56) - 28}px`,
+    '--wish-tilt': `${((seed * 7) % 9) - 4}deg`,
+    '--wish-scale': far ? 0.82 : 1,
+    '--wish-opacity': far ? 0.78 : 1,
+    zIndex: far ? 1 : 2,
+    filter: far ? 'blur(0.6px)' : undefined,
+  } as CSSProperties
 
   return (
     <div
-      className="photo-marquee"
-      style={{ '--marquee-duration': duration } as CSSProperties}
+      className="wish-float"
+      style={style}
+      onAnimationIteration={() => setRound((value) => value + 1)}
     >
-      <div
-        className={cn(
-          'photo-marquee-track',
-          reverse && 'photo-marquee-track--reverse',
-          paused && 'photo-marquee-track--paused',
-        )}
-      >
-        {segment(false)}
-        {segment(true)}
-      </div>
+      <WishTicket wish={wish} compact />
+    </div>
+  )
+}
+
+/** The wish sky: tickets float upward like the hearts elsewhere on the
+ *  page — slow, layered and pausable under the guest's finger. */
+function WishSky({ wishes }: { wishes: Wish[] }) {
+  const slots = Math.min(SKY_SLOTS, wishes.length <= 4 ? wishes.length * 2 : SKY_SLOTS)
+
+  return (
+    <div
+      className="relative h-[24rem] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,black_12%,black_88%,transparent_100%)]"
+      aria-hidden="true"
+    >
+      {Array.from({ length: slots }, (_, slot) => (
+        <WishSkySlot key={slot} slot={slot} slots={slots} wishes={wishes} />
+      ))}
     </div>
   )
 }
@@ -196,16 +216,26 @@ interface FlightState {
   confettiOrigin: { x: number; y: number }
 }
 
-/** Shared timeline: pop out of the form → hover → the plane hooks the ticket
- *  → both climb away. Plane and ticket use the same `times`, so they stay in
- *  perfect sync without any per-frame coupling. */
-const FLIGHT_TIMES = [0, 0.16, 0.38, 0.46, 0.72, 1]
-const FLIGHT_DURATION = 2.7
-const PICKUP_AT_MS = FLIGHT_TIMES[3] * FLIGHT_DURATION * 1000
+/** Shared timeline: the ticket pops free and hovers, the plane swoops in
+ *  from high on the left, dips to hook the rope with a little snatch, then
+ *  climbs out fast. Plane and ticket share `times`, so they never drift. */
+const FLIGHT_TIMES = [0, 0.13, 0.32, 0.4, 0.46, 0.6, 0.8, 1]
+const FLIGHT_EASE = [
+  'linear',
+  'easeOut',
+  'easeOut',
+  'easeInOut',
+  'easeOut',
+  'easeIn',
+  'easeIn',
+] as const
+const FLIGHT_DURATION = 3
+const PICKUP_AT_MS = FLIGHT_TIMES[4] * FLIGHT_DURATION * 1000
 
 /**
- * The send-off: a little plane sweeps in, picks the guest's freshly written
- * ticket off the form and tows it away into the sky.
+ * The send-off: a courier plane swoops down, snatches the guest's freshly
+ * written ticket onto a tow rope and hauls it into the sky, shedding
+ * sparkles, a couple of hearts and a whoosh on the way out.
  */
 function WishFlight({
   flight,
@@ -246,44 +276,55 @@ function WishFlight({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
-      {/* The courier plane, with a soft light trail. */}
+      {/* The courier plane: high entry, banking swoop, dip, snatch, climb. */}
       <motion.span
         className="absolute left-0 top-0"
         initial={false}
         animate={{
-          x: [-180, -180, planeX, planeX + 26, planeX + glide * 0.5, exitX],
-          y: [
-            planeY + 46,
-            planeY + 46,
-            planeY,
-            planeY - 2,
-            planeY - 38,
-            planeY - 118,
+          x: [
+            -220,
+            -220,
+            planeX * 0.45 - 90,
+            planeX,
+            planeX + 20,
+            planeX + glide * 0.28,
+            planeX + glide * 0.62,
+            exitX,
           ],
-          rotate: [6, 6, 0, -2, -6, -10],
-          opacity: [0, 0, 1, 1, 1, 0],
+          y: [
+            planeY - 96,
+            planeY - 96,
+            planeY - 48,
+            planeY + 3,
+            planeY,
+            planeY - 28,
+            planeY - 66,
+            planeY - 156,
+          ],
+          rotate: [16, 16, 9, 1, -2, -6, -10, -14],
+          opacity: [0, 0, 1, 1, 1, 1, 1, 0],
         }}
         transition={{
           duration: FLIGHT_DURATION,
           times: FLIGHT_TIMES,
-          ease: 'easeInOut',
+          ease: [...FLIGHT_EASE],
         }}
       >
-        <span className="absolute right-full top-1/2 mr-1 h-px w-16 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
+        <span className="absolute right-full top-1/2 mr-1 h-px w-20 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
         <Plane
           className="h-8 w-8 rotate-45 text-gold-dark drop-shadow-[0_6px_10px_rgba(27,42,74,0.35)]"
           strokeWidth={1.4}
         />
       </motion.span>
 
-      {/* Sparkle burst the instant the ticket is hooked. */}
+      {/* Sparkle burst the instant the rope hooks on. */}
       {[
         { dx: -26, dy: -6, delay: 0 },
         { dx: 20, dy: -20, delay: 0.09 },
         { dx: 4, dy: 18, delay: 0.16 },
       ].map(({ dx, dy, delay }) => (
         <motion.span
-          key={`${dx}-${dy}`}
+          key={`sparkle-${dx}-${dy}`}
           className="absolute left-0 top-0 text-gold"
           style={{ x: pickupX + dx, y: pickupY + dy }}
           initial={{ scale: 0, opacity: 0 }}
@@ -298,21 +339,92 @@ function WishFlight({
         </motion.span>
       ))}
 
-      {/* The guest's ticket: rises from the form, then swings on the rope. */}
+      {/* A couple of tiny hearts spill loose and tumble down. */}
+      {[
+        { dx: -12, fall: 46, sway: -22, delay: 0.05 },
+        { dx: 16, fall: 60, sway: 18, delay: 0.16 },
+        { dx: 2, fall: 38, sway: 8, delay: 0.28 },
+      ].map(({ dx, fall, sway, delay }) => (
+        <motion.span
+          key={`heart-${dx}-${fall}`}
+          className="absolute left-0 top-0 text-rose"
+          style={{ x: pickupX + dx, y: pickupY + 16 }}
+          initial={{ opacity: 0, y: pickupY + 16, scale: 0.6 }}
+          animate={{
+            opacity: [0, 0.9, 0],
+            y: [pickupY + 16, pickupY + 16 + fall * 0.5, pickupY + 16 + fall],
+            x: [pickupX + dx, pickupX + dx + sway * 0.5, pickupX + dx + sway],
+            rotate: [0, sway, sway * 1.6],
+            scale: [0.6, 1, 0.7],
+          }}
+          transition={{
+            duration: 1,
+            delay: PICKUP_AT_MS / 1000 + delay,
+            ease: 'easeOut',
+          }}
+        >
+          <Heart className="h-3 w-3 fill-rose/70" strokeWidth={1.4} />
+        </motion.span>
+      ))}
+
+      {/* Whoosh streaks as the pair accelerates out of frame. */}
+      {[
+        { w: 'w-24', oy: -46, delay: 0 },
+        { w: 'w-14', oy: -16, delay: 0.09 },
+      ].map(({ w, oy, delay }) => (
+        <motion.span
+          key={`whoosh-${w}-${oy}`}
+          className={cn(
+            'absolute left-0 top-0 h-px bg-gradient-to-l from-white/90 via-gold-light/60 to-transparent',
+            w,
+          )}
+          style={{ y: planeY + oy }}
+          initial={{ x: pickupX + glide * 0.3, opacity: 0 }}
+          animate={{
+            x: [pickupX + glide * 0.3, pickupX + glide * 0.85],
+            opacity: [0, 0.85, 0],
+          }}
+          transition={{
+            duration: 0.6,
+            delay: FLIGHT_DURATION * 0.66 + delay,
+            ease: 'easeIn',
+          }}
+        />
+      ))}
+
+      {/* The guest's ticket: pops free, hovers, gets snatched, sails away. */}
       <motion.div
         className="absolute left-0 top-0 w-44 origin-top"
         initial={false}
         animate={{
-          x: [hangX, hangX, hangX, hangX, hangX + glide * 0.5, hangX + glide],
-          y: [startY, hangY + 8, hangY + 14, hangY, hangY - 36, hangY - 116],
-          rotate: [-5, 2, -2, 0, 4, 7],
-          scale: [0.5, 1, 1, 1, 1, 0.9],
-          opacity: [0, 1, 1, 1, 1, 0],
+          x: [
+            hangX,
+            hangX,
+            hangX,
+            hangX,
+            hangX,
+            hangX + glide * 0.28,
+            hangX + glide * 0.62,
+            hangX + glide,
+          ],
+          y: [
+            startY,
+            hangY + 10,
+            hangY + 16,
+            hangY + 12,
+            hangY,
+            hangY - 24,
+            hangY - 62,
+            hangY - 152,
+          ],
+          rotate: [-6, 3, -3, -1, 0, 5, 8, 10],
+          scale: [0.45, 1, 1, 1, 1, 1, 1, 0.88],
+          opacity: [0, 1, 1, 1, 1, 1, 1, 0],
         }}
         transition={{
           duration: FLIGHT_DURATION,
           times: FLIGHT_TIMES,
-          ease: 'easeInOut',
+          ease: [...FLIGHT_EASE],
         }}
         onAnimationComplete={onDone}
       >
@@ -320,13 +432,14 @@ function WishFlight({
         <motion.span
           className="absolute -top-12 left-1/2 h-12 w-px -translate-x-1/2 bg-gradient-to-b from-gold-dark/80 to-gold/40"
           initial={false}
-          animate={{ opacity: [0, 0, 0, 1, 1, 1] }}
+          animate={{ opacity: [0, 0, 0, 0, 1, 1, 1, 1] }}
           transition={{ duration: FLIGHT_DURATION, times: FLIGHT_TIMES }}
         >
           <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-gold-dark/80" />
         </motion.span>
 
-        <div className="rounded-lg border border-gold/40 bg-white/95 px-3 py-2 shadow-[0_14px_30px_-14px_rgba(27,42,74,0.55)]">
+        {/* Inner flutter keeps the towed ticket alive like a banner. */}
+        <div className="animate-[ticket-flutter_0.85s_ease-in-out_infinite] rounded-lg border border-gold/40 bg-white/95 px-3 py-2 shadow-[0_14px_30px_-14px_rgba(27,42,74,0.55)]">
           <span className="label-caps flex items-center gap-1 text-[7px] text-gold-dark">
             <Plane className="h-2.5 w-2.5 rotate-45" strokeWidth={1.6} />
             {t.guestbook.wishLabel}
@@ -350,10 +463,11 @@ function WishFlight({
 }
 
 /**
- * Boarding messages — the guest book. Wishes drift past as little boarding
- * passes in two opposing marquee lanes; a small form lets every guest add
- * their own ticket. With `config.guestbook.endpoint` set the wishes are
- * shared between all guests, otherwise they stay on the guest's device.
+ * Boarding messages — the guest book. Wishes float up through the section
+ * like the hearts elsewhere on the page, each one a little boarding pass;
+ * a small form lets every guest send their own ticket skyward. With
+ * `config.guestbook.endpoint` set the wishes are shared between all guests
+ * (per-site via `config.guestbook.site`), otherwise they stay on-device.
  */
 export function BoardingMessages({
   config,
@@ -365,6 +479,7 @@ export function BoardingMessages({
   const { t } = useI18n()
   const reduced = !!useReducedMotion()
   const endpoint = config.guestbook.endpoint.trim()
+  const site = config.guestbook.site.trim()
 
   const sectionRef = useRef<HTMLElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -391,7 +506,9 @@ export function BoardingMessages({
     if (!endpoint) return undefined
     const controller = new AbortController()
     const timer = window.setTimeout(() => controller.abort(), 8000)
-    fetch(endpoint, { signal: controller.signal })
+    fetch(`${endpoint}?site=${encodeURIComponent(site)}`, {
+      signal: controller.signal,
+    })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setRemoteWishes(sanitiseWishes(data)))
       .catch(() => {
@@ -402,7 +519,7 @@ export function BoardingMessages({
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [endpoint])
+  }, [endpoint, site])
 
   const wishes = useMemo(() => {
     const seeds = sanitiseWishes(
@@ -412,15 +529,11 @@ export function BoardingMessages({
     for (const wish of [...seeds, ...remoteWishes, ...localWishes]) {
       merged.set(wish.id, wish)
     }
-    return [...merged.values()].slice(-WISHES_MAX)
+    // Newest first, so a fresh wish takes the next free lane in the sky.
+    return [...merged.values()]
+      .slice(-WISHES_MAX)
+      .sort((a, b) => b.ts - a.ts)
   }, [t.guestbook.seeds, remoteWishes, localWishes])
-
-  const [laneA, laneB] = useMemo(() => {
-    const a: Wish[] = []
-    const b: Wish[] = []
-    wishes.forEach((wish, index) => (index % 2 === 0 ? a : b).push(wish))
-    return [a, b]
-  }, [wishes])
 
   const trimmedName = name.trim()
   const trimmedMessage = message.trim()
@@ -443,32 +556,30 @@ export function BoardingMessages({
           name: wish.name,
           message: wish.message,
           ts: wish.ts,
+          site,
         }),
       })
         .then(() => true)
         .catch(() => false)
     },
-    [endpoint],
+    [endpoint, site],
   )
 
-  /** Lands the wish: put it on the wall and show the outcome. Guarded so the
+  /** Lands the wish: put it in the sky and show the outcome. Guarded so the
    *  flight callback and its safety timer can't land the same wish twice. */
-  const finalizeWish = useCallback(
-    async (wish: Wish) => {
-      if (landedRef.current === wish.id) return
-      landedRef.current = wish.id
-      const delivered = await deliveryRef.current
-      setLocalWishes((prev) => {
-        const next = [...prev, wish].slice(-WISHES_MAX)
-        saveLocalWishes(next)
-        return next
-      })
-      setFlight(null)
-      setStatus(delivered ? 'thanks' : 'error')
-      window.setTimeout(() => setStatus('idle'), 4500)
-    },
-    [],
-  )
+  const finalizeWish = useCallback(async (wish: Wish) => {
+    if (landedRef.current === wish.id) return
+    landedRef.current = wish.id
+    const delivered = await deliveryRef.current
+    setLocalWishes((prev) => {
+      const next = [...prev, wish].slice(-WISHES_MAX)
+      saveLocalWishes(next)
+      return next
+    })
+    setFlight(null)
+    setStatus(delivered ? 'thanks' : 'error')
+    window.setTimeout(() => setStatus('idle'), 4500)
+  }, [])
 
   const onSubmit = useCallback(
     (event: FormEvent) => {
@@ -493,7 +604,7 @@ export function BoardingMessages({
       const section = sectionRef.current
       const form = formRef.current
       if (reduced || !section || !form) {
-        // No theatrics: deliver straight to the wall.
+        // No theatrics: deliver straight to the sky.
         void finalizeWish(wish)
         return
       }
@@ -507,7 +618,7 @@ export function BoardingMessages({
         startY: formRect.top - sectionRect.top + 90,
         pickupX,
         pickupY,
-        exitX: sectionRect.width + 200,
+        exitX: sectionRect.width + 220,
         confettiOrigin: {
           x: (formRect.left + formRect.width / 2) / window.innerWidth,
           y: Math.max(0.05, (sectionRect.top + pickupY + 24) / window.innerHeight),
@@ -532,7 +643,7 @@ export function BoardingMessages({
       aria-label={t.guestbook.title}
     >
       <RomanticAura className="opacity-70" />
-      <SectionRomance direction="ltr" planeTop="12%" />
+      <SectionRomance direction="ltr" planeTop="8%" />
 
       {flight && (
         <WishFlight flight={flight} onDone={() => finalizeWish(flight.wish)} />
@@ -547,15 +658,23 @@ export function BoardingMessages({
           />
         </Reveal>
 
-        {/* The wall of boarding wishes, drifting like passing air traffic. */}
-        <Reveal delay={0.08} className="mt-10">
-          <WishLane wishes={laneA} duration="52s" paused={reduced} />
-          <WishLane wishes={laneB} duration="67s" reverse paused={reduced} />
+        {/* Wishes float up through the sky like hearts; under reduced
+            motion they rest as a quiet, readable grid instead. */}
+        <Reveal delay={0.08} className="mt-6">
+          {reduced ? (
+            <div className="flex flex-wrap items-stretch justify-center gap-4 px-5 py-6">
+              {wishes.slice(0, 6).map((wish) => (
+                <WishTicket key={wish.id} wish={wish} />
+              ))}
+            </div>
+          ) : (
+            <WishSky wishes={wishes} />
+          )}
         </Reveal>
 
         <Reveal
           delay={0.14}
-          className="relative mx-5 mt-8 sm:mx-auto sm:w-full sm:max-w-xl"
+          className="relative mx-5 mt-6 sm:mx-auto sm:w-full sm:max-w-xl"
         >
           <form
             ref={formRef}

@@ -147,6 +147,9 @@ export interface WeddingConfig {
      *  JSON `[{ name, message, ts }]`. Empty ⇒ wishes stay on the guest's
      *  device only (still a lovely keepsake, just not shared). */
     endpoint: string
+    /** Short tag identifying this wedding in the shared wishes sheet, so the
+     *  two invitation sites keep their guest books separate. */
+    site: string
   }
 
   music: {
@@ -307,6 +310,7 @@ export const weddingConfig: WeddingConfig = {
     // couple's "Lời chúc" sheet and returns them for every guest.
     endpoint:
       'https://script.google.com/macros/s/AKfycbyVb26JgdKy9e3Xdj9Vb_SeghHsiLsBM7hkNKpdIQreoN1BsezqlxNMQ7LKnHOjLCuV/exec',
+    site: 'suri',
   },
 
   music: {

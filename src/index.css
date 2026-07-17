@@ -102,6 +102,57 @@
   }
 }
 
+/* Wish tickets that rise through the guest-book sky like floating hearts.
+   Per-slot custom props give every ticket its own lane, pace and sway. */
+.wish-float {
+  position: absolute;
+  bottom: -9rem;
+  left: var(--wish-left, 50%);
+  will-change: transform, opacity;
+  opacity: 0;
+  animation: wish-float var(--wish-duration, 26s) linear var(--wish-delay, 0s)
+    infinite;
+}
+
+.wish-float:hover,
+.wish-float:focus-within {
+  animation-play-state: paused;
+}
+
+@keyframes wish-float {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(var(--wish-tilt, 0deg))
+      scale(var(--wish-scale, 1));
+    opacity: 0;
+  }
+  7% {
+    opacity: var(--wish-opacity, 1);
+  }
+  50% {
+    transform: translate3d(var(--wish-drift, 24px), -18rem, 0)
+      rotate(calc(var(--wish-tilt, 0deg) * -1)) scale(var(--wish-scale, 1));
+  }
+  93% {
+    opacity: var(--wish-opacity, 1);
+  }
+  100% {
+    transform: translate3d(calc(var(--wish-drift, 24px) * -0.5), -36rem, 0)
+      rotate(var(--wish-tilt, 0deg)) scale(var(--wish-scale, 1));
+    opacity: 0;
+  }
+}
+
+/* Gentle banner flutter for the ticket while the plane tows it away. */
+@keyframes ticket-flutter {
+  0%,
+  100% {
+    rotate: -1.4deg;
+  }
+  50% {
+    rotate: 1.6deg;
+  }
+}
+
 /* Luxury light sweep that occasionally glides across glass cards. */
 .card-sheen::before {
   content: '';
