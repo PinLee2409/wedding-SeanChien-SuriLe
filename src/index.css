@@ -160,6 +160,36 @@
   }
 }
 
+/* The courier plane's constant-speed run along its offset-path curve.
+   Pure CSS so the compositor owns every frame of the flight. */
+.wish-flight-plane {
+  animation: wish-flight-path var(--flight-duration, 2.8s) linear forwards;
+}
+
+@keyframes wish-flight-path {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Rope + towed ticket snap into view the instant the hook passes. */
+.wish-flight-hook {
+  opacity: 0;
+  animation: wish-hook-in 0.05s linear var(--hook-delay, 1.3s) forwards;
+}
+
+@keyframes wish-hook-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Luxury light sweep that occasionally glides across glass cards. */
 .card-sheen::before {
   content: '';

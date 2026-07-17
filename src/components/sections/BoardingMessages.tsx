@@ -209,32 +209,23 @@ function WishSky({ wishes }: { wishes: Wish[] }) {
   )
 }
 
-/** Geometry (in px, relative to the section) captured the moment the guest
- *  presses send, so the flight lines up with the form wherever it sits. */
+/** Geometry captured the moment the guest presses send: one smooth SVG
+ *  curve from off-screen left, through the hook point, out top-right. */
 interface FlightState {
   wish: Wish
+  path: string
+  /** Seconds for the full constant-speed run along the path. */
+  duration: number
+  /** Fraction of the path (= of the timeline, speed is constant) at hook. */
+  pickupFraction: number
   startY: number
   pickupX: number
   pickupY: number
-  exitX: number
   confettiOrigin: { x: number; y: number }
 }
 
-/** Shared timeline: the ticket pops free and hovers, the plane swoops in
- *  from high on the left, dips to hook the rope with a little snatch, then
- *  climbs out fast. Plane and ticket share `times`, so they never drift. */
-const FLIGHT_TIMES = [0, 0.13, 0.32, 0.4, 0.46, 0.6, 0.8, 1]
-const FLIGHT_EASE = [
-  'linear',
-  'easeOut',
-  'easeInOut',
-  'easeInOut',
-  'easeInOut',
-  'easeInOut',
-  'easeIn',
-] as const
-const FLIGHT_DURATION = 3
-const PICKUP_AT_MS = FLIGHT_TIMES[4] * FLIGHT_DURATION * 1000
+/** The towed ticket hangs this far under the plane's flight path. */
+const ROPE_DROP = 60
 
 /** Emoji shapes are rasterised once up front — doing it inside the pickup
  *  timeout caused a visible frame drop right at the snatch moment. */
@@ -250,10 +241,91 @@ function getWishConfettiShapes(): WishConfettiShape[] {
   return wishConfettiShapes
 }
 
+const supportsOffsetPath =
+  typeof CSS !== 'undefined' &&
+  typeof CSS.supports === 'function' &&
+  CSS.supports('offset-path', 'path("M 0 0 L 10 10")')
+
+/** Builds the flight curve and measures where the hook point sits on it.
+ *  Two cubics share the tangent at the hook, so the whole swoop is one
+ *  C¹-continuous line — no corners, no stop-and-go. */
+function planFlight(
+  pickupX: number,
+  pickupY: number,
+  sectionWidth: number,
+): { path: string; duration: number; pickupFraction: number } {
+  const entryX = -240
+  const entryY = pickupY - 130
+  const exitX = sectionWidth + 240
+  const exitY = pickupY - 190
+  const tangent = { x: 130, y: 8 }
+  const path =
+    `M ${entryX} ${entryY} ` +
+    `C ${entryX + 200} ${entryY + 20}, ${pickupX - tangent.x} ${pickupY - tangent.y}, ${pickupX} ${pickupY} ` +
+    `C ${pickupX + tangent.x} ${pickupY + tangent.y}, ${exitX - 260} ${exitY + 110}, ${exitX} ${exitY}`
+
+  // Constant speed makes time-fraction equal distance-fraction, so one
+  // measurement pins the hook moment for every synchronised effect.
+  let pickupFraction = 0.45
+  let duration = 2.8
+  try {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    const probe = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    probe.setAttribute('d', path)
+    svg.setAttribute('aria-hidden', 'true')
+    svg.style.position = 'absolute'
+    svg.style.width = '0'
+    svg.style.height = '0'
+    svg.appendChild(probe)
+    document.body.appendChild(svg)
+    const total = probe.getTotalLength()
+    let bestDist = Infinity
+    for (let i = 0; i <= 240; i += 1) {
+      const point = probe.getPointAtLength((i / 240) * total)
+      const dist = (point.x - pickupX) ** 2 + (point.y - pickupY) ** 2
+      if (dist < bestDist) {
+        bestDist = dist
+        pickupFraction = i / 240
+      }
+    }
+    duration = Math.min(3.4, Math.max(2.3, total / 640))
+    svg.remove()
+  } catch {
+    /* the defaults above still give a believable flight */
+  }
+  return { path, duration, pickupFraction }
+}
+
+/** The little boarding-pass card that rides the rope. */
+function MiniTicket({ wish }: { wish: Wish }) {
+  const { t } = useI18n()
+  return (
+    <div className="rounded-lg border border-gold/40 bg-[#fffdfa] px-3 py-2 shadow-[0_14px_30px_-14px_rgba(27,42,74,0.55)]">
+      <span className="label-caps flex items-center gap-1 text-[7px] text-gold-dark">
+        <Plane className="h-2.5 w-2.5 rotate-45" strokeWidth={1.6} />
+        {t.guestbook.wishLabel}
+      </span>
+      <p className="mt-1 truncate text-[11px] leading-snug text-navy">
+        {wish.message}
+      </p>
+      <span className="mt-0.5 flex items-center justify-between gap-2">
+        <span className="truncate font-script text-sm text-gold-dark">
+          {wish.name}
+        </span>
+        <Heart
+          className="h-2.5 w-2.5 shrink-0 fill-rose/60 text-rose"
+          strokeWidth={1.5}
+        />
+      </span>
+    </div>
+  )
+}
+
 /**
- * The send-off: a courier plane swoops down, snatches the guest's freshly
- * written ticket onto a tow rope and hauls it into the sky, shedding
- * sparkles, a couple of hearts and a whoosh on the way out.
+ * The send-off, mail-hook style: the plane never stops — it sweeps through
+ * on one continuous curve at constant speed (offset-path, composited by the
+ * browser), hooks the waiting ticket in passing and climbs away with it
+ * swinging on the rope.
  */
 function WishFlight({
   flight,
@@ -262,16 +334,24 @@ function WishFlight({
   flight: FlightState
   onDone: () => void
 }) {
-  const { t } = useI18n()
-  const { wish, startY, pickupX, pickupY, exitX, confettiOrigin } = flight
+  const {
+    wish,
+    path,
+    duration,
+    pickupFraction,
+    startY,
+    pickupX,
+    pickupY,
+    confettiOrigin,
+  } = flight
 
-  // Plane icon is 32px — offset so its centre rides the flight path.
-  const planeX = pickupX - 16
-  const planeY = pickupY - 16
-  // Ticket (w-44 ≈ 176px) hangs centred on a short rope under the plane.
+  const pickupSeconds = pickupFraction * duration
+  /** Timeline fraction right after the hook, when the hand-over happens. */
+  const swap = Math.min(pickupFraction + 0.015, 1)
+  // The waiting ticket's top-centre must coincide with the towed copy the
+  // instant they swap: plane centre + rope drop (ticket is w-44 ≈ 176px).
   const hangX = pickupX - 88
-  const hangY = pickupY + 32
-  const glide = exitX - pickupX
+  const hangY = pickupY + ROPE_DROP
 
   useEffect(() => {
     // Warm the emoji rasters now, while the ticket is still rising.
@@ -287,52 +367,50 @@ function WishFlight({
         disableForReducedMotion: true,
         zIndex: 60,
       })
-    }, PICKUP_AT_MS)
+    }, pickupSeconds * 1000)
     return () => window.clearTimeout(timer)
-  }, [confettiOrigin])
+  }, [confettiOrigin, pickupSeconds])
 
   return (
     <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
-      {/* The courier plane: high entry, banking swoop, dip, snatch, climb. */}
-      <motion.span
-        className="absolute left-0 top-0"
-        initial={false}
-        animate={{
-          x: [
-            -220,
-            -220,
-            planeX * 0.45 - 90,
-            planeX,
-            planeX + 20,
-            planeX + glide * 0.28,
-            planeX + glide * 0.62,
-            exitX,
-          ],
-          y: [
-            planeY - 96,
-            planeY - 96,
-            planeY - 48,
-            planeY + 3,
-            planeY,
-            planeY - 28,
-            planeY - 66,
-            planeY - 156,
-          ],
-          rotate: [16, 16, 9, 1, -2, -6, -10, -14],
-          opacity: [0, 0, 1, 1, 1, 1, 1, 0],
-        }}
-        transition={{
-          duration: FLIGHT_DURATION,
-          times: FLIGHT_TIMES,
-          ease: [...FLIGHT_EASE],
+      {/* Plane group riding the curve at constant speed — a pure CSS
+          offset-path animation, so the compositor owns every frame and the
+          run cannot stutter. offset-rotate banks it with the tangent; the
+          rope + towed ticket live inside the group, glued to the plane. */}
+      <div
+        className="wish-flight-plane absolute left-0 top-0 h-px w-px"
+        style={
+          {
+            offsetPath: `path("${path}")`,
+            offsetRotate: 'auto',
+            '--flight-duration': `${duration}s`,
+          } as CSSProperties
+        }
+        onAnimationEnd={(event) => {
+          if (event.animationName === 'wish-flight-path') onDone()
         }}
       >
-        <span className="absolute right-full top-1/2 mr-1 h-px w-20 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
+        <span className="absolute right-3 top-0 h-px w-20 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
         <Plane
-          className="h-8 w-8 rotate-45 text-gold-dark drop-shadow-[0_6px_10px_rgba(27,42,74,0.35)]"
+          className="absolute -left-4 -top-4 h-8 w-8 rotate-45 text-gold-dark drop-shadow-[0_6px_10px_rgba(27,42,74,0.35)]"
           strokeWidth={1.4}
         />
-      </motion.span>
+
+        {/* Tow rope, knot and the towed copy of the ticket. */}
+        <div
+          className="wish-flight-hook absolute left-0 top-0"
+          style={{ '--hook-delay': `${pickupSeconds}s` } as CSSProperties}
+        >
+          <span className="absolute left-0 top-1 h-14 w-px -translate-x-1/2 bg-gradient-to-b from-gold-dark/80 to-gold/40" />
+          <span className="absolute left-0 top-[3.4rem] h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-gold-dark/80" />
+          <div
+            className="absolute left-0 w-44 -translate-x-1/2 animate-[ticket-flutter_0.85s_ease-in-out_infinite]"
+            style={{ top: ROPE_DROP }}
+          >
+            <MiniTicket wish={wish} />
+          </div>
+        </div>
+      </div>
 
       {/* Sparkle burst the instant the rope hooks on. */}
       {[
@@ -348,7 +426,7 @@ function WishFlight({
           animate={{ scale: [0, 1.25, 0], opacity: [0, 1, 0] }}
           transition={{
             duration: 0.55,
-            delay: PICKUP_AT_MS / 1000 + delay,
+            delay: pickupSeconds + delay,
             ease: 'easeOut',
           }}
         >
@@ -376,7 +454,7 @@ function WishFlight({
           }}
           transition={{
             duration: 1,
-            delay: PICKUP_AT_MS / 1000 + delay,
+            delay: pickupSeconds + delay,
             ease: 'easeOut',
           }}
         >
@@ -386,8 +464,8 @@ function WishFlight({
 
       {/* Whoosh streaks as the pair accelerates out of frame. */}
       {[
-        { w: 'w-24', oy: -46, delay: 0 },
-        { w: 'w-14', oy: -16, delay: 0.09 },
+        { w: 'w-24', oy: -58, delay: 0 },
+        { w: 'w-14', oy: -28, delay: 0.09 },
       ].map(({ w, oy, delay }) => (
         <motion.span
           key={`whoosh-${w}-${oy}`}
@@ -395,85 +473,47 @@ function WishFlight({
             'absolute left-0 top-0 h-px bg-gradient-to-l from-white/90 via-gold-light/60 to-transparent',
             w,
           )}
-          style={{ y: planeY + oy }}
-          initial={{ x: pickupX + glide * 0.3, opacity: 0 }}
+          style={{ y: pickupY + oy }}
+          initial={{ x: pickupX + 170, opacity: 0 }}
           animate={{
-            x: [pickupX + glide * 0.3, pickupX + glide * 0.85],
+            x: [pickupX + 170, pickupX + 460],
             opacity: [0, 0.85, 0],
           }}
           transition={{
             duration: 0.6,
-            delay: FLIGHT_DURATION * 0.66 + delay,
+            delay: duration * 0.68 + delay,
             ease: 'easeIn',
           }}
         />
       ))}
 
-      {/* The guest's ticket: pops free, hovers, gets snatched, sails away. */}
+      {/* The waiting ticket: rises from the form, hovers at hook height and
+          hands itself to the plane's towed copy the instant the hook
+          passes — the swap is a 40ms cross-fade at identical coordinates. */}
       <motion.div
         className="absolute left-0 top-0 w-44 origin-top"
         initial={false}
         animate={{
-          x: [
-            hangX,
-            hangX,
-            hangX,
-            hangX,
-            hangX,
-            hangX + glide * 0.28,
-            hangX + glide * 0.62,
-            hangX + glide,
-          ],
-          y: [
-            startY,
-            hangY + 6,
-            hangY + 10,
-            hangY + 7,
-            hangY,
-            hangY - 24,
-            hangY - 62,
-            hangY - 152,
-          ],
-          rotate: [-5, 2, -2, -1, 0, 4, 7, 9],
-          scale: [0.45, 1, 1, 1, 1, 1, 1, 0.88],
-          opacity: [0, 1, 1, 1, 1, 1, 1, 0],
+          x: hangX,
+          y: [startY, hangY + 8, hangY + 2, hangY, hangY, hangY],
+          rotate: [-5, 2, -1, 0, 0, 0],
+          scale: [0.45, 1, 1, 1, 1, 1],
+          opacity: [0, 1, 1, 1, 0, 0],
         }}
         transition={{
-          duration: FLIGHT_DURATION,
-          times: FLIGHT_TIMES,
-          ease: [...FLIGHT_EASE],
+          duration,
+          times: [
+            0,
+            Math.min(0.3, pickupFraction * 0.6),
+            pickupFraction * 0.9,
+            pickupFraction,
+            swap,
+            1,
+          ],
+          ease: 'easeOut',
         }}
-        onAnimationComplete={onDone}
       >
-        {/* Tow rope + knot — appears the moment the plane hooks on. */}
-        <motion.span
-          className="absolute -top-12 left-1/2 h-12 w-px -translate-x-1/2 bg-gradient-to-b from-gold-dark/80 to-gold/40"
-          initial={false}
-          animate={{ opacity: [0, 0, 0, 0, 1, 1, 1, 1] }}
-          transition={{ duration: FLIGHT_DURATION, times: FLIGHT_TIMES }}
-        >
-          <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-gold-dark/80" />
-        </motion.span>
-
-        {/* Inner flutter keeps the towed ticket alive like a banner. */}
-        <div className="animate-[ticket-flutter_0.85s_ease-in-out_infinite] rounded-lg border border-gold/40 bg-white/95 px-3 py-2 shadow-[0_14px_30px_-14px_rgba(27,42,74,0.55)]">
-          <span className="label-caps flex items-center gap-1 text-[7px] text-gold-dark">
-            <Plane className="h-2.5 w-2.5 rotate-45" strokeWidth={1.6} />
-            {t.guestbook.wishLabel}
-          </span>
-          <p className="mt-1 truncate text-[11px] leading-snug text-navy">
-            {wish.message}
-          </p>
-          <span className="mt-0.5 flex items-center justify-between gap-2">
-            <span className="truncate font-script text-sm text-gold-dark">
-              {wish.name}
-            </span>
-            <Heart
-              className="h-2.5 w-2.5 shrink-0 fill-rose/60 text-rose"
-              strokeWidth={1.5}
-            />
-          </span>
-        </div>
+        <MiniTicket wish={wish} />
       </motion.div>
     </div>
   )
@@ -612,15 +652,13 @@ export function BoardingMessages({
       setMessage('')
       landedRef.current = null
       deliveryRef.current = dispatchWish(wish)
-      // Safety net: if the tab is throttled mid-flight, land the wish anyway.
-      window.setTimeout(
-        () => void finalizeWish(wish),
-        (FLIGHT_DURATION + 1.6) * 1000,
-      )
+      // Safety net: if the tab is throttled mid-flight, land the wish anyway
+      // (5.2s comfortably covers the longest possible 3.4s flight).
+      window.setTimeout(() => void finalizeWish(wish), 5200)
 
       const section = sectionRef.current
       const form = formRef.current
-      if (reduced || !section || !form) {
+      if (reduced || !section || !form || !supportsOffsetPath) {
         // No theatrics: deliver straight to the sky.
         void finalizeWish(wish)
         return
@@ -629,16 +667,16 @@ export function BoardingMessages({
       const sectionRect = section.getBoundingClientRect()
       const formRect = form.getBoundingClientRect()
       const pickupX = formRect.left - sectionRect.left + formRect.width / 2
-      const pickupY = Math.max(96, formRect.top - sectionRect.top - 92)
+      const pickupY = Math.max(120, formRect.top - sectionRect.top - 150)
       setFlight({
         wish,
+        ...planFlight(pickupX, pickupY, sectionRect.width),
         startY: formRect.top - sectionRect.top + 90,
         pickupX,
         pickupY,
-        exitX: sectionRect.width + 220,
         confettiOrigin: {
           x: (formRect.left + formRect.width / 2) / window.innerWidth,
-          y: Math.max(0.05, (sectionRect.top + pickupY + 24) / window.innerHeight),
+          y: Math.max(0.05, (sectionRect.top + pickupY + 40) / window.innerHeight),
         },
       })
     },
