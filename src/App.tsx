@@ -12,6 +12,7 @@ import { MediaGallery } from './components/sections/MediaGallery'
 import { FlightPhotoStory } from './components/sections/FlightPhotoStory'
 import { WeddingDetails } from './components/sections/WeddingDetails'
 import { LoveMessage } from './components/sections/LoveMessage'
+import { BoardingMessages } from './components/sections/BoardingMessages'
 import { GuestLinkGenerator } from './components/sections/GuestLinkGenerator'
 import { FinalThankYou } from './components/sections/FinalThankYou'
 import { ScannedInvitationView } from './components/sections/ScannedInvitationView'
@@ -147,6 +148,8 @@ function App() {
         <FlightPhotoStory />
 
         <LoveMessage config={weddingConfig} />
+
+        <BoardingMessages config={weddingConfig} guestName={guestName} />
 
         <GuestLinkGenerator />
 

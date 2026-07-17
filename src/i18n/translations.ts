@@ -92,6 +92,25 @@ export interface Translation {
     body: string[]
     signature: string
   }
+  guestbook: {
+    kicker: string
+    title: string
+    subtitle: string
+    nameLabel: string
+    namePlaceholder: string
+    messageLabel: string
+    messagePlaceholder: string
+    submit: string
+    sending: string
+    thanks: string
+    error: string
+    /** Small caps header printed on every wish ticket. */
+    wishLabel: string
+    /** "Seat" label in front of the playful seat code on each ticket. */
+    seat: string
+    /** Wishes from the couple/family that keep the wall warm from day one. */
+    seeds: Array<{ name: string; message: string }>
+  }
   couple: {
     groomRole: string
     brideRole: string
@@ -239,6 +258,39 @@ export const translations: Record<Lang, Translation> = {
       ],
       signature: 'Với tất cả yêu thương và lòng biết ơn,',
     },
+    guestbook: {
+      kicker: 'Sổ lời chúc',
+      title: 'Lời chúc gửi chuyến bay',
+      subtitle:
+        'Để lại đôi lời yêu thương — mỗi lời chúc là một tấm vé cùng cất cánh trên chuyến bay hạnh phúc của chúng mình.',
+      nameLabel: 'Tên của bạn',
+      namePlaceholder: 'Ví dụ: Bạn Minh Anh',
+      messageLabel: 'Lời chúc',
+      messagePlaceholder: 'Chúc hai bạn trăm năm hạnh phúc…',
+      submit: 'Gửi lời chúc',
+      sending: 'Đang gửi…',
+      thanks: 'Cảm ơn bạn! Lời chúc của bạn đã lên máy bay ♥',
+      error: 'Chưa gửi được, bạn thử lại giúp mình nhé.',
+      wishLabel: 'Vé lời chúc',
+      seat: 'Ghế',
+      seeds: [
+        {
+          name: 'Cô dâu & Chú rể',
+          message:
+            'Cảm ơn bạn đã là một phần trong chuyến bay hạnh phúc của chúng mình!',
+        },
+        {
+          name: 'Gia đình hai bên',
+          message:
+            'Chúc hai con trăm năm hạnh phúc, bay thật xa và luôn nắm chặt tay nhau.',
+        },
+        {
+          name: 'Hội bạn thân',
+          message:
+            'Chúc chuyến bay LOVE cất cánh thuận lợi và hạnh phúc không bao giờ hạ cánh!',
+        },
+      ],
+    },
     couple: {
       groomRole: 'Chú rể',
       brideRole: 'Cô dâu',
@@ -383,6 +435,38 @@ export const translations: Record<Lang, Translation> = {
         'Our journey has brought us together for a lifetime. We are deeply grateful for the honour of your presence as we celebrate this special day.',
       ],
       signature: 'With love and gratitude,',
+    },
+    guestbook: {
+      kicker: 'Guest Book',
+      title: 'Wishes for the Flight',
+      subtitle:
+        'Leave a few loving words — every wish becomes a little boarding pass on our flight to happiness.',
+      nameLabel: 'Your name',
+      namePlaceholder: 'e.g. Emily & Tom',
+      messageLabel: 'Your wish',
+      messagePlaceholder: 'Wishing you a lifetime of love…',
+      submit: 'Send wish',
+      sending: 'Sending…',
+      thanks: 'Thank you! Your wish is now on board ♥',
+      error: 'Could not send just now — please try again.',
+      wishLabel: 'Boarding wish',
+      seat: 'Seat',
+      seeds: [
+        {
+          name: 'The Bride & Groom',
+          message: 'Thank you for being part of our flight to happiness!',
+        },
+        {
+          name: 'Our Families',
+          message:
+            'Wishing the newlyweds a lifetime of love — hold hands through every sky.',
+        },
+        {
+          name: 'The Best Friends',
+          message:
+            'May flight LOVE take off smoothly and happiness never land!',
+        },
+      ],
     },
     couple: {
       groomRole: 'Groom',
@@ -562,6 +646,35 @@ export const translations: Record<Lang, Translation> = {
         '一段旅程，讓我們相知相伴，攜手走向一生。承蒙您撥冗蒞臨，與我們共同見證這份喜悅；您的祝福與陪伴，是我們最珍貴的禮物。',
       ],
       signature: '謹致誠摯謝意，',
+    },
+    guestbook: {
+      kicker: '祝福留言簿',
+      title: '給幸福航班的祝福',
+      subtitle: '留下您的祝福——每一句祝福都是一張登上幸福航班的登機證。',
+      nameLabel: '您的名字',
+      namePlaceholder: '例如：小美與阿哲',
+      messageLabel: '祝福內容',
+      messagePlaceholder: '祝你們百年好合、幸福美滿…',
+      submit: '送出祝福',
+      sending: '送出中…',
+      thanks: '謝謝您！您的祝福已登機 ♥',
+      error: '暫時無法送出，請再試一次。',
+      wishLabel: '祝福登機證',
+      seat: '座位',
+      seeds: [
+        {
+          name: '新娘與新郎',
+          message: '謝謝您成為我們幸福航班的一員！',
+        },
+        {
+          name: '雙方家人',
+          message: '祝福新人百年好合，攜手飛越每一片天空。',
+        },
+        {
+          name: '摯友們',
+          message: '願 LOVE 航班順利起飛，幸福永不降落！',
+        },
+      ],
     },
     couple: {
       groomRole: '新郎',

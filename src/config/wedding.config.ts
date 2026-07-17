@@ -142,6 +142,13 @@ export interface WeddingConfig {
     message: string
   }
 
+  guestbook: {
+    /** Optional Apps Script / API endpoint that stores + returns wishes as
+     *  JSON `[{ name, message, ts }]`. Empty ⇒ wishes stay on the guest's
+     *  device only (still a lovely keepsake, just not shared). */
+    endpoint: string
+  }
+
   music: {
     /** Sequential background playlist in /public/music. Empty hides controls. */
     tracks: Array<{
@@ -293,6 +300,12 @@ export const weddingConfig: WeddingConfig = {
     heading: 'With heartfelt thanks',
     message:
       'We look forward to welcoming you as we begin this joyful journey together.',
+  },
+
+  guestbook: {
+    // Paste a Google Apps Script web-app URL here to share wishes between
+    // every guest. See the notes above `guestbook` in the config interface.
+    endpoint: '',
   },
 
   music: {
