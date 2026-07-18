@@ -7,12 +7,13 @@ import {
   type CSSProperties,
   type FormEvent,
 } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import confetti from 'canvas-confetti'
-import { Heart, Plane, Send, Sparkles } from 'lucide-react'
+import { Heart, Plane, Send, Sparkles, X } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { useI18n } from '../../i18n/LanguageContext'
+import { LOCALES } from '../../i18n/translations'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Reveal } from '../ui/Reveal'
 import { RomanticAura } from '../decorations/RomanticAura'
@@ -158,11 +159,14 @@ function WishSkySlot({
   slot,
   slots,
   wishes,
+  onSelect,
 }: {
   slot: number
   slots: number
   wishes: Wish[]
+  onSelect: (wish: Wish) => void
 }) {
+  const { t } = useI18n()
   const [round, setRound] = useState(0)
   const wish = wishes[(slot + round * slots) % wishes.length]
   const far = slot % 3 === 2
@@ -187,25 +191,150 @@ function WishSkySlot({
       style={style}
       onAnimationIteration={() => setRound((value) => value + 1)}
     >
-      <WishTicket wish={wish} compact />
+      <button
+        type="button"
+        onClick={() => onSelect(wish)}
+        aria-label={`${t.guestbook.wishLabel} — ${wish.name}`}
+        className="block cursor-pointer rounded-xl text-left transition-transform duration-200 hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2"
+      >
+        <WishTicket wish={wish} compact />
+      </button>
     </div>
   )
 }
 
 /** The wish sky: tickets float upward like the hearts elsewhere on the
- *  page — slow, layered and pausable under the guest's finger. */
-function WishSky({ wishes }: { wishes: Wish[] }) {
+ *  page — slow, layered, pausable and tappable for the full wish. */
+function WishSky({
+  wishes,
+  onSelect,
+}: {
+  wishes: Wish[]
+  onSelect: (wish: Wish) => void
+}) {
   const slots = Math.min(SKY_SLOTS, wishes.length <= 4 ? wishes.length * 2 : SKY_SLOTS)
 
   return (
-    <div
-      className="relative h-[24rem] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,black_12%,black_88%,transparent_100%)]"
-      aria-hidden="true"
-    >
+    <div className="relative h-[24rem] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,black_12%,black_88%,transparent_100%)]">
       {Array.from({ length: slots }, (_, slot) => (
-        <WishSkySlot key={slot} slot={slot} slots={slots} wishes={wishes} />
+        <WishSkySlot
+          key={slot}
+          slot={slot}
+          slots={slots}
+          wishes={wishes}
+          onSelect={onSelect}
+        />
       ))}
     </div>
+  )
+}
+
+/** Full-detail popup for a tapped wish — a larger boarding pass showing the
+ *  whole message, name, seat and (for real submissions) the date. Closes on
+ *  the backdrop, the ✕ or Escape; focus lands on the close button. */
+function WishDetailModal({
+  wish,
+  onClose,
+}: {
+  wish: Wish
+  onClose: () => void
+}) {
+  const { t, lang } = useI18n()
+  const reduced = !!useReducedMotion()
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    closeRef.current?.focus()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [onClose])
+
+  // Seed wishes carry tiny synthetic timestamps; only show a date for real
+  // guest submissions (millisecond epochs well past 2020).
+  const date = wish.ts > 1.5e12 ? new Date(wish.ts) : null
+  const dateText = date
+    ? new Intl.DateTimeFormat(LOCALES[lang], {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(date)
+    : null
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-5"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: reduced ? 0 : 0.25 }}
+    >
+      <button
+        type="button"
+        aria-label={t.ui.close}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-navy/50 backdrop-blur-sm"
+      />
+
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${t.guestbook.wishLabel} — ${wish.name}`}
+        className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-gold/40 bg-[#fffdfa] shadow-[0_40px_90px_-40px_rgba(27,42,74,0.65)]"
+        initial={reduced ? false : { scale: 0.9, y: 18, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={reduced ? { opacity: 0 } : { scale: 0.95, opacity: 0 }}
+        transition={{ duration: reduced ? 0 : 0.34, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <button
+          ref={closeRef}
+          type="button"
+          onClick={onClose}
+          aria-label={t.ui.close}
+          className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/70 text-navy-500 transition hover:bg-white hover:text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Ticket header ribbon */}
+        <div className="flex items-center justify-between gap-3 border-b border-dashed border-navy/15 bg-gradient-to-r from-sky-soft/60 to-ivory px-6 py-4">
+          <span className="label-caps flex items-center gap-2 text-[10px] text-gold-dark">
+            <Plane className="h-4 w-4 rotate-45" strokeWidth={1.5} />
+            {t.guestbook.wishLabel}
+          </span>
+          <span className="font-mono text-xs tracking-[0.14em] text-navy-500">
+            {t.guestbook.seat} {seatCode(wish)}
+          </span>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-7 text-center">
+          <Heart
+            className="mx-auto h-5 w-5 animate-heart-beat fill-rose/50 text-rose"
+            strokeWidth={1.4}
+          />
+          <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-navy">
+            {wish.message}
+          </p>
+          <div className="mx-auto mt-5 h-px w-16 bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+          <p className="mt-4 font-script text-3xl leading-tight text-gold-dark">
+            {wish.name}
+          </p>
+          {dateText && (
+            <p className="mt-1.5 font-mono text-[10px] tracking-[0.12em] text-navy-400">
+              {dateText}
+            </p>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -565,6 +694,7 @@ export function BoardingMessages({
     'idle',
   )
   const [flight, setFlight] = useState<FlightState | null>(null)
+  const [selectedWish, setSelectedWish] = useState<Wish | null>(null)
   const [localWishes, setLocalWishes] = useState<Wish[]>(() =>
     typeof window === 'undefined' ? [] : readLocalWishes(),
   )
@@ -730,16 +860,25 @@ export function BoardingMessages({
         </Reveal>
 
         {/* Wishes float up through the sky like hearts; under reduced
-            motion they rest as a quiet, readable grid instead. */}
+            motion they rest as a quiet, readable grid instead. Either way,
+            tapping a ticket opens its full detail. */}
         <Reveal delay={0.08} className="mt-6">
           {reduced ? (
             <div className="flex flex-wrap items-stretch justify-center gap-4 px-5 py-6">
               {wishes.slice(0, 6).map((wish) => (
-                <WishTicket key={wish.id} wish={wish} />
+                <button
+                  key={wish.id}
+                  type="button"
+                  onClick={() => setSelectedWish(wish)}
+                  aria-label={`${t.guestbook.wishLabel} — ${wish.name}`}
+                  className="cursor-pointer rounded-xl text-left transition-transform duration-200 hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2"
+                >
+                  <WishTicket wish={wish} />
+                </button>
               ))}
             </div>
           ) : (
-            <WishSky wishes={wishes} />
+            <WishSky wishes={wishes} onSelect={setSelectedWish} />
           )}
         </Reveal>
 
@@ -822,6 +961,15 @@ export function BoardingMessages({
           </form>
         </Reveal>
       </div>
+
+      <AnimatePresence>
+        {selectedWish && (
+          <WishDetailModal
+            wish={selectedWish}
+            onClose={() => setSelectedWish(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   )
 }
