@@ -209,14 +209,21 @@ function WishSky({ wishes }: { wishes: Wish[] }) {
   )
 }
 
-/** Geometry captured the moment the guest presses send: one smooth SVG
- *  curve from off-screen left, through the hook point, out top-right. */
+/** Geometry captured the moment the guest presses send: the swoop pre-sampled
+ *  into equal-arc-length keyframes so the plane can be driven purely by
+ *  `transform` (translate + rotate) — the one thing every browser, iOS Safari
+ *  included, always runs on the GPU compositor. */
 interface FlightState {
   wish: Wish
-  path: string
-  /** Seconds for the full constant-speed run along the path. */
+  /** Plane-centre x/y for each keyframe, in px within the section. */
+  xs: number[]
+  ys: number[]
+  /** Path tangent (deg) at each keyframe — the plane's bank angle. */
+  angles: number[]
+  /** Even timeline positions (constant speed, since samples are equal-arc). */
+  times: number[]
   duration: number
-  /** Fraction of the path (= of the timeline, speed is constant) at hook. */
+  /** Timeline fraction at the hook moment. */
   pickupFraction: number
   startY: number
   pickupX: number
@@ -226,6 +233,9 @@ interface FlightState {
 
 /** The towed ticket hangs this far under the plane's flight path. */
 const ROPE_DROP = 60
+/** Keyframe samples along the swoop — enough for a silky line, few enough
+ *  that the compositor never breaks a sweat. */
+const FLIGHT_SAMPLES = 48
 
 /** Emoji shapes are rasterised once up front — doing it inside the pickup
  *  timeout caused a visible frame drop right at the snatch moment. */
@@ -241,19 +251,17 @@ function getWishConfettiShapes(): WishConfettiShape[] {
   return wishConfettiShapes
 }
 
-const supportsOffsetPath =
-  typeof CSS !== 'undefined' &&
-  typeof CSS.supports === 'function' &&
-  CSS.supports('offset-path', 'path("M 0 0 L 10 10")')
-
-/** Builds the flight curve and measures where the hook point sits on it.
- *  Two cubics share the tangent at the hook, so the whole swoop is one
- *  C¹-continuous line — no corners, no stop-and-go. */
+/** Builds one C¹-continuous swoop (two cubics sharing the hook tangent) and
+ *  samples it at equal arc length. Equal-length samples + evenly spaced times
+ *  give perfectly constant velocity — no stop-and-go at keyframe joints. */
 function planFlight(
   pickupX: number,
   pickupY: number,
   sectionWidth: number,
-): { path: string; duration: number; pickupFraction: number } {
+): Pick<
+  FlightState,
+  'xs' | 'ys' | 'angles' | 'times' | 'duration' | 'pickupFraction'
+> {
   const entryX = -240
   const entryY = pickupY - 130
   const exitX = sectionWidth + 240
@@ -264,36 +272,57 @@ function planFlight(
     `C ${entryX + 200} ${entryY + 20}, ${pickupX - tangent.x} ${pickupY - tangent.y}, ${pickupX} ${pickupY} ` +
     `C ${pickupX + tangent.x} ${pickupY + tangent.y}, ${exitX - 260} ${exitY + 110}, ${exitX} ${exitY}`
 
-  // Constant speed makes time-fraction equal distance-fraction, so one
-  // measurement pins the hook moment for every synchronised effect.
+  const xs: number[] = []
+  const ys: number[] = []
+  const angles: number[] = []
+  const times: number[] = []
   let pickupFraction = 0.45
   let duration = 2.8
+
   try {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
     const probe = document.createElementNS('http://www.w3.org/2000/svg', 'path')
     probe.setAttribute('d', path)
     svg.setAttribute('aria-hidden', 'true')
-    svg.style.position = 'absolute'
-    svg.style.width = '0'
-    svg.style.height = '0'
+    svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden'
     svg.appendChild(probe)
     document.body.appendChild(svg)
+
     const total = probe.getTotalLength()
     let bestDist = Infinity
-    for (let i = 0; i <= 240; i += 1) {
-      const point = probe.getPointAtLength((i / 240) * total)
+    for (let i = 0; i <= FLIGHT_SAMPLES; i += 1) {
+      const t = i / FLIGHT_SAMPLES
+      const len = t * total
+      const point = probe.getPointAtLength(len)
+      // Tangent from a short step either side of this sample.
+      const ahead = probe.getPointAtLength(Math.min(total, len + 1))
+      const behind = probe.getPointAtLength(Math.max(0, len - 1))
+      xs.push(point.x)
+      ys.push(point.y)
+      angles.push(
+        (Math.atan2(ahead.y - behind.y, ahead.x - behind.x) * 180) / Math.PI,
+      )
+      times.push(t)
       const dist = (point.x - pickupX) ** 2 + (point.y - pickupY) ** 2
       if (dist < bestDist) {
         bestDist = dist
-        pickupFraction = i / 240
+        pickupFraction = t
       }
     }
     duration = Math.min(3.4, Math.max(2.3, total / 640))
     svg.remove()
   } catch {
-    /* the defaults above still give a believable flight */
+    // Fallback straight glide keeps the send-off working if SVG probing fails.
+    for (let i = 0; i <= FLIGHT_SAMPLES; i += 1) {
+      const t = i / FLIGHT_SAMPLES
+      xs.push(entryX + (exitX - entryX) * t)
+      ys.push(pickupY - 40 * t)
+      angles.push(0)
+      times.push(t)
+    }
   }
-  return { path, duration, pickupFraction }
+
+  return { xs, ys, angles, times, duration, pickupFraction }
 }
 
 /** The little boarding-pass card that rides the rope. */
@@ -323,9 +352,10 @@ function MiniTicket({ wish }: { wish: Wish }) {
 
 /**
  * The send-off, mail-hook style: the plane never stops — it sweeps through
- * on one continuous curve at constant speed (offset-path, composited by the
- * browser), hooks the waiting ticket in passing and climbs away with it
- * swinging on the rope.
+ * on one continuous curve at constant speed, hooks the waiting ticket in
+ * passing and climbs away with it swinging on the rope. Every moving part is
+ * driven by `transform` (translate/rotate) so the whole flight lives on the
+ * GPU compositor and stays silky even on modest phones.
  */
 function WishFlight({
   flight,
@@ -336,7 +366,10 @@ function WishFlight({
 }) {
   const {
     wish,
-    path,
+    xs,
+    ys,
+    angles,
+    times,
     duration,
     pickupFraction,
     startY,
@@ -352,6 +385,7 @@ function WishFlight({
   // instant they swap: plane centre + rope drop (ticket is w-44 ≈ 176px).
   const hangX = pickupX - 88
   const hangY = pickupY + ROPE_DROP
+  const willChange = { willChange: 'transform' } as CSSProperties
 
   useEffect(() => {
     // Warm the emoji rasters now, while the ticket is still rising.
@@ -371,35 +405,44 @@ function WishFlight({
     return () => window.clearTimeout(timer)
   }, [confettiOrigin, pickupSeconds])
 
+  const rideTransition = { duration, times, ease: 'linear' as const }
+
   return (
     <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
-      {/* Plane group riding the curve at constant speed — a pure CSS
-          offset-path animation, so the compositor owns every frame and the
-          run cannot stutter. offset-rotate banks it with the tangent; the
-          rope + towed ticket live inside the group, glued to the plane. */}
-      <div
-        className="wish-flight-plane absolute left-0 top-0 h-px w-px"
-        style={
-          {
-            offsetPath: `path("${path}")`,
-            offsetRotate: 'auto',
-            '--flight-duration': `${duration}s`,
-          } as CSSProperties
-        }
-        onAnimationEnd={(event) => {
-          if (event.animationName === 'wish-flight-path') onDone()
-        }}
+      {/* Outer group carries only the translate — the single most reliably
+          composited animation there is. Constant speed (equal-arc samples +
+          even times + linear) means no deceleration at any joint. */}
+      <motion.div
+        className="absolute left-0 top-0 h-px w-px"
+        style={willChange}
+        initial={false}
+        animate={{ x: xs, y: ys }}
+        transition={rideTransition}
+        onAnimationComplete={onDone}
       >
-        <span className="absolute right-3 top-0 h-px w-20 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
-        <Plane
-          className="absolute -left-4 -top-4 h-8 w-8 rotate-45 text-gold-dark drop-shadow-[0_6px_10px_rgba(27,42,74,0.35)]"
-          strokeWidth={1.4}
-        />
+        {/* Banking layer: rotates with the path tangent. Rope stays out of
+            here so the towed ticket always hangs straight down. */}
+        <motion.div
+          className="absolute left-0 top-0 h-px w-px"
+          style={willChange}
+          initial={false}
+          animate={{ rotate: angles }}
+          transition={rideTransition}
+        >
+          <span className="absolute right-3 top-0 h-px w-20 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
+          <Plane
+            className="absolute -left-4 -top-4 h-8 w-8 rotate-45 text-gold-dark drop-shadow-[0_5px_8px_rgba(27,42,74,0.32)]"
+            strokeWidth={1.4}
+          />
+        </motion.div>
 
-        {/* Tow rope, knot and the towed copy of the ticket. */}
-        <div
-          className="wish-flight-hook absolute left-0 top-0"
-          style={{ '--hook-delay': `${pickupSeconds}s` } as CSSProperties}
+        {/* Tow rope, knot and the towed copy of the ticket — hangs vertically
+            from the plane centre and fades in the instant the hook passes. */}
+        <motion.div
+          className="absolute left-0 top-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0, 1, 1] }}
+          transition={{ duration, times: [0, pickupFraction, swap, 1], ease: 'linear' }}
         >
           <span className="absolute left-0 top-1 h-14 w-px -translate-x-1/2 bg-gradient-to-b from-gold-dark/80 to-gold/40" />
           <span className="absolute left-0 top-[3.4rem] h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-gold-dark/80" />
@@ -409,8 +452,8 @@ function WishFlight({
           >
             <MiniTicket wish={wish} />
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Sparkle burst the instant the rope hooks on. */}
       {[
@@ -658,7 +701,7 @@ export function BoardingMessages({
 
       const section = sectionRef.current
       const form = formRef.current
-      if (reduced || !section || !form || !supportsOffsetPath) {
+      if (reduced || !section || !form) {
         // No theatrics: deliver straight to the sky.
         void finalizeWish(wish)
         return
