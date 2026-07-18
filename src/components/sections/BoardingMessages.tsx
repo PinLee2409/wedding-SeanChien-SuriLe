@@ -218,8 +218,9 @@ interface FlightState {
   /** Plane-centre x/y for each keyframe, in px within the section. */
   xs: number[]
   ys: number[]
-  /** Path tangent (deg) at each keyframe — the plane's bank angle. */
-  angles: number[]
+  /** Constant bank angle (deg) — the plane holds one attitude the whole way,
+   *  so it never wobbles. */
+  headingDeg: number
   /** Even timeline positions (constant speed, since samples are equal-arc). */
   times: number[]
   duration: number
@@ -251,78 +252,52 @@ function getWishConfettiShapes(): WishConfettiShape[] {
   return wishConfettiShapes
 }
 
-/** Builds one C¹-continuous swoop (two cubics sharing the hook tangent) and
- *  samples it at equal arc length. Equal-length samples + evenly spaced times
- *  give perfectly constant velocity — no stop-and-go at keyframe joints. */
+/** A straight diagonal from the lower-left corner up through the pickup point
+ *  and out the upper-right. One heading the whole way ⇒ the plane holds a
+ *  single, calm attitude (no wobble). Sampled uniformly + even times ⇒
+ *  perfectly constant speed, and every sample is a plain translate. */
 function planFlight(
   pickupX: number,
   pickupY: number,
   sectionWidth: number,
 ): Pick<
   FlightState,
-  'xs' | 'ys' | 'angles' | 'times' | 'duration' | 'pickupFraction'
+  'xs' | 'ys' | 'headingDeg' | 'times' | 'duration' | 'pickupFraction'
 > {
   const entryX = -240
-  const entryY = pickupY - 130
   const exitX = sectionWidth + 240
-  const exitY = pickupY - 190
-  const tangent = { x: 130, y: 8 }
-  const path =
-    `M ${entryX} ${entryY} ` +
-    `C ${entryX + 200} ${entryY + 20}, ${pickupX - tangent.x} ${pickupY - tangent.y}, ${pickupX} ${pickupY} ` +
-    `C ${pickupX + tangent.x} ${pickupY + tangent.y}, ${exitX - 260} ${exitY + 110}, ${exitX} ${exitY}`
+  // ~24° climb: the plane rises gently as it crosses left-to-right.
+  const slope = Math.tan((24 * Math.PI) / 180)
+  const entryY = pickupY + (pickupX - entryX) * slope
+  const exitY = pickupY - (exitX - pickupX) * slope
+
+  const dx = exitX - entryX
+  const dy = exitY - entryY
+  const headingDeg = (Math.atan2(dy, dx) * 180) / Math.PI
+  const total = Math.hypot(dx, dy)
 
   const xs: number[] = []
   const ys: number[] = []
-  const angles: number[] = []
   const times: number[] = []
-  let pickupFraction = 0.45
-  let duration = 2.8
+  let pickupFraction = 0.5
+  let bestDist = Infinity
 
-  try {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    const probe = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-    probe.setAttribute('d', path)
-    svg.setAttribute('aria-hidden', 'true')
-    svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden'
-    svg.appendChild(probe)
-    document.body.appendChild(svg)
-
-    const total = probe.getTotalLength()
-    let bestDist = Infinity
-    for (let i = 0; i <= FLIGHT_SAMPLES; i += 1) {
-      const t = i / FLIGHT_SAMPLES
-      const len = t * total
-      const point = probe.getPointAtLength(len)
-      // Tangent from a short step either side of this sample.
-      const ahead = probe.getPointAtLength(Math.min(total, len + 1))
-      const behind = probe.getPointAtLength(Math.max(0, len - 1))
-      xs.push(point.x)
-      ys.push(point.y)
-      angles.push(
-        (Math.atan2(ahead.y - behind.y, ahead.x - behind.x) * 180) / Math.PI,
-      )
-      times.push(t)
-      const dist = (point.x - pickupX) ** 2 + (point.y - pickupY) ** 2
-      if (dist < bestDist) {
-        bestDist = dist
-        pickupFraction = t
-      }
-    }
-    duration = Math.min(3.4, Math.max(2.3, total / 640))
-    svg.remove()
-  } catch {
-    // Fallback straight glide keeps the send-off working if SVG probing fails.
-    for (let i = 0; i <= FLIGHT_SAMPLES; i += 1) {
-      const t = i / FLIGHT_SAMPLES
-      xs.push(entryX + (exitX - entryX) * t)
-      ys.push(pickupY - 40 * t)
-      angles.push(0)
-      times.push(t)
+  for (let i = 0; i <= FLIGHT_SAMPLES; i += 1) {
+    const t = i / FLIGHT_SAMPLES
+    const x = entryX + dx * t
+    const y = entryY + dy * t
+    xs.push(x)
+    ys.push(y)
+    times.push(t)
+    const dist = (x - pickupX) ** 2 + (y - pickupY) ** 2
+    if (dist < bestDist) {
+      bestDist = dist
+      pickupFraction = t
     }
   }
 
-  return { xs, ys, angles, times, duration, pickupFraction }
+  const duration = Math.min(3.2, Math.max(2.3, total / 720))
+  return { xs, ys, headingDeg, times, duration, pickupFraction }
 }
 
 /** The little boarding-pass card that rides the rope. */
@@ -368,7 +343,7 @@ function WishFlight({
     wish,
     xs,
     ys,
-    angles,
+    headingDeg,
     times,
     duration,
     pickupFraction,
@@ -410,7 +385,7 @@ function WishFlight({
   return (
     <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
       {/* Outer group carries only the translate — the single most reliably
-          composited animation there is. Constant speed (equal-arc samples +
+          composited animation there is. Constant speed (uniform samples +
           even times + linear) means no deceleration at any joint. */}
       <motion.div
         className="absolute left-0 top-0 h-px w-px"
@@ -420,21 +395,19 @@ function WishFlight({
         transition={rideTransition}
         onAnimationComplete={onDone}
       >
-        {/* Banking layer: rotates with the path tangent. Rope stays out of
-            here so the towed ticket always hangs straight down. */}
-        <motion.div
+        {/* Plane, banked ONCE to the constant heading — no per-frame rotation,
+            so it holds a calm attitude the whole crossing. The trail aligns
+            with travel; the icon adds its own +45° nose offset. */}
+        <div
           className="absolute left-0 top-0 h-px w-px"
-          style={willChange}
-          initial={false}
-          animate={{ rotate: angles }}
-          transition={rideTransition}
+          style={{ rotate: `${headingDeg}deg` }}
         >
           <span className="absolute right-3 top-0 h-px w-20 -translate-y-1/2 bg-gradient-to-l from-gold-dark/70 via-gold/40 to-transparent" />
           <Plane
             className="absolute -left-4 -top-4 h-8 w-8 rotate-45 text-gold-dark drop-shadow-[0_5px_8px_rgba(27,42,74,0.32)]"
             strokeWidth={1.4}
           />
-        </motion.div>
+        </div>
 
         {/* Tow rope, knot and the towed copy of the ticket — hangs vertically
             from the plane centre and fades in the instant the hook passes. */}
