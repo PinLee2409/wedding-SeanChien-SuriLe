@@ -309,7 +309,7 @@ export const weddingConfig: WeddingConfig = {
     // Google Apps Script "Loi chuc - Boarding wishes" — stores wishes in the
     // couple's "Lời chúc" sheet and returns them for every guest.
     endpoint:
-      'https://script.google.com/macros/s/AKfycbyVb26JgdKy9e3Xdj9Vb_SeghHsiLsBM7hkNKpdIQreoN1BsezqlxNMQ7LKnHOjLCuV/exec',
+      'https://script.google.com/macros/s/AKfycbxaqUXWH-XPnL8yfOCyVqLZm66DiJRJJps38RW8sBfoAP4UO4eElx6We2ne5fs6_iQB/exec',
     site: 'suri',
   },
 
