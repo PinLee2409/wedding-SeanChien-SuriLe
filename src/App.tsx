@@ -1,19 +1,14 @@
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import confetti from 'canvas-confetti'
 import { weddingConfig } from './config/wedding.config'
-import { useGuestName } from './hooks/useGuestName'
 import { useAudio } from './hooks/useAudio'
 import { useTheme } from './hooks/useTheme'
 import { HeroSection } from './components/sections/HeroSection'
-import { GuestNameGate } from './components/sections/GuestNameGate'
 import { DownloadInvitation } from './components/sections/DownloadInvitation'
 import { MediaGallery } from './components/sections/MediaGallery'
 import { FlightPhotoStory } from './components/sections/FlightPhotoStory'
 import { WeddingDetails } from './components/sections/WeddingDetails'
 import { LoveMessage } from './components/sections/LoveMessage'
-import { BoardingMessages } from './components/sections/BoardingMessages'
-import { GuestLinkGenerator } from './components/sections/GuestLinkGenerator'
 import { FinalThankYou } from './components/sections/FinalThankYou'
 import { ScannedInvitationView } from './components/sections/ScannedInvitationView'
 import { RouteDivider } from './components/decorations/RouteDivider'
@@ -26,9 +21,12 @@ import { LanguageSwitcher } from './components/ui/LanguageSwitcher'
 import { ScrollProgress } from './components/ui/ScrollProgress'
 import { clearCardViewInUrl, isCardViewFromUrl } from './lib/guest'
 
+/** One invitation for everyone — no per-guest name. Every passenger is our
+ *  honoured "Quý khách", so the whole site runs on the generic fallbacks. */
+const GUEST_NAME = ''
+
 function App() {
   const reduce = useReducedMotion()
-  const { guestName, setGuestName } = useGuestName()
   const { themeId, setTheme, themes } = useTheme()
   const {
     isPlaying,
@@ -43,18 +41,6 @@ function App() {
   } = useAudio(weddingConfig.music.tracks, weddingConfig.music.initialVolume)
 
   const [cardView, setCardView] = useState(() => isCardViewFromUrl())
-  // Show the name gate on every page load / reload.
-  // A scanned QR is the exception: its dedicated view opens the card directly.
-  const [gateDismissed, setGateDismissed] = useState(cardView)
-  const gateOpen = !gateDismissed
-
-  const startMusicAfterGate = () => {
-    // A direct attempt covers normal browsers. The short follow-up covers
-    // embedded webviews that register the gate click only after its handler
-    // finishes; calling play() on an already-playing element is harmless.
-    void play()
-    window.setTimeout(() => void play(), 160)
-  }
 
   // Always open at the top. scrollRestoration is disabled in main.tsx before
   // first paint; here we force the position instantly ("instant" bypasses the
@@ -68,15 +54,30 @@ function App() {
     return () => window.removeEventListener('pageshow', toTop)
   }, [])
 
+  // No entry gate anymore, so the ambient playlist starts on the guest's very
+  // first interaction — the gesture every browser needs to allow sound.
+  useEffect(() => {
+    if (!musicEnabled || cardView) return undefined
+    const start = () => void play()
+    const opts = { once: true, passive: true } as const
+    window.addEventListener('pointerdown', start, opts)
+    window.addEventListener('keydown', start, opts)
+    window.addEventListener('touchstart', start, opts)
+    return () => {
+      window.removeEventListener('pointerdown', start)
+      window.removeEventListener('keydown', start)
+      window.removeEventListener('touchstart', start)
+    }
+  }, [musicEnabled, cardView, play])
+
   if (cardView) {
     return (
       <ScannedInvitationView
         config={weddingConfig}
-        guestName={guestName}
+        guestName={GUEST_NAME}
         onOpenFullInvitation={() => {
           clearCardViewInUrl()
-          startMusicAfterGate()
-          setGateDismissed(true)
+          void play()
           setCardView(false)
           window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)
         }}
@@ -85,10 +86,6 @@ function App() {
   }
 
   return (
-    // IMPORTANT: no `filter`/`transform` on this root — any filter value (even
-    // blur(0px) left inline by Motion) turns it into the containing block for
-    // every `position: fixed` descendant, which made the guest gate span the
-    // whole page height and autofocus-scroll the layout to mid-page.
     <motion.div
       className="relative min-h-screen"
       initial={reduce ? false : { opacity: 0 }}
@@ -100,44 +97,17 @@ function App() {
       <FloatingDecor />
       <FallingPetals />
 
-      <GuestNameGate
-        open={gateOpen}
-        flightCode={weddingConfig.event.flightCode}
-        onSubmit={(name) => {
-          // The gate click is the browser-approved gesture that starts the
-          // playlist with sound. Playback then continues across all 3 songs.
-          startMusicAfterGate()
-          setGuestName(name)
-          setGateDismissed(true)
-          // A soft burst of hearts welcomes the guest aboard.
-          confetti({
-            particleCount: 45,
-            spread: 90,
-            startVelocity: 32,
-            scalar: 1.6,
-            origin: { x: 0.5, y: 0.55 },
-            shapes: [confetti.shapeFromText({ text: '💗', scalar: 1.6 })],
-            disableForReducedMotion: true,
-            zIndex: 60,
-          })
-        }}
-        onSkip={() => {
-          startMusicAfterGate()
-          setGateDismissed(true)
-        }}
-      />
-
       <main className="relative z-10">
         <HeroSection
           config={weddingConfig}
-          guestName={guestName}
+          guestName={GUEST_NAME}
           isMusicPlaying={isPlaying}
           onToggleMusic={toggle}
           musicEnabled={musicEnabled}
-          isRevealed={gateDismissed}
+          isRevealed
         />
 
-        <DownloadInvitation config={weddingConfig} guestName={guestName} />
+        <DownloadInvitation config={weddingConfig} guestName={GUEST_NAME} />
 
         <WeddingDetails config={weddingConfig} />
 
@@ -148,10 +118,6 @@ function App() {
         <FlightPhotoStory />
 
         <LoveMessage config={weddingConfig} />
-
-        <BoardingMessages config={weddingConfig} guestName={guestName} />
-
-        <GuestLinkGenerator />
 
         <FinalThankYou config={weddingConfig} />
       </main>

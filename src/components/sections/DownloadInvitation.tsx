@@ -266,6 +266,8 @@ export function DownloadInvitation({
               className="relative z-20 col-span-2 col-start-1 row-start-2 mx-auto w-[88vw] max-w-[21rem] rounded-[1.5rem] [container-type:inline-size] sm:w-full sm:max-w-[420px] sm:rounded-[1.75rem] md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-[clamp(400px,42vw,425px)] lg:max-w-[440px]"
               onPointerMove={handlePointerMove}
               onPointerLeave={resetTilt}
+              animate={reduce ? undefined : { y: [0, -6, 0] }}
+              transition={{ y: { duration: 6, repeat: Infinity, ease: 'easeInOut' } }}
               style={{
                 rotateX: reduce ? 0 : smoothTiltX,
                 rotateY: reduce ? 0 : smoothTiltY,
@@ -276,6 +278,7 @@ export function DownloadInvitation({
                 config={config}
                 guestName={guestName}
                 animatePhoto
+                reveal
                 selectedPhoto={selectedPhoto}
               />
               <motion.span
@@ -288,6 +291,7 @@ export function DownloadInvitation({
                   className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.5rem] sm:rounded-[1.75rem]"
                   aria-hidden="true"
                 >
+                  {/* Entrance shine */}
                   <motion.span
                     className="absolute -bottom-1/4 -top-1/4 w-[28%] -skew-x-12 bg-gradient-to-r from-transparent via-white/55 to-transparent mix-blend-screen"
                     initial={{ left: '-45%', opacity: 0 }}
@@ -297,6 +301,19 @@ export function DownloadInvitation({
                       duration: 1.25,
                       delay: 0.55,
                       ease: [0.22, 1, 0.36, 1],
+                    }}
+                  />
+                  {/* Recurring gold sheen that keeps the pass feeling alive */}
+                  <motion.span
+                    className="absolute -bottom-1/4 -top-1/4 w-[20%] -skew-x-12 bg-gradient-to-r from-transparent via-gold-light/45 to-transparent mix-blend-screen"
+                    initial={{ left: '-40%' }}
+                    animate={{ left: ['-40%', '135%'] }}
+                    transition={{
+                      duration: 2.3,
+                      ease: 'easeInOut',
+                      repeat: Infinity,
+                      repeatDelay: 4.2,
+                      delay: 2.4,
                     }}
                   />
                 </span>
