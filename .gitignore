@@ -19,6 +19,11 @@ photos-original/
 src/assets/marquee/Cuoi1/
 src/assets/marquee/Cuoi2/
 
+# Raw full-resolution drops in public/images (never serve/commit masters —
+# the site uses the optimized copies in src/assets/marquee + gallery)
+public/images/marque*/
+public/images/**/*.JPG
+
 # Claude Code workspace (local tooling — never commit)
 .claude/
 

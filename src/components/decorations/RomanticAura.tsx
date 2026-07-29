@@ -1,5 +1,11 @@
 import { useRef } from 'react'
-import { motion, useInView, useReducedMotion } from 'motion/react'
+import {
+  motion,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'motion/react'
 import { cn } from '../../lib/cn'
 
 /** Slow rose-and-champagne light that makes intimate sections feel alive. */
@@ -12,9 +18,22 @@ export function RomanticAura({ className }: { className?: string }) {
   })
   const active = !reduce && inView
 
+  // Gentle scroll parallax: the whole glow layer drifts a touch against the
+  // scroll, giving each section a soft sense of depth.
+  const { scrollYProgress } = useScroll({
+    target: auraRef,
+    offset: ['start end', 'end start'],
+  })
+  const parallaxY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    reduce ? ['0%', '0%'] : ['-7%', '7%'],
+  )
+
   return (
-    <div
+    <motion.div
       ref={auraRef}
+      style={reduce ? undefined : { y: parallaxY }}
       className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}
       aria-hidden="true"
     >
@@ -59,6 +78,6 @@ export function RomanticAura({ className }: { className?: string }) {
             : { duration: 0.45, ease: 'easeOut' as const }),
         }}
       />
-    </div>
+    </motion.div>
   )
 }

@@ -32,7 +32,7 @@ export function SectionHeading({
       )}
     >
       {kicker && (
-        <span className="label-caps text-[clamp(0.6rem,2.4vw,0.72rem)] text-gold">
+        <span className="label-caps text-gold-shimmer text-[clamp(0.6rem,2.4vw,0.72rem)]">
           {kicker}
         </span>
       )}
