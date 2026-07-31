@@ -4,7 +4,6 @@ import { downloadICS } from '../../lib/ics'
 import { useI18n } from '../../i18n/LanguageContext'
 import { formatWeekday } from '../../i18n/translations'
 import { SectionHeading } from '../ui/SectionHeading'
-import { Countdown } from '../ui/Countdown'
 import { Reveal } from '../ui/Reveal'
 import { RomanticAura } from '../decorations/RomanticAura'
 import { SectionRomance } from '../decorations/SectionRomance'
@@ -23,7 +22,7 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
   return (
     <section
       id="details"
-      className="relative overflow-hidden bg-gradient-to-b from-ivory via-sky-soft/60 to-ivory px-5 py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-ivory via-sky-soft/50 to-sky-soft/70 px-5 py-20"
       aria-label={t.details.title}
     >
       <RomanticAura className="opacity-75" />
@@ -111,12 +110,8 @@ export function WeddingDetails({ config }: { config: WeddingConfig }) {
             </div>
           )}
 
-          <Countdown
-            iso={date.iso}
-            tone="navy"
-            className="w-full max-w-[22rem] sm:w-auto sm:max-w-none"
-          />
-
+          {/* The countdown lives in the hero alone — repeating it here made the
+              two sections read as the same beat twice. */}
           <div className="flex w-full flex-col gap-3 sm:flex-row">
             {venue.mapLink && (
               <a

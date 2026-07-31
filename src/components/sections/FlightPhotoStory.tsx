@@ -19,6 +19,8 @@ import {
 } from '../../lib/galleryPhotos'
 import { useI18n } from '../../i18n/LanguageContext'
 import { Clouds } from '../decorations/Clouds'
+import { Reveal } from '../ui/Reveal'
+import { SectionHeading } from '../ui/SectionHeading'
 import { SmartImage } from '../ui/SmartImage'
 
 /**
@@ -396,17 +398,16 @@ export function FlightPhotoStory() {
 
   if (!activePhoto || !leftPortrait || !rightPortrait) return null
 
-  const sectionLabel = `${t.gallery.title} — Cabin Window Journey`
+  const sectionLabel = t.photoStory.title
   const activeLabel = `${t.gallery.photo} ${activeIndex + 1}`
 
   return (
     <section
       ref={sectionRef}
       id="flight-photo-story"
-      className="relative overflow-hidden bg-gradient-to-b from-ivory via-sky-soft to-warm-white py-10 sm:py-12 lg:py-16"
+      className="relative overflow-hidden bg-gradient-to-b from-warm-white via-sky-soft/60 to-warm-white py-10 sm:py-12 lg:py-16"
       aria-label={sectionLabel}
     >
-      <h2 className="sr-only">{sectionLabel}</h2>
       <Clouds tone="white" className="opacity-50" />
 
       <div
@@ -415,7 +416,15 @@ export function FlightPhotoStory() {
       />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative flex items-center justify-center pb-16 pt-4 sm:pb-20 sm:pt-6 lg:pb-20 lg:pt-8">
+        <Reveal>
+          <SectionHeading
+            kicker={t.photoStory.kicker}
+            title={t.photoStory.title}
+            subtitle={t.photoStory.subtitle}
+          />
+        </Reveal>
+
+        <div className="relative flex items-center justify-center pb-16 pt-10 sm:pb-20 sm:pt-12 lg:pb-20 lg:pt-14">
           <motion.div
             className="relative z-20 aspect-[4/5] w-[min(86vw,25rem)] sm:aspect-[16/10] sm:w-[min(76vw,48rem)] lg:w-[min(68vw,58rem)]"
             initial={reduced ? false : { opacity: 0, y: 24, scale: 0.97 }}

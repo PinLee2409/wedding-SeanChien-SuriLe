@@ -12,6 +12,7 @@ import {
 import { useI18n } from '../../i18n/LanguageContext'
 import { SectionRomance } from '../decorations/SectionRomance'
 import { Reveal } from '../ui/Reveal'
+import { SectionHeading } from '../ui/SectionHeading'
 import { RevealItem, SectionReveal } from '../ui/SectionReveal'
 import { SmartImage } from '../ui/SmartImage'
 
@@ -123,6 +124,13 @@ function weaveSources(...sources: GalleryPhoto[][]) {
   return result
 }
 
+interface MarqueeEntry {
+  photo: GalleryPhoto
+  /** Position in the album, so the two lanes number 1…N between them. */
+  number: number
+}
+
+/** The whole album, woven shoot-by-shoot — no slice, every photograph shows. */
 const MIXED_MARQUEE_PHOTOS = weaveSources(
   mixPhotos(
     galleryPhotos.filter((photo) => photo.filename.startsWith('cuoi1_')),
@@ -136,7 +144,23 @@ const MIXED_MARQUEE_PHOTOS = weaveSources(
     galleryPhotos.filter((photo) => photo.filename.startsWith('cuoi3_')),
     0x7a8b9c,
   ),
-).slice(0, 33)
+)
+
+/**
+ * Dealt alternately into two lanes rather than split down the middle: the weave
+ * already alternates shoots, so taking every other entry keeps both lanes
+ * evenly mixed. No photograph appears in both lanes, so nothing is on screen
+ * twice while the pair drifts in opposite directions.
+ */
+const NUMBERED_MARQUEE_PHOTOS: MarqueeEntry[] = MIXED_MARQUEE_PHOTOS.map(
+  (photo, index) => ({ photo, number: index + 1 }),
+)
+const MARQUEE_ROW_TOP = NUMBERED_MARQUEE_PHOTOS.filter(
+  (_, index) => index % 2 === 0,
+)
+const MARQUEE_ROW_BOTTOM = NUMBERED_MARQUEE_PHOTOS.filter(
+  (_, index) => index % 2 === 1,
+)
 
 const SOFT_TILTS = [
   'rotate-[-0.65deg]',
@@ -159,18 +183,30 @@ const MARQUEE_TILTS = [
 function MarqueePhotoCard({
   photo,
   index,
+  label,
+  onOpen,
+  duplicate = false,
 }: {
   photo: GalleryPhoto
   index: number
+  label: string
+  onOpen: (photo: GalleryPhoto, label: string) => void
+  /** The looping second copy: still clickable, but never focusable and never
+   *  announced, so the strip is not read out twice. */
+  duplicate?: boolean
 }) {
   return (
-    <figure
-      aria-hidden="true"
+    <button
+      type="button"
+      onClick={() => onOpen(photo, label)}
+      aria-label={duplicate ? undefined : label}
+      aria-hidden={duplicate || undefined}
+      tabIndex={duplicate ? -1 : undefined}
       className={cn(
-        'group/tile relative h-24 shrink-0 overflow-hidden rounded-[1.3rem] bg-gradient-to-br from-white via-white to-rose/20 p-[3px] shadow-[0_18px_38px_-22px_rgba(27,42,74,0.7)] ring-1 ring-rosegold/20 transition-[transform,box-shadow] duration-500 ease-out hover:z-10 hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_24px_46px_-20px_rgba(27,42,74,0.76)] sm:h-28 sm:rounded-[1.55rem] sm:p-1 lg:h-32',
+        'group/tile relative h-44 shrink-0 cursor-pointer overflow-hidden rounded-[1.6rem] bg-gradient-to-br from-white via-white to-rose/20 p-[3px] shadow-[0_18px_38px_-22px_rgba(27,42,74,0.7)] ring-1 ring-rosegold/20 transition-[transform,box-shadow] duration-500 ease-out hover:z-10 hover:-translate-y-1.5 hover:rotate-0 hover:shadow-[0_28px_52px_-20px_rgba(27,42,74,0.78)] focus:outline-none focus-visible:z-10 focus-visible:rotate-0 focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ivory sm:h-[12.5rem] sm:rounded-[1.85rem] sm:p-1 lg:h-56',
         photo.orientation === 'landscape'
-          ? 'w-36 sm:w-[10.5rem] lg:w-48'
-          : 'w-[4.9rem] sm:w-[5.75rem] lg:w-[6.6rem]',
+          ? 'w-[16.5rem] sm:w-[18.75rem] lg:w-[21rem]'
+          : 'w-[9rem] sm:w-[10.25rem] lg:w-[11.6rem]',
         MARQUEE_TILTS[index % MARQUEE_TILTS.length],
       )}
     >
@@ -179,7 +215,7 @@ function MarqueePhotoCard({
         alt=""
         fit="cover"
         placeholder="bare"
-        className="h-full w-full rounded-[1.05rem] ring-1 ring-navy/5 sm:rounded-[1.25rem]"
+        className="h-full w-full rounded-[1.25rem] ring-1 ring-navy/5 sm:rounded-[1.45rem]"
         imgClassName={cn(
           'transition-transform duration-700 ease-out group-hover/tile:scale-[1.04]',
           photo.orientation === 'portrait'
@@ -187,7 +223,7 @@ function MarqueePhotoCard({
             : 'object-center',
         )}
       />
-    </figure>
+    </button>
   )
 }
 
@@ -205,12 +241,28 @@ function HeartDivider() {
   )
 }
 
-function MarqueeSegment({ photos }: { photos: GalleryPhoto[] }) {
+function MarqueeSegment({
+  entries,
+  onOpen,
+  duplicate = false,
+}: {
+  entries: MarqueeEntry[]
+  onOpen: (photo: GalleryPhoto, label: string) => void
+  duplicate?: boolean
+}) {
+  const { t } = useI18n()
+
   return (
     <div className="photo-marquee-segment">
-      {photos.map((photo, index) => (
+      {entries.map(({ photo, number }, index) => (
         <Fragment key={photo.filename}>
-          <MarqueePhotoCard photo={photo} index={index} />
+          <MarqueePhotoCard
+            photo={photo}
+            index={index}
+            label={`${t.gallery.photo} ${number}`}
+            onOpen={onOpen}
+            duplicate={duplicate}
+          />
           <HeartDivider />
         </Fragment>
       ))}
@@ -219,17 +271,22 @@ function MarqueeSegment({ photos }: { photos: GalleryPhoto[] }) {
 }
 
 function MarqueeLane({
-  photos,
+  entries,
   duration,
   reduce,
   active,
+  reverse = false,
+  onOpen,
 }: {
-  photos: GalleryPhoto[]
+  entries: MarqueeEntry[]
   duration: number
   reduce: boolean
   active: boolean
+  /** Drift right-to-left instead, so a pair of lanes counter-scrolls. */
+  reverse?: boolean
+  onOpen: (photo: GalleryPhoto, label: string) => void
 }) {
-  if (photos.length === 0) return null
+  if (entries.length === 0) return null
 
   if (reduce) {
     return (
@@ -237,10 +294,15 @@ function MarqueeLane({
         className="flex snap-x snap-mandatory items-center gap-3 overflow-x-auto px-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4"
         aria-label="Photo strip"
       >
-        {photos.map((photo, index) => (
+        {entries.map(({ photo, number }, index) => (
           <Fragment key={photo.filename}>
             <div className="snap-center">
-              <MarqueePhotoCard photo={photo} index={index} />
+              <MarqueeStaticCard
+                photo={photo}
+                index={index}
+                number={number}
+                onOpen={onOpen}
+              />
             </div>
             <HeartDivider />
           </Fragment>
@@ -250,21 +312,45 @@ function MarqueeLane({
   }
 
   return (
-    <div className="photo-marquee py-2 sm:py-3">
+    <div className="photo-marquee py-4 sm:py-6">
       <div
         className={cn(
           'photo-marquee-track',
+          reverse && 'photo-marquee-track--reverse',
           !active && 'photo-marquee-track--paused',
         )}
         style={{ '--marquee-duration': `${duration}s` } as CSSProperties}
-        aria-hidden="true"
       >
-        <MarqueeSegment photos={photos} />
-        <div className="shrink-0" aria-hidden="true">
-          <MarqueeSegment photos={photos} />
+        <MarqueeSegment entries={entries} onOpen={onOpen} />
+        <div className="shrink-0">
+          <MarqueeSegment entries={entries} onOpen={onOpen} duplicate />
         </div>
       </div>
     </div>
+  )
+}
+
+/** Reduced-motion strip: one focusable card per photo, no looping copy. */
+function MarqueeStaticCard({
+  photo,
+  index,
+  number,
+  onOpen,
+}: {
+  photo: GalleryPhoto
+  index: number
+  number: number
+  onOpen: (photo: GalleryPhoto, label: string) => void
+}) {
+  const { t } = useI18n()
+
+  return (
+    <MarqueePhotoCard
+      photo={photo}
+      index={index}
+      label={`${t.gallery.photo} ${number}`}
+      onOpen={onOpen}
+    />
   )
 }
 
@@ -389,22 +475,32 @@ export function MediaGallery() {
     null,
   )
 
+  const openLightbox = (photo: GalleryPhoto, label: string) =>
+    setLightboxImage({ src: photo.full, alt: label })
+
   if (FEATURED_PHOTOS.length === 0) return null
 
   return (
     <section
       ref={sectionRef}
       id="gallery"
-      className="relative overflow-hidden bg-gradient-to-b from-warm-white via-ivory to-ivory py-12 sm:py-16 lg:py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-ivory via-cream to-ivory-deep py-12 sm:py-16 lg:py-20"
       aria-label={t.gallery.title}
     >
-      <h2 className="sr-only">{t.gallery.title}</h2>
       <SectionRomance direction="ltr" planeTop="47%" />
 
       <div
         className="pointer-events-none absolute inset-x-0 top-1/4 h-1/2 bg-[radial-gradient(ellipse_60%_70%_at_50%_50%,var(--color-rose)_0%,transparent_72%)] opacity-[0.12]"
         aria-hidden="true"
       />
+
+      <Reveal className="relative z-10 mx-auto max-w-7xl px-5 pb-10 sm:px-7 sm:pb-12 lg:px-10">
+        <SectionHeading
+          kicker={t.gallery.kicker}
+          title={t.gallery.title}
+          subtitle={t.gallery.subtitle}
+        />
+      </Reveal>
 
       <SectionReveal className="relative z-10 mx-auto grid max-w-7xl grid-cols-2 gap-3 px-5 py-1 sm:gap-4 sm:px-7 md:grid-cols-6 md:auto-rows-[clamp(7.125rem,15vw,9.5rem)] lg:grid-cols-12 lg:auto-rows-[clamp(5rem,6.6vw,5.75rem)] lg:gap-5 lg:px-10">
         {FEATURED_PHOTOS.map(({ photo, spec }, index) => {
@@ -456,11 +552,23 @@ export function MediaGallery() {
         delay={0.08}
         className="relative z-10 mt-9 border-y border-gold/10 bg-white/25 py-2 sm:mt-12 sm:py-3"
       >
+        {/* Two counter-scrolling lanes. The durations are tuned to the longer
+            tracks so the drift stays at roughly the old pace, and differ
+            slightly between lanes so they never lock into step. */}
         <MarqueeLane
-          photos={MIXED_MARQUEE_PHOTOS}
-          duration={74}
+          entries={MARQUEE_ROW_TOP}
+          duration={150}
           reduce={reduce}
           active={marqueeActive}
+          onOpen={openLightbox}
+        />
+        <MarqueeLane
+          entries={MARQUEE_ROW_BOTTOM}
+          duration={136}
+          reduce={reduce}
+          active={marqueeActive}
+          reverse
+          onOpen={openLightbox}
         />
       </Reveal>
 

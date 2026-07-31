@@ -5,6 +5,9 @@ import { cn } from '../../lib/cn'
 import { getOrderedCouple } from '../../lib/couple'
 import { easeLux } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
+import { RomanticAura } from '../decorations/RomanticAura'
+import { Reveal } from '../ui/Reveal'
+import { SectionHeading } from '../ui/SectionHeading'
 import { SmartImage } from '../ui/SmartImage'
 
 const PORTRAIT_SIZE = 'w-[clamp(5.75rem,30vw,10rem)]'
@@ -72,7 +75,7 @@ function ProfileCard({
 }
 
 /** Couple portraits — ordered per repository and joined as one composition. */
-export function CoupleProfile({ config }: { config: WeddingConfig }) {
+function CoupleCard({ config }: { config: WeddingConfig }) {
   const { t } = useI18n()
   const reduce = useReducedMotion()
   const orderedCouple = getOrderedCouple(config)
@@ -156,5 +159,38 @@ export function CoupleProfile({ config }: { config: WeddingConfig }) {
         />
       </div>
     </div>
+  )
+}
+
+/**
+ * "The flight crew" — the couple introduced straight after the hero, so guests
+ * know who they are flying with before the journey is told. Opens the long
+ * ivory run that carries through the timeline into the flight details.
+ */
+export function CoupleProfile({ config }: { config: WeddingConfig }) {
+  const { t } = useI18n()
+
+  return (
+    <section
+      id="couple"
+      className="relative overflow-hidden bg-gradient-to-b from-cream via-ivory to-ivory px-5 py-20 sm:py-24"
+      aria-label={t.couple.title}
+    >
+      <RomanticAura className="opacity-60" />
+
+      <div className="relative z-10 mx-auto max-w-5xl">
+        <Reveal>
+          <SectionHeading
+            kicker={t.couple.kicker}
+            title={t.couple.title}
+            subtitle={t.couple.subtitle}
+          />
+        </Reveal>
+
+        <Reveal delay={0.1} className="mt-12 sm:mt-14">
+          <CoupleCard config={config} />
+        </Reveal>
+      </div>
+    </section>
   )
 }

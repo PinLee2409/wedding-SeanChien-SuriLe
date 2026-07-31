@@ -3,12 +3,15 @@ import { motion, useReducedMotion } from 'motion/react'
 import { weddingConfig } from './config/wedding.config'
 import { useAudio } from './hooks/useAudio'
 import { useTheme } from './hooks/useTheme'
+// Imported in page order — the list doubles as the running order of the flight.
 import { HeroSection } from './components/sections/HeroSection'
-import { DownloadInvitation } from './components/sections/DownloadInvitation'
-import { MediaGallery } from './components/sections/MediaGallery'
-import { FlightPhotoStory } from './components/sections/FlightPhotoStory'
+import { CoupleProfile } from './components/sections/CoupleProfile'
+import { FlightTimeline } from './components/sections/FlightTimeline'
 import { WeddingDetails } from './components/sections/WeddingDetails'
+import { DownloadInvitation } from './components/sections/DownloadInvitation'
+import { FlightPhotoStory } from './components/sections/FlightPhotoStory'
 import { LoveMessage } from './components/sections/LoveMessage'
+import { MediaGallery } from './components/sections/MediaGallery'
 import { FinalThankYou } from './components/sections/FinalThankYou'
 import { ScannedInvitationView } from './components/sections/ScannedInvitationView'
 import { RouteDivider } from './components/decorations/RouteDivider'
@@ -107,17 +110,30 @@ function App() {
           isRevealed
         />
 
-        <DownloadInvitation config={weddingConfig} guestName={GUEST_NAME} />
+        {/* Who you are flying with, before the journey is told. */}
+        <CoupleProfile config={weddingConfig} />
+
+        {/* The story — its final leg *is* the wedding date, so it hands
+            straight over to the details below with nothing in between. */}
+        <FlightTimeline config={weddingConfig} />
 
         <WeddingDetails config={weddingConfig} />
 
-        <RouteDivider className="bg-gradient-to-b from-ivory to-warm-white" />
+        {/* The same facts again, now as a keepsake to take away. Kept adjacent
+            to the details on purpose: side by side they reinforce rather than
+            repeat. */}
+        <DownloadInvitation config={weddingConfig} guestName={GUEST_NAME} />
 
-        <MediaGallery />
+        <RouteDivider className="bg-warm-white" />
 
         <FlightPhotoStory />
 
+        {/* Words between the two photo runs, so neither becomes a wall. */}
         <LoveMessage config={weddingConfig} />
+
+        <RouteDivider className="bg-ivory" />
+
+        <MediaGallery />
 
         <FinalThankYou config={weddingConfig} />
       </main>

@@ -109,7 +109,7 @@ export function DownloadInvitation({
   return (
     <section
       id="boarding-pass"
-      className="relative overflow-hidden bg-gradient-to-b from-cream via-ivory to-sky-soft/70 px-2 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24"
+      className="relative overflow-hidden bg-gradient-to-b from-sky-soft/70 via-ivory to-warm-white px-2 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-24"
       aria-label={t.download.title}
     >
       <RomanticAura className="opacity-70" />

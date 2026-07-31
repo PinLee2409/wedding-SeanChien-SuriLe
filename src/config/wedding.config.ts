@@ -222,42 +222,42 @@ export const weddingConfig: WeddingConfig = {
     backgroundVideo: '',
   },
 
+  // Deliberately free of dates and events we were never told. Only the landing
+  // leg carries a real date — the wedding day. If the couple want their actual
+  // milestones here, fill in `date`/`title`/`description` per leg (and the
+  // matching entries in i18n `timeline.items`); a leg with an empty `date`
+  // simply renders without one.
+  // Photographs come from the gallery set via FlightTimeline's LEG_PHOTOS —
+  // the old `images/timeline-*.jpg` paths were never supplied and rendered as
+  // placeholders, which is why this section had been dropped from the page.
   timeline: [
     {
       phase: 'Check-in',
       icon: 'ticket',
-      date: 'Mùa thu 2019',
-      title: 'Lần đầu gặp gỡ',
-      description:
-        'Hai hành khách xa lạ tình cờ chung một chuyến bay. Một ánh nhìn, và hành trình bắt đầu.',
-      image: 'images/timeline-1.jpg',
+      date: '',
+      title: 'Packing for the journey',
+      description: 'Every flight begins with a promise.',
     },
     {
       phase: 'Take-off',
       icon: 'plane-takeoff',
-      date: 'Xuân 2021',
-      title: 'Chính thức cất cánh',
-      description:
-        'Sean Chien and Suri Le joined the same crew and began writing their story together.',
-      image: 'images/timeline-2.jpg',
+      date: '',
+      title: 'Cleared for take-off',
+      description: 'Two passengers choosing the same route.',
     },
     {
       phase: 'Cruising Altitude',
       icon: 'cloud',
-      date: '2021 — 2026',
-      title: 'Những kỷ niệm đẹp',
-      description:
-        'Bay qua bao vùng trời, cùng đón bình minh và hoàng hôn ở khắp mọi nơi.',
-      image: 'images/timeline-3.jpg',
+      date: '',
+      title: 'The shared route',
+      description: 'Through sunshine, through rain, through the ordinary days.',
     },
     {
       phase: 'Landing',
       icon: 'plane-landing',
       date: '27 · 12 · 2026',
-      title: 'Ngày hạ cánh',
-      description:
-        'Chuyến bay hạnh phúc đáp xuống bến đỗ cuối cùng — mãi mãi bên nhau.',
-      image: 'images/timeline-4.jpg',
+      title: 'Landing day',
+      description: 'Our final stop, and where everything begins.',
     },
   ],
 

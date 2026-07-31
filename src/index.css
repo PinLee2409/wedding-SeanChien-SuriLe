@@ -668,7 +668,11 @@
   padding-right: 0.75rem;
 }
 
-.photo-marquee:focus-within .photo-marquee-track {
+/* Pause for keyboard focus only. The cards are real buttons, so a mouse click
+   leaves focus sitting on one after the lightbox closes — plain :focus-within
+   would freeze the strip until the guest clicked empty space. :focus-visible
+   is not set by pointer clicks, so only tabbing settles the strip. */
+.photo-marquee:has(:focus-visible) .photo-marquee-track {
   animation-play-state: paused;
 }
 

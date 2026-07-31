@@ -74,6 +74,13 @@ export interface Translation {
     photo: string
     captions: [string, string]
   }
+  /** The cabin-window run, kept distinct from the album so the two photo
+   *  sections never carry the same heading. */
+  photoStory: {
+    kicker: string
+    title: string
+    subtitle: string
+  }
   details: {
     kicker: string
     title: string
@@ -112,6 +119,9 @@ export interface Translation {
     seeds: Array<{ name: string; message: string }>
   }
   couple: {
+    kicker: string
+    title: string
+    subtitle: string
     groomRole: string
     brideRole: string
   }
@@ -224,10 +234,10 @@ export const translations: Record<Lang, Translation> = {
       title: 'Hành trình yêu thương',
       subtitle: 'Mỗi chặng bay, một dấu mốc yêu thương.',
       items: [
-        { phase: 'Làm thủ tục', date: 'Mùa thu 2019', title: 'Lần đầu gặp gỡ', description: 'Hai người xa lạ chung một chuyến bay.' },
-        { phase: 'Cất cánh', date: 'Xuân 2021', title: 'Chính thức cất cánh', description: 'Về chung một đội bay, chung một câu chuyện.' },
-        { phase: 'Bay ổn định', date: '2021 — 2026', title: 'Những kỷ niệm đẹp', description: 'Bình minh và hoàng hôn khắp mọi nơi.' },
-        { phase: 'Hạ cánh', date: '27 · 12 · 2026', title: 'Ngày hạ cánh', description: 'Bến đỗ cuối — mãi mãi bên nhau.' },
+        { phase: 'Làm thủ tục', date: '', title: 'Chuẩn bị hành trang', description: 'Mọi chuyến bay đều bắt đầu bằng một lời hẹn.' },
+        { phase: 'Cất cánh', date: '', title: 'Cùng cất cánh', description: 'Hai hành khách chọn chung một đường bay.' },
+        { phase: 'Bay ổn định', date: '', title: 'Đường bay chung', description: 'Qua nắng, qua mưa, qua những điều rất đời thường.' },
+        { phase: 'Hạ cánh', date: '27 · 12 · 2026', title: 'Ngày hạ cánh', description: 'Bến đỗ cuối cùng, và cũng là nơi bắt đầu.' },
       ],
     },
     gallery: {
@@ -237,6 +247,11 @@ export const translations: Record<Lang, Translation> = {
       memoryLane: 'Dòng ký ức',
       photo: 'Ảnh',
       captions: ['Yêu thương', 'Mãi mãi'],
+    },
+    photoStory: {
+      kicker: 'Trên chuyến bay',
+      title: 'Nhìn qua ô cửa',
+      subtitle: 'Những khung trời hai đứa đã cùng đi qua.',
     },
     details: {
       kicker: 'Chi tiết chuyến bay',
@@ -292,6 +307,9 @@ export const translations: Record<Lang, Translation> = {
       ],
     },
     couple: {
+      kicker: 'Phi hành đoàn',
+      title: 'Cô dâu & Chú rể',
+      subtitle: 'Hai hành khách xa lạ, nay chung một chuyến bay.',
       groomRole: 'Chú rể',
       brideRole: 'Cô dâu',
     },
@@ -402,10 +420,10 @@ export const translations: Record<Lang, Translation> = {
       title: 'Our journey',
       subtitle: 'Every leg of the flight, a milestone of love.',
       items: [
-        { phase: 'Check-in', date: 'Autumn 2019', title: 'First encounter', description: 'Two strangers on the same flight.' },
-        { phase: 'Take-off', date: 'Spring 2021', title: 'Officially airborne', description: 'One crew, one story.' },
-        { phase: 'Cruising Altitude', date: '2021 — 2026', title: 'Beautiful memories', description: 'Sunrises and sunsets everywhere.' },
-        { phase: 'Landing', date: '27 · 12 · 2026', title: 'Landing day', description: 'Our final stop — together, forever.' },
+        { phase: 'Check-in', date: '', title: 'Packing for the journey', description: 'Every flight begins with a promise.' },
+        { phase: 'Take-off', date: '', title: 'Cleared for take-off', description: 'Two passengers choosing the same route.' },
+        { phase: 'Cruising Altitude', date: '', title: 'The shared route', description: 'Through sunshine, through rain, through the ordinary days.' },
+        { phase: 'Landing', date: '27 · 12 · 2026', title: 'Landing day', description: 'Our final stop, and where everything begins.' },
       ],
     },
     gallery: {
@@ -415,6 +433,11 @@ export const translations: Record<Lang, Translation> = {
       memoryLane: 'Memory lane',
       photo: 'Photo',
       captions: ['Love', 'Forever'],
+    },
+    photoStory: {
+      kicker: 'In flight',
+      title: 'Through the window',
+      subtitle: 'The views we have shared along the way.',
     },
     details: {
       kicker: 'Flight Details',
@@ -469,6 +492,9 @@ export const translations: Record<Lang, Translation> = {
       ],
     },
     couple: {
+      kicker: 'The flight crew',
+      title: 'The Bride & Groom',
+      subtitle: 'Two passengers, now sharing one flight.',
       groomRole: 'Groom',
       brideRole: 'Bride',
     },
@@ -613,10 +639,10 @@ export const translations: Record<Lang, Translation> = {
       title: '我們的旅程',
       subtitle: '每一段航程，都是愛的里程碑。',
       items: [
-        { phase: '報到', date: '2019 秋', title: '初次相遇', description: '兩位陌生旅客，同一班機。' },
-        { phase: '起飛', date: '2021 春', title: '正式起飛', description: '同一機組，同一個故事。' },
-        { phase: '巡航', date: '2021 — 2026', title: '美好回憶', description: '世界各地的日出與日落。' },
-        { phase: '降落', date: '2026.12.27', title: '降落之日', description: '最後的停機坪——永遠相伴。' },
+        { phase: '報到', date: '', title: '整理行囊', description: '每一趟旅程，都始於一個約定。' },
+        { phase: '起飛', date: '', title: '一同起飛', description: '兩位旅客，選擇了同一條航線。' },
+        { phase: '巡航', date: '', title: '共同的航線', description: '晴天、雨天，以及每一個平凡的日子。' },
+        { phase: '降落', date: '2026.12.27', title: '降落之日', description: '最後的停機坪，也是一切的起點。' },
       ],
     },
     gallery: {
@@ -626,6 +652,11 @@ export const translations: Record<Lang, Translation> = {
       memoryLane: '回憶長廊',
       photo: '照片',
       captions: ['甜蜜', '永恆'],
+    },
+    photoStory: {
+      kicker: '航程中',
+      title: '窗外的風景',
+      subtitle: '我們一路上共同看過的風景。',
     },
     details: {
       kicker: '搭乘資訊',
@@ -677,6 +708,9 @@ export const translations: Record<Lang, Translation> = {
       ],
     },
     couple: {
+      kicker: '機組人員',
+      title: '新娘與新郎',
+      subtitle: '兩位旅人，如今同行一段旅程。',
       groomRole: '新郎',
       brideRole: '新娘',
     },

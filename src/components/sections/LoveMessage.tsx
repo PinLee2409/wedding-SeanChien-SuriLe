@@ -5,8 +5,6 @@ import type { WeddingConfig } from '../../config/wedding.config'
 import { useI18n } from '../../i18n/LanguageContext'
 import { getOrderedCouple } from '../../lib/couple'
 import { RomanticAura } from '../decorations/RomanticAura'
-import { Reveal } from '../ui/Reveal'
-import { CoupleProfile } from './CoupleProfile'
 
 const letterEase = [0.22, 1, 0.36, 1] as const
 
@@ -261,10 +259,6 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
           </motion.article>
         </motion.div>
       </div>
-
-      <Reveal delay={0.1} className="relative z-10 mt-12 sm:mt-16">
-        <CoupleProfile config={config} />
-      </Reveal>
     </section>
   )
 }
