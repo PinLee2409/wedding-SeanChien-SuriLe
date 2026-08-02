@@ -71,6 +71,7 @@ function TimelineRow({
 }) {
   const Icon = ICONS[item.icon]
   const isLeft = index % 2 === 0
+  const isWide = photo?.orientation === 'landscape'
 
   // The ring fills as the aircraft covers the leg *into* this node, so the
   // badge reads as loading while the plane is still on its way.
@@ -132,45 +133,64 @@ function TimelineRow({
         </motion.span>
       </span>
 
-      {/* Text */}
+      {/* Text. The block hugs the route on both sides, but the copy itself is
+          always ranged left — a three-line paragraph set ragged-left is hard
+          work to read, and the phase caption is dropped because the icon on
+          the route already says which leg this is. */}
       <div
         className={cn(
           'pl-16 md:row-start-1 md:pl-0',
-          isLeft
-            ? 'md:col-start-1 md:pr-12 md:text-right'
-            : 'md:col-start-2 md:pl-12',
+          isLeft ? 'md:col-start-1 md:pr-12' : 'md:col-start-2 md:pl-12',
         )}
       >
-        <span className="label-caps text-[10px] text-gold">{copy.phase}</span>
-        {/* Only the wedding day carries a real date; the other legs deliberately
-            carry none rather than an invented one. */}
-        {copy.date && (
-          <p className="mt-1 font-mono text-xs text-navy-400">{copy.date}</p>
-        )}
-        <h3 className="mt-1 font-display text-[clamp(1.4rem,4.5vw,2rem)] text-navy">
-          {copy.title}
-        </h3>
-        <p className="mt-2 text-sm leading-relaxed text-navy-400">
-          {copy.description}
-        </p>
+        <div className={cn('max-w-[31rem]', isLeft && 'md:ml-auto')}>
+          {/* Only the wedding day carries a real date; the other legs
+              deliberately carry none rather than an invented one. */}
+          {copy.date && (
+            <p className="mb-2 font-mono text-[0.7rem] tracking-[0.2em] text-gold-dark">
+              {copy.date}
+            </p>
+          )}
+          <h3 className="font-display text-[clamp(1.45rem,4vw,2.05rem)] leading-[1.16] text-navy">
+            {copy.title}
+          </h3>
+          <span
+            className="mt-4 block h-px w-10 bg-gold/50"
+            aria-hidden="true"
+          />
+          <p className="mt-4 text-justify text-[0.95rem] leading-[1.8] text-navy-500">
+            {copy.description}
+          </p>
+        </div>
       </div>
 
-      {/* Image */}
+      {/* Image. The frame takes the photograph's own shape so nothing is cut —
+          these legs mix uprights and a landscape, and one fixed 4:3 frame was
+          taking about half of every upright. Uprights are held to a narrower
+          column as well, or a 2:3 frame at full width would make each leg
+          taller than the screen. */}
       <div
         className={cn(
-          'group mt-4 overflow-hidden rounded-2xl border border-gold/20 shadow-[0_18px_44px_-30px_rgba(27,42,74,0.65)] md:row-start-1 md:mt-0',
+          'group mt-4 overflow-hidden rounded-2xl border border-gold/20 shadow-[0_18px_44px_-30px_rgba(27,42,74,0.65)] transition-shadow duration-500 hover:shadow-[0_26px_56px_-28px_rgba(27,42,74,0.8)] md:row-start-1 md:mt-0',
           'ml-16 md:ml-0',
           isLeft ? 'md:col-start-2 md:ml-12' : 'md:col-start-1 md:mr-12',
+          isWide ? 'w-full' : 'w-full max-w-[19rem]',
+          !isWide && !isLeft && 'md:ml-auto',
         )}
       >
         <SmartImage
           src={photo?.display}
           srcSet={photo ? photoSrcSet(photo) : undefined}
-          sizes="(min-width: 768px) 45vw, 70vw"
+          sizes={
+            isWide ? '(min-width: 768px) 45vw, 70vw' : '(min-width: 768px) 19rem, 70vw'
+          }
           alt={copy.title}
           label={copy.phase}
-          className="aspect-[4/3] w-full"
-          imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]"
+          fit="contain"
+          className={cn(
+            'w-full bg-ivory-deep',
+            isWide ? 'aspect-[3/2]' : 'aspect-[2/3]',
+          )}
         />
       </div>
     </Reveal>

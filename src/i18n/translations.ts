@@ -80,6 +80,7 @@ export interface Translation {
     subtitle: string
     departure: string
     boardingAt: string
+    /** Ceremony and banquet times — Taiwan only. */
     ceremony: string
     banquet: string
     venue: string
@@ -203,7 +204,8 @@ export const translations: Record<Lang, Translation> = {
       aria: 'Trang bìa thiệp cưới',
       inviteLabel: 'Trân trọng kính mời',
       inviteFallback: 'Trân trọng kính mời Quý khách',
-      inviteLine: 'Đến chung vui trong ngày trọng đại của cô dâu và chú rể.',
+      // The line break is deliberate — rendered with `whitespace-pre-line`.
+      inviteLine: 'Đến chung vui cùng cô dâu và chú rể\ntrong ngày trọng đại.',
       scroll: 'Cuộn xuống',
     },
     countdown: {
@@ -215,7 +217,7 @@ export const translations: Record<Lang, Translation> = {
     },
     download: {
       kicker: 'Lời mời trân quý',
-      title: 'Hân hạnh đón Quý khách chung vui',
+      title: 'Xin dành tặng Quý khách tấm vé này',
       subtitle:
         'Quý khách vui lòng lưu thẻ mời để thuận tiện khi tham dự ngày trọng đại.',
       png: 'Tải PNG',
@@ -227,12 +229,37 @@ export const translations: Record<Lang, Translation> = {
     timeline: {
       kicker: 'Hành trình bay',
       title: 'Hành trình yêu thương',
-      subtitle: 'Mỗi chặng bay, một dấu mốc yêu thương.',
+      subtitle:
+        'Giữa hàng triệu người, chúng mình đã gặp nhau. Từ hai con người với hai hành trình riêng, giờ đây cùng chọn đi chung một con đường.',
       items: [
-        { phase: 'Làm thủ tục', date: '', title: 'Chuẩn bị hành trang', description: 'Mọi chuyến bay đều bắt đầu bằng một lời hẹn.' },
-        { phase: 'Cất cánh', date: '', title: 'Cùng cất cánh', description: 'Hai hành khách chọn chung một đường bay.' },
-        { phase: 'Bay ổn định', date: '', title: 'Đường bay chung', description: 'Qua nắng, qua mưa, qua những điều rất đời thường.' },
-        { phase: 'Hạ cánh', date: '27 · 12 · 2026', title: 'Ngày hạ cánh', description: 'Bến đỗ cuối cùng, và cũng là nơi bắt đầu.' },
+        {
+          phase: 'Làm thủ tục',
+          date: '',
+          title: 'Chuẩn bị hành trang',
+          description:
+            'Mỗi người đều mang theo những ước mơ, những trải nghiệm và cả những điều chưa trọn vẹn. Nhưng quan trọng hơn cả là mong muốn được đồng hành cùng nhau.',
+        },
+        {
+          phase: 'Cất cánh',
+          date: '',
+          title: 'Cùng cất cánh',
+          description:
+            'Không phải vì mọi thứ đều hoàn hảo, mà vì chúng mình tin rằng, nắm tay nhau sẽ giúp mọi hành trình trở nên ý nghĩa hơn.',
+        },
+        {
+          phase: 'Bay ổn định',
+          date: '',
+          title: 'Đường bay chung',
+          description:
+            'Phía trước sẽ có những ngày nắng đẹp, cũng sẽ có những lúc nhiều thử thách. Nhưng từ hôm nay, mọi niềm vui và khó khăn sẽ không còn phải đi qua một mình.',
+        },
+        {
+          phase: 'Hạ cánh',
+          date: '27 · 12 · 2026',
+          title: 'Ngày hạ cánh',
+          description:
+            'Không phải là điểm kết thúc của một chuyến bay, mà là điểm khởi đầu của một mái ấm. Từ hôm nay, chúng mình chính thức trở thành gia đình.',
+        },
       ],
     },
     gallery: {
@@ -259,7 +286,8 @@ export const translations: Record<Lang, Translation> = {
       kicker: 'Lời tri ân',
       title: 'Đôi lời từ cô dâu và chú rể',
       body: [
-        'Có một chuyến bay đã đưa cô dâu và chú rể về bên nhau trọn đời. Xin trân trọng cảm ơn Quý khách đã dành thời gian đến chung vui — sự hiện diện của Quý khách là niềm vinh hạnh và món quà quý giá đối với hai gia đình.',
+        'Giữa muôn vàn chuyến bay, có một chuyến bay đặc biệt nhất đã đưa cô dâu và chú rể tìm thấy nhau, để cùng nắm tay bước vào hành trình trọn đời.',
+        'Hai bên gia đình xin gửi lời cảm ơn chân thành đến Quý khách đã hiện diện và sẻ chia niềm hạnh phúc trong ngày trọng đại này. Sự có mặt của Quý khách là niềm vinh hạnh và là món quà vô cùng quý giá đối với cô dâu, chú rể cùng hai bên gia đình.',
       ],
       signature: 'Với tất cả yêu thương và lòng biết ơn,',
     },
@@ -299,7 +327,9 @@ export const translations: Record<Lang, Translation> = {
     couple: {
       kicker: 'Phi hành đoàn',
       title: 'Cô dâu & Chú rể',
-      subtitle: 'Hai hành khách xa lạ, nay chung một chuyến bay.',
+      // The line break is deliberate — SectionHeading renders with
+      // `whitespace-pre-line`.
+      subtitle: 'Hai hành khách xa lạ,\nnay chung một chuyến bay.',
       groomRole: 'Chú rể',
       brideRole: 'Cô dâu',
     },
@@ -319,7 +349,7 @@ export const translations: Record<Lang, Translation> = {
       tagline: 'Trân trọng cảm ơn Quý khách',
       heading: 'Lời cảm ơn chân thành',
       message:
-        'Cô dâu, chú rể và hai gia đình hân hạnh được đón tiếp Quý khách trong ngày trọng đại.',
+        'Cô dâu, chú rể và hai bên gia đình hân hạnh được đón tiếp Quý khách trong ngày trọng đại.',
     },
     pass: {
       label: 'Thẻ lên máy bay',
@@ -386,7 +416,7 @@ export const translations: Record<Lang, Translation> = {
       aria: 'Wedding invitation cover',
       inviteLabel: 'Cordially invited',
       inviteFallback: 'You are cordially invited',
-      inviteLine: 'Please join us in celebrating our wedding.',
+      inviteLine: 'Join the bride and groom\non their special day.',
       scroll: 'Scroll down',
     },
     countdown: {
@@ -398,7 +428,7 @@ export const translations: Record<Lang, Translation> = {
     },
     download: {
       kicker: 'A Heartfelt Invitation',
-      title: 'We would be delighted to celebrate with you',
+      title: 'This boarding pass is yours to keep',
       subtitle: 'Please save your boarding pass for our wedding day.',
       png: 'Download PNG',
       pdf: 'Download PDF',
@@ -408,19 +438,44 @@ export const translations: Record<Lang, Translation> = {
     },
     timeline: {
       kicker: 'Flight Journey',
-      title: 'Our journey',
-      subtitle: 'Every leg of the flight, a milestone of love.',
+      title: 'Our journey of love',
+      subtitle:
+        'Among millions of people, we found each other. Two people, two separate journeys, now choosing one road together.',
       items: [
-        { phase: 'Check-in', date: '', title: 'Packing for the journey', description: 'Every flight begins with a promise.' },
-        { phase: 'Take-off', date: '', title: 'Cleared for take-off', description: 'Two passengers choosing the same route.' },
-        { phase: 'Cruising Altitude', date: '', title: 'The shared route', description: 'Through sunshine, through rain, through the ordinary days.' },
-        { phase: 'Landing', date: '27 · 12 · 2026', title: 'Landing day', description: 'Our final stop, and where everything begins.' },
+        {
+          phase: 'Check-in',
+          date: '',
+          title: 'Packing for the journey',
+          description:
+            'Each of us brings our own dreams, our own experiences, and the things left unfinished. What matters more is the wish to travel together.',
+        },
+        {
+          phase: 'Take-off',
+          date: '',
+          title: 'Cleared for take-off',
+          description:
+            'Not because everything is perfect, but because we believe that holding hands makes every journey worth more.',
+        },
+        {
+          phase: 'Cruising Altitude',
+          date: '',
+          title: 'The shared route',
+          description:
+            'There will be bright days ahead, and there will be harder ones. From today, neither the joy nor the difficulty has to be met alone.',
+        },
+        {
+          phase: 'Landing',
+          date: '27 · 12 · 2026',
+          title: 'Landing day',
+          description:
+            'Not the end of a flight, but the beginning of a home. From today, we are officially a family.',
+        },
       ],
     },
     gallery: {
       kicker: 'Gallery',
       title: 'Moments of love',
-      subtitle: 'The best pieces of our journey.',
+      subtitle: 'The loveliest pieces of our story.',
       memoryLane: 'Memory lane',
       photo: 'Photo',
       captions: ['Love', 'Forever'],
@@ -428,7 +483,7 @@ export const translations: Record<Lang, Translation> = {
     details: {
       kicker: 'Flight Details',
       title: 'Flight details',
-      subtitle: 'We look forward to welcoming you at the gate.',
+      subtitle: 'We kindly ask that you arrive at the gate in good time.',
       departure: 'Departure date',
       boardingAt: 'Guests welcome from',
       ceremony: 'Outdoor marriage ceremony',
@@ -438,10 +493,11 @@ export const translations: Record<Lang, Translation> = {
       addCalendar: 'Add to calendar',
     },
     love: {
-      kicker: 'A Note from the Couple',
-      title: 'With heartfelt gratitude',
+      kicker: 'With gratitude',
+      title: 'A few words from the bride and groom',
       body: [
-        'Our journey has brought us together for a lifetime. We are deeply grateful for the honour of your presence as we celebrate this special day.',
+        'Among countless flights, one carried the bride and groom to each other — and now, hand in hand, into a journey meant to last a lifetime.',
+        'Both our families offer our sincere thanks to you for being here and sharing our happiness on this day. Your presence is an honour, and a gift beyond price, to the bride, the groom and both our families.',
       ],
       signature: 'With love and gratitude,',
     },
@@ -480,7 +536,7 @@ export const translations: Record<Lang, Translation> = {
     couple: {
       kicker: 'The flight crew',
       title: 'The Bride & Groom',
-      subtitle: 'Two passengers, now sharing one flight.',
+      subtitle: 'Two strangers on separate flights,\nnow travelling as one.',
       groomRole: 'Groom',
       brideRole: 'Bride',
     },
@@ -497,10 +553,10 @@ export const translations: Record<Lang, Translation> = {
       openTest: 'Open the link',
     },
     thanks: {
-      tagline: 'With sincere appreciation',
+      tagline: 'Our sincere thanks to you',
       heading: 'With heartfelt thanks',
       message:
-        'We look forward to welcoming you as we begin this joyful journey together.',
+        'The bride, the groom and both our families would be honoured to welcome you on our wedding day.',
     },
     pass: {
       label: 'Boarding Pass',
@@ -601,7 +657,7 @@ export const translations: Record<Lang, Translation> = {
       aria: '喜帖封面',
       inviteLabel: '誠摯敬邀',
       inviteFallback: '誠摯敬邀您蒞臨',
-      inviteLine: '敬請您蒞臨，共同見證我們的幸福時刻。',
+      inviteLine: '誠邀您與新郎新娘\n共度這特別的一天。',
       scroll: '向下滑動',
     },
     countdown: {
@@ -613,7 +669,7 @@ export const translations: Record<Lang, Translation> = {
     },
     download: {
       kicker: '誠摯邀請',
-      title: '誠盼您蒞臨，共享喜悅',
+      title: '這張登機證，敬贈予您',
       subtitle: '敬請惠存登機證，以備婚禮當日使用。',
       png: '下載 PNG',
       pdf: '下載 PDF',
@@ -623,19 +679,44 @@ export const translations: Record<Lang, Translation> = {
     },
     timeline: {
       kicker: '飛行旅程',
-      title: '我們的旅程',
-      subtitle: '每一段航程，都是愛的里程碑。',
+      title: '愛的旅程',
+      subtitle:
+        '在千萬人之中，我們遇見了彼此。兩個人，兩段各自的旅程，如今選擇同行一條路。',
       items: [
-        { phase: '報到', date: '', title: '整理行囊', description: '每一趟旅程，都始於一個約定。' },
-        { phase: '起飛', date: '', title: '一同起飛', description: '兩位旅客，選擇了同一條航線。' },
-        { phase: '巡航', date: '', title: '共同的航線', description: '晴天、雨天，以及每一個平凡的日子。' },
-        { phase: '降落', date: '2026.12.27', title: '降落之日', description: '最後的停機坪，也是一切的起點。' },
+        {
+          phase: '報到',
+          date: '',
+          title: '整理行囊',
+          description:
+            '各自帶著夢想、經歷，以及那些尚未圓滿的事。但更重要的，是想要一起同行的心願。',
+        },
+        {
+          phase: '起飛',
+          date: '',
+          title: '一同起飛',
+          description:
+            '不是因為一切都完美，而是因為我們相信，牽著手能讓每一段旅程更有意義。',
+        },
+        {
+          phase: '巡航',
+          date: '',
+          title: '共同的航線',
+          description:
+            '前方會有晴朗的日子，也會有艱難的時刻。但從今天起，喜悅與困難都不必再獨自面對。',
+        },
+        {
+          phase: '降落',
+          date: '2026.12.27',
+          title: '降落之日',
+          description:
+            '這不是一趟飛行的終點，而是一個家的起點。從今天起，我們正式成為家人。',
+        },
       ],
     },
     gallery: {
       kicker: '相簿',
       title: '甜蜜時刻',
-      subtitle: '旅程中最美的風景。',
+      subtitle: '我們故事裡最美的片段。',
       memoryLane: '回憶長廊',
       photo: '照片',
       captions: ['甜蜜', '永恆'],
@@ -643,7 +724,7 @@ export const translations: Record<Lang, Translation> = {
     details: {
       kicker: '搭乘資訊',
       title: '航班資訊',
-      subtitle: '敬候您於良辰蒞臨，共襄盛舉。',
+      subtitle: '敬請您準時於登機門集合。',
       departure: '啟程日期',
       boardingAt: '迎賓時間',
       ceremony: '戶外證婚儀式',
@@ -653,10 +734,11 @@ export const translations: Record<Lang, Translation> = {
       addCalendar: '加入行事曆',
     },
     love: {
-      kicker: '新人的話',
-      title: '致貴賓的一席話',
+      kicker: '謹致謝忱',
+      title: '新郎與新娘的幾句話',
       body: [
-        '一段旅程，讓我們相知相伴，攜手走向一生。承蒙您撥冗蒞臨，與我們共同見證這份喜悅；您的祝福與陪伴，是我們最珍貴的禮物。',
+        '在無數航班之中，有一班最特別的，讓新郎與新娘找到了彼此，攜手走進一生的旅程。',
+        '雙方家庭謹向蒞臨並與我們分享這份喜悅的您，致上最誠摯的感謝。您的出席，是新郎、新娘與雙方家庭莫大的榮幸，也是最珍貴的禮物。',
       ],
       signature: '謹致誠摯謝意，',
     },
@@ -692,7 +774,7 @@ export const translations: Record<Lang, Translation> = {
     couple: {
       kicker: '機組人員',
       title: '新娘與新郎',
-      subtitle: '兩位旅人，如今同行一段旅程。',
+      subtitle: '原是陌路的兩位旅人，\n如今同搭一班航班。',
       groomRole: '新郎',
       brideRole: '新娘',
     },
@@ -709,9 +791,9 @@ export const translations: Record<Lang, Translation> = {
       openTest: '開啟連結測試',
     },
     thanks: {
-      tagline: '誠摯感謝您的蒞臨',
+      tagline: '謹向您致上謝忱',
       heading: '衷心感謝',
-      message: '敬候您蒞臨，共同見證我們啟程幸福的新篇章。',
+      message: '新郎、新娘與雙方家庭，誠摯期盼於大喜之日恭候您的蒞臨。',
     },
     pass: {
       label: '登機證',

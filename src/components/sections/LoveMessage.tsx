@@ -207,12 +207,16 @@ export function LoveMessage({ config }: { config: WeddingConfig }) {
                 <Sparkles className="h-3 w-3" strokeWidth={1.35} />
               </motion.div>
 
-              <div className="mx-auto flex max-w-[38rem] flex-col items-center gap-4 sm:gap-5">
+              {/* Justified, not centred: these are full paragraphs now, and a
+                  centred block of prose leaves both edges ragged. `text-balance`
+                  goes with it — balancing line lengths works against justifying
+                  them. The card itself still centres everything else. */}
+              <div className="mx-auto flex max-w-[38rem] flex-col gap-4 sm:gap-5">
                 {t.love.body.map((paragraph, index) => (
                   <motion.p
                     key={index}
                     variants={contentVariants}
-                    className="text-balance font-display text-[1.08rem] italic leading-[1.75] text-navy/90 sm:text-[1.42rem] sm:leading-[1.7]"
+                    className="text-justify font-display text-[1.08rem] italic leading-[1.75] text-navy/90 sm:text-[1.42rem] sm:leading-[1.7]"
                   >
                     {paragraph}
                   </motion.p>

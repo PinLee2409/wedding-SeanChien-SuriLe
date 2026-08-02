@@ -86,10 +86,10 @@ function ProfileCard({
         />
       </div>
 
-      <span className="label-caps mt-3 text-[clamp(0.52rem,2.2vw,0.7rem)] text-gold sm:mt-4">
+      <span className="label-caps mt-3 text-[clamp(0.62rem,2.6vw,0.82rem)] text-gold sm:mt-4">
         {role}
       </span>
-      <h3 className="mt-1 max-w-full text-balance break-words font-display text-[clamp(0.95rem,4vw,1.7rem)] font-semibold leading-tight text-navy">
+      <h3 className="mt-1.5 max-w-full text-balance break-words font-display text-[clamp(1.15rem,4.8vw,2.1rem)] font-semibold leading-tight text-navy">
         {person.fullName ?? person.name}
       </h3>
     </motion.article>

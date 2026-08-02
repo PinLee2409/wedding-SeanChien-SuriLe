@@ -307,7 +307,7 @@ export function HeroSection({
 
             <motion.p
               variants={fadeUp}
-              className="label-caps mt-3 text-center text-[9px] text-sky-soft/85 sm:mt-4 sm:text-[11px] lg:text-left"
+              className="label-caps mt-3 text-center text-[11px] text-sky-soft/85 sm:mt-4 sm:text-[13px] lg:text-left"
             >
               {weekday} · {date.displayDate}
             </motion.p>
@@ -318,19 +318,21 @@ export function HeroSection({
             >
               {guestName ? (
                 <>
-                  <span className="label-caps text-[9px] text-sky-soft/65 sm:text-[10px]">
+                  <span className="label-caps text-[11px] text-sky-soft/65 sm:text-[12px]">
                     {t.hero.inviteLabel}
                   </span>
-                  <span className="mt-0.5 block font-script text-[1.65rem] leading-snug text-gold-light sm:text-[2.05rem]">
+                  <span className="mt-0.5 block font-script text-[1.95rem] leading-snug text-gold-light sm:text-[2.4rem]">
                     {guestName}
                   </span>
                 </>
               ) : (
-                <span className="font-display text-lg font-medium text-gold-light sm:text-2xl">
+                <span className="font-display text-2xl font-medium text-gold-light sm:text-3xl">
                   {t.hero.inviteFallback}
                 </span>
               )}
-              <p className="mx-auto mt-1 max-w-lg text-[11px] leading-relaxed text-sky-soft/80 sm:text-xs lg:mx-0">
+              {/* `whitespace-pre-line` so a language can place its own line
+                  break; those without one still wrap on their own. */}
+              <p className="mx-auto mt-2 max-w-xl whitespace-pre-line text-sm leading-relaxed text-sky-soft/80 sm:text-base lg:mx-0">
                 {t.hero.inviteLine}
               </p>
             </motion.div>

@@ -91,7 +91,9 @@ export function SectionHeading({
       {subtitle && (
         <p
           className={cn(
-            'max-w-xl text-balance text-sm leading-relaxed sm:text-base',
+            // `whitespace-pre-line` so a subtitle can place its own break;
+            // those without one still wrap on their own.
+            'max-w-xl whitespace-pre-line text-balance text-sm leading-relaxed sm:text-base',
             tone === 'light' ? 'text-sky-soft' : 'text-navy-400',
           )}
         >
