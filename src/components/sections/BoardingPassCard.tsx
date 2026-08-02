@@ -1,13 +1,11 @@
 import { forwardRef, useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Plane } from 'lucide-react'
-import { QRCodeSVG } from 'qrcode.react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { getOrderedCouple } from '../../lib/couple'
 import type { GalleryPhoto } from '../../lib/galleryPhotos'
-import { pickGalleryPhotos } from '../../lib/galleryPhotos'
-import { buildCardViewUrl } from '../../lib/guest'
+import { slotPhotos } from '../../lib/photoSlots'
 import { fadeUpBlur, staggerContainer } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
 import { formatWeekday } from '../../i18n/translations'
@@ -40,12 +38,7 @@ interface BoardingPassCardProps {
   reveal?: boolean
 }
 
-const BOARDING_PASS_PHOTOS = pickGalleryPhotos([
-  'cuoi1_t04-04-293.jpg',
-  'cuoi2_dsc09678.jpg',
-  'cuoi1_t04-04-248.jpg',
-  'cuoi1_t04-04-327.jpg',
-])
+const BOARDING_PASS_PHOTOS = slotPhotos('boardingPass')
 
 const PHOTO_INTERVAL_MS = 5_000
 
@@ -57,45 +50,6 @@ const PHOTO_FOCUS: Record<string, string> = {
   'cuoi1_t04-04-248.jpg': 'object-[50%_49%]',
   'cuoi1_t04-04-327.jpg': 'object-[50%_61%]',
   'cuoi3_dscf0954.jpg': 'object-[50%_18%]',
-}
-
-/* ── Decorative CSS barcode (widths in em → fully fluid) ─────────────────── */
-const BAR_WIDTHS = [
-  2, 1, 3, 1, 2, 4, 1, 2, 1, 3, 2, 1, 4, 1, 2, 1, 3, 1, 2, 2, 1, 3, 1, 2, 4, 1,
-  2, 1, 3, 1, 2, 1, 4, 2, 1, 3, 1, 2, 1, 2, 3, 1, 2, 1,
-]
-
-function Barcode() {
-  return (
-    <div className="flex h-[2.6em] items-stretch gap-[0.06em]" aria-hidden="true">
-      {BAR_WIDTHS.map((w, i) => (
-        <span key={i} className="bg-navy" style={{ width: `${w * 0.05}em` }} />
-      ))}
-    </div>
-  )
-}
-
-/* ── Real, personalised QR — opens the standalone invitation card ───────── */
-function QrCode({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="flex shrink-0 flex-col items-center gap-[0.35em]" role="img" aria-label={label}>
-      <div className="grid h-[7em] w-[7em] place-items-center overflow-hidden rounded-[0.28em] bg-white shadow-[0_0_0_1px_rgba(71,35,59,0.1)]">
-        <QRCodeSVG
-          value={value}
-          size={160}
-          level="M"
-          marginSize={4}
-          bgColor="#ffffff"
-          fgColor="#1b2a4a"
-          className="h-full w-full"
-          aria-hidden="true"
-        />
-      </div>
-      <span className="max-w-[9em] text-center text-[0.48em] font-semibold uppercase leading-tight tracking-[0.12em] text-gold-dark">
-        {label}
-      </span>
-    </div>
-  )
 }
 
 /* ── A labelled field with a hairline underline ─────────────────────────── */
@@ -123,7 +77,9 @@ function Field({
         align === 'right' && 'items-end text-right',
       )}
     >
-      <span className="text-[0.72em] font-medium uppercase tracking-[0.22em] text-gold-dark">
+      {/* The gold caption. Enlarged with the tracking eased back, so the extra
+          size buys legibility instead of just making the line wider. */}
+      <span className="whitespace-nowrap text-[0.88em] font-medium uppercase tracking-[0.14em] text-gold-dark">
         {label}
       </span>
       <span
@@ -159,7 +115,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
     },
     ref,
   ) => {
-    const { event, couple, date, venue, boardingPass } = config
+    const { event, date, venue, boardingPass } = config
     const { t, lang } = useI18n()
     const reduce = !!useReducedMotion()
     const doReveal = reveal && !reduce
@@ -168,7 +124,6 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
     const passenger = guestName.trim() || t.pass.passengerFallback
     const flightNo = `LOVE-${event.flightCode}`
     const [firstPartner, secondPartner] = getOrderedCouple(config)
-    const qrUrl = buildCardViewUrl(guestName, lang, config.site.publicUrl)
     const canTransitionPhoto = animatePhoto && !reduce
     const canAutoAdvance =
       canTransitionPhoto && !selectedPhoto && BOARDING_PASS_PHOTOS.length > 1
@@ -196,7 +151,11 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
         style={fontPx ? { fontSize: `${fontPx}px` } : undefined}
         className={cn(
           'relative isolate w-full overflow-hidden rounded-[1.5rem] border border-gold/40 bg-cream font-sans text-navy sm:rounded-[1.75rem]',
-          'text-[3cqw] shadow-[0_30px_60px_-30px_rgba(71,35,59,0.45),0_2px_6px_rgba(71,35,59,0.06)]',
+          /* Every size on the card is em-based off this one figure, so raising
+             it enlarges the whole pass at once. It is a share of the card's own
+             width, which means narrowing the card also shrinks the type —
+             the two have to be tuned together. */
+          'text-[3.5cqw] shadow-[0_30px_60px_-30px_rgba(71,35,59,0.45),0_2px_6px_rgba(71,35,59,0.06)]',
           className,
         )}
       >
@@ -224,7 +183,9 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
         <div className="px-[1.1em] pt-[1.1em]">
           <div className="relative overflow-hidden rounded-[1rem] ring-1 ring-gold/30 sm:rounded-[1.15rem]">
             <div
-              className="relative aspect-[3/2] w-full overflow-hidden bg-ivory-deep"
+              /* 2:3 — the shape of the photographs themselves, so the couple is
+                 shown whole instead of being cut down to a letterbox strip. */
+              className="relative aspect-[2/3] w-full overflow-hidden bg-ivory-deep"
               role="img"
               aria-label={`${firstPartner.person.name} & ${secondPartner.person.name}`}
             >
@@ -233,26 +194,13 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
                   <motion.div
                     key={activePhoto.filename}
                     className="absolute inset-0 will-change-transform"
-                    initial={{ opacity: 0, scale: 1.025 }}
-                    animate={{
-                      opacity: 1,
-                      scale: selectedPhoto
-                        ? 1.02
-                        : photoIndex % 2 === 0
-                          ? 1.075
-                          : 1.045,
-                      x: selectedPhoto
-                        ? '0%'
-                        : photoIndex % 2 === 0
-                          ? '-0.7%'
-                          : '0.7%',
-                    }}
+                    /* No slow push-in any more: the frame now matches the
+                       photograph exactly, so any zoom would start eating the
+                       edges again. The crossfade alone carries the change. */
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{
-                      opacity: { duration: 1.05, ease: 'easeInOut' },
-                      scale: { duration: 5.8, ease: 'linear' },
-                      x: { duration: 5.8, ease: 'linear' },
-                    }}
+                    transition={{ opacity: { duration: 1.05, ease: 'easeInOut' } }}
                     aria-hidden="true"
                   >
                     <SmartImage
@@ -301,7 +249,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             variants={fadeUpBlur}
             className="flex flex-col items-center px-[1.5em] pt-[1em] text-center"
           >
-            <span className="text-[0.68em] uppercase tracking-[0.34em] text-gold-dark">
+            <span className="text-[0.84em] uppercase tracking-[0.24em] text-gold-dark">
               {t.pass.weddingOf}
             </span>
             <p className="mt-[0.35em] whitespace-nowrap font-display text-[2.15em] font-semibold leading-[1.1]">
@@ -320,7 +268,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             className="flex items-center justify-between gap-[0.8em] px-[1.5em] pt-[1.1em]"
           >
             <div className="flex flex-col">
-              <span className="text-[0.7em] uppercase tracking-[0.22em] text-gold-dark">{t.pass.from}</span>
+              <span className="text-[0.86em] uppercase tracking-[0.14em] text-gold-dark">{t.pass.from}</span>
               <span className="whitespace-nowrap font-display text-[1.58em] font-semibold leading-none">
                 {t.pass.fromValue}
               </span>
@@ -331,7 +279,7 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/70" />
             </div>
             <div className="flex flex-col items-end text-right">
-              <span className="text-[0.7em] uppercase tracking-[0.22em] text-gold-dark">{t.pass.to}</span>
+              <span className="text-[0.86em] uppercase tracking-[0.14em] text-gold-dark">{t.pass.to}</span>
               <span className="whitespace-nowrap font-display text-[1.58em] font-semibold leading-none">
                 {t.pass.toValue}
               </span>
@@ -346,10 +294,17 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             <div className="border-t border-dashed border-gold/30 pt-[0.9em]">
               <Field label={t.pass.passenger} value={passenger} nowrap={false} />
             </div>
-            <div className="grid grid-cols-3 items-start gap-x-[0.7em]">
+            {/* Time and date share one field. As three columns they were fighting
+                for room at this type size; together they also read the way a
+                guest actually thinks about it — one moment, not two figures. */}
+            <div className="flex items-start justify-between gap-x-[0.9em]">
               <Field label={t.pass.flight} value={flightNo} numeric />
-              <Field label={t.pass.boarding} value={date.time} align="center" numeric />
-              <Field label={t.pass.date} value={date.displayDate} align="right" numeric />
+              <Field
+                label={t.pass.when}
+                value={`${date.time} · ${date.displayDate.replace(/\s·\s/g, '/')}`}
+                align="right"
+                numeric
+              />
             </div>
             {/* Venue — the one detail every guest actually needs on the pass. */}
             <div className="border-t border-dashed border-gold/30 pt-[0.9em]">
@@ -368,24 +323,10 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             <span className="absolute right-0 top-1/2 h-[1.4em] w-[1.4em] translate-x-1/2 -translate-y-1/2 rounded-full bg-ivory" />
           </div>
 
-          {/* Stub: barcode + QR */}
-          <motion.div
-            variants={fadeUpBlur}
-            className="flex items-end justify-between gap-[1em] px-[1.5em] pb-[1.4em] pt-[0.8em]"
-          >
-            <div className="flex min-w-0 flex-col gap-[0.5em]">
-              <Barcode />
-              <span className="font-mono text-[0.62em] tracking-[0.2em] text-navy-400">
-                {flightNo} · {event.flightCode}
-              </span>
-              {couple.hashtag && (
-                <span className="truncate text-[0.6em] leading-snug text-navy-400">
-                  {couple.hashtag}
-                </span>
-              )}
-            </div>
-            <QrCode value={qrUrl} label={t.pass.scanQr} />
-          </motion.div>
+          {/* The stub used to carry a barcode, the flight number again and the
+              hashtag. The flight number is already a field above, so all of it
+              was repetition below the fold of the card. */}
+          <div className="pb-[1.2em]" aria-hidden="true" />
         </motion.div>
       </div>
     )

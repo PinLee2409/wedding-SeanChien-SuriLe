@@ -1,0 +1,25 @@
+{
+  "$comment": "Photographs whose frame is wider than it is tall. Drives the grid and marquee tile shapes. Maintained by the dev-only photo admin, which measures each upload — see plugins/photo-admin.ts.",
+  "landscape": [
+    "cuoi1_t04-04-248.jpg",
+    "cuoi1_t04-04-293.jpg",
+    "cuoi1_t04-04-327.jpg",
+    "cuoi2_dsc09271.jpg",
+    "cuoi2_dsc09275.jpg",
+    "cuoi2_dsc09287.jpg",
+    "cuoi2_dsc09305.jpg",
+    "cuoi2_dsc09438.jpg",
+    "cuoi2_dsc09450.jpg",
+    "cuoi2_dsc09461.jpg",
+    "cuoi2_dsc09678.jpg",
+    "cuoi3_dscf0859.jpg",
+    "cuoi3_dscf9011.jpg",
+    "cuoi3_dscf9015.jpg",
+    "cuoi3_dscf9017.jpg",
+    "cuoi3_dscf9029.jpg",
+    "cuoi3_dscf9054.jpg",
+    "cuoi3_dscf9107.jpg",
+    "moi_cuoi1-t04-04-293.jpg",
+    "moi_e982e678-3e21-4b7e-8ccf-1fa36fe6ce6e.jpg"
+  ]
+}

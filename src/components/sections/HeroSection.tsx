@@ -1,5 +1,7 @@
 import {
+  useEffect,
   useRef,
+  useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import {
@@ -12,8 +14,9 @@ import {
 } from 'motion/react'
 import { ChevronDown, Plane } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
+import { cn } from '../../lib/cn'
 import { getOrderedCouple } from '../../lib/couple'
-import { pickGalleryPhotos } from '../../lib/galleryPhotos'
+import { slotPhotos } from '../../lib/photoSlots'
 import { fadeUp, staggerContainer } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
 import { formatWeekday } from '../../i18n/translations'
@@ -30,8 +33,7 @@ interface HeroSectionProps {
   isRevealed: boolean
 }
 
-const [MOBILE_HERO_PHOTO] = pickGalleryPhotos(['cuoi2_dsc09704.jpg'])
-const [DESKTOP_HERO_PHOTO] = pickGalleryPhotos(['cuoi2_dsc09678.jpg'])
+const [MOBILE_HERO_PHOTO, DESKTOP_HERO_PHOTO] = slotPhotos('hero')
 
 const easeCinematic = [0.22, 1, 0.36, 1] as const
 
@@ -51,6 +53,23 @@ export function HeroSection({
     offset: ['start start', 'end start'],
   })
   const photoDepth = useTransform(scrollYProgress, [0, 1], [0, 52])
+
+  // On a phone the cover photograph is shown whole, so every effect that needs
+  // the image to overflow its frame — the parallax overscan, the scroll drift,
+  // the slow push-in — has to stand down. They all return from 640px up, where
+  // the frame is a letterbox and there is room to spare behind it.
+  const [isWide, setIsWide] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches,
+  )
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 640px)')
+    const sync = () => setIsWide(query.matches)
+    sync()
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
+  }, [])
+
+  const still = !!reduce || !isWide
   const { t, lang } = useI18n()
   const { event, date, hero } = config
   const [firstPartner, secondPartner] = getOrderedCouple(config)
@@ -83,21 +102,24 @@ export function HeroSection({
       <div className="grid min-h-[100svh] grid-cols-1 grid-rows-[auto_auto] lg:grid-cols-[minmax(25rem,0.88fr)_minmax(0,1.12fr)] lg:grid-rows-1">
         {/* The portrait owns a separate canvas. Nothing textual is ever placed
             over it, so both faces remain clear at every breakpoint. */}
-        <div className="relative order-2 h-[40svh] min-h-[18rem] max-h-[24rem] overflow-hidden border-t border-gold-light/35 sm:h-[48svh] sm:max-h-[32rem] lg:h-auto lg:min-h-[100svh] lg:max-h-none lg:border-b-0 lg:border-l lg:border-t-0">
+        <div className="relative order-2 aspect-[2/3] overflow-hidden border-t border-gold-light/35 sm:aspect-auto sm:h-[48svh] sm:max-h-[32rem] lg:h-auto lg:min-h-[100svh] lg:max-h-none lg:border-b-0 lg:border-l lg:border-t-0">
           <motion.div
-            className="pointer-events-none absolute -inset-x-5 -inset-y-16"
-            style={{ y: reduce ? 0 : photoDepth }}
+            className={cn(
+              'pointer-events-none absolute',
+              isWide ? '-inset-x-5 -inset-y-16' : 'inset-0',
+            )}
+            style={{ y: still ? 0 : photoDepth }}
             aria-hidden="true"
           >
             <motion.div
               className="h-full w-full will-change-transform"
               style={{
-                x: reduce ? 0 : parallaxX,
-                y: reduce ? 0 : parallaxY,
+                x: still ? 0 : parallaxX,
+                y: still ? 0 : parallaxY,
               }}
               initial={false}
               animate={
-                reduce
+                still
                   ? { scale: 1 }
                   : isRevealed
                     ? { scale: [1.045, 1.015] }
@@ -119,7 +141,7 @@ export function HeroSection({
                   loading="eager"
                   fetchPriority="high"
                   decoding="async"
-                  className="h-full w-full object-cover object-[50%_70%] md:object-[50%_55%] lg:object-[52%_50%]"
+                  className="h-full w-full object-contain sm:object-cover sm:object-[50%_70%] md:object-[50%_55%] lg:object-[52%_50%]"
                 />
               </picture>
             </motion.div>

@@ -12,8 +12,9 @@ import {
 import type { MotionValue } from 'motion/react'
 import type { TimelineItem, WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
-import { pickGalleryPhotos } from '../../lib/galleryPhotos'
+import { photoSrcSet } from '../../lib/galleryPhotos'
 import type { GalleryPhoto } from '../../lib/galleryPhotos'
+import { slotPhotos } from '../../lib/photoSlots'
 import { useI18n } from '../../i18n/LanguageContext'
 import type { TimelineCopy } from '../../i18n/translations'
 import { SectionHeading } from '../ui/SectionHeading'
@@ -34,13 +35,7 @@ const ICONS: Record<TimelineItem['icon'], LucideIcon> = {
  * These four landscape frames are deliberately different from the ones the
  * boarding pass cycles through.
  */
-const LEG_PHOTOS = pickGalleryPhotos([
-  'cuoi3_dscf9011.jpg',
-  // Leg 2 was cuoi2_dsc09267.jpg until the couple culled it from the album.
-  'cuoi2_dsc09461.jpg',
-  'cuoi2_dsc09305.jpg',
-  'cuoi3_dscf9107.jpg',
-])
+const LEG_PHOTOS = slotPhotos('timeline')
 
 /** Node geometry: a 48px badge with the progress ring drawn just inside it. */
 const NODE_RADIUS = 22
@@ -170,6 +165,8 @@ function TimelineRow({
       >
         <SmartImage
           src={photo?.display}
+          srcSet={photo ? photoSrcSet(photo) : undefined}
+          sizes="(min-width: 768px) 45vw, 70vw"
           alt={copy.title}
           label={copy.phase}
           className="aspect-[4/3] w-full"

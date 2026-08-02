@@ -74,13 +74,6 @@ export interface Translation {
     photo: string
     captions: [string, string]
   }
-  /** The cabin-window run, kept distinct from the album so the two photo
-   *  sections never carry the same heading. */
-  photoStory: {
-    kicker: string
-    title: string
-    subtitle: string
-  }
   details: {
     kicker: string
     title: string
@@ -151,6 +144,8 @@ export interface Translation {
     flight: string
     boarding: string
     date: string
+    /** Boarding time and date on one line — they share a field on the pass. */
+    when: string
     venue: string
     photoLabel: string
     passengerFallback: string
@@ -248,11 +243,6 @@ export const translations: Record<Lang, Translation> = {
       photo: 'Ảnh',
       captions: ['Yêu thương', 'Mãi mãi'],
     },
-    photoStory: {
-      kicker: 'Trên chuyến bay',
-      title: 'Nhìn qua ô cửa',
-      subtitle: 'Những khung trời hai đứa đã cùng đi qua.',
-    },
     details: {
       kicker: 'Chi tiết chuyến bay',
       title: 'Thông tin chuyến bay',
@@ -340,6 +330,7 @@ export const translations: Record<Lang, Translation> = {
       flight: 'Chuyến bay',
       boarding: 'Đón khách',
       date: 'Ngày',
+      when: 'Thời gian',
       venue: 'Địa điểm',
       photoLabel: 'Ảnh cưới',
       passengerFallback: 'Quý khách',
@@ -434,11 +425,6 @@ export const translations: Record<Lang, Translation> = {
       photo: 'Photo',
       captions: ['Love', 'Forever'],
     },
-    photoStory: {
-      kicker: 'In flight',
-      title: 'Through the window',
-      subtitle: 'The views we have shared along the way.',
-    },
     details: {
       kicker: 'Flight Details',
       title: 'Flight details',
@@ -525,6 +511,7 @@ export const translations: Record<Lang, Translation> = {
       flight: 'Flight',
       boarding: 'Boarding',
       date: 'Date',
+      when: 'Time',
       venue: 'Venue',
       photoLabel: 'Wedding photo',
       passengerFallback: 'Honoured Guest',
@@ -653,11 +640,6 @@ export const translations: Record<Lang, Translation> = {
       photo: '照片',
       captions: ['甜蜜', '永恆'],
     },
-    photoStory: {
-      kicker: '航程中',
-      title: '窗外的風景',
-      subtitle: '我們一路上共同看過的風景。',
-    },
     details: {
       kicker: '搭乘資訊',
       title: '航班資訊',
@@ -740,6 +722,7 @@ export const translations: Record<Lang, Translation> = {
       flight: '航班',
       boarding: '登機時間',
       date: '日期',
+      when: '時間',
       venue: '地點',
       photoLabel: '婚紗照',
       passengerFallback: '貴賓',

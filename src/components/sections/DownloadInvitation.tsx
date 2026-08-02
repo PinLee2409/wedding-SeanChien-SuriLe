@@ -11,7 +11,7 @@ import { Download, FileText, Heart, LoaderCircle, Plane } from 'lucide-react'
 import type { WeddingConfig } from '../../config/wedding.config'
 import { exportElementToPdf, exportElementToPng } from '../../lib/exportCard'
 import type { GalleryPhoto } from '../../lib/galleryPhotos'
-import { pickGalleryPhotos } from '../../lib/galleryPhotos'
+import { slotPhotos } from '../../lib/photoSlots'
 import { cardEntrance } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
 import { RomanticAura } from '../decorations/RomanticAura'
@@ -25,10 +25,7 @@ const EXPORT_WIDTH = 900
 const EXPORT_PADDING = 70
 const EXPORT_FONT_PX = 23
 
-const SCENE_PHOTOS = pickGalleryPhotos([
-  'cuoi1_t04-04-032.jpg',
-  'cuoi3_dscf0954.jpg',
-])
+const SCENE_PHOTOS = slotPhotos('downloadScene')
 
 /** Turn a (possibly Vietnamese) name into a safe file slug. */
 function slugify(input: string): string {
@@ -173,7 +170,9 @@ export function DownloadInvitation({
             aria-hidden="true"
           />
 
-          <div className="relative z-20 grid grid-cols-2 items-end justify-items-center gap-x-2.5 gap-y-6 px-0.5 sm:gap-x-5 sm:gap-y-8 sm:px-2 md:grid-cols-[minmax(6rem,1fr)_minmax(0,425px)_minmax(6rem,1fr)] md:items-center md:gap-x-0 md:gap-y-0 md:px-0 lg:grid-cols-[minmax(9rem,1fr)_minmax(0,440px)_minmax(9rem,1fr)]">
+          {/* On a phone the pass stands alone — the two side prints are dropped
+              so the card itself can take the full width. */}
+          <div className="relative z-20 grid grid-cols-1 items-end justify-items-center gap-y-6 sm:gap-y-8 md:grid-cols-[minmax(6rem,1fr)_minmax(0,425px)_minmax(6rem,1fr)] md:items-center md:gap-y-0 lg:grid-cols-[minmax(9rem,1fr)_minmax(0,440px)_minmax(9rem,1fr)]">
             {SCENE_PHOTOS.map((photo, index) => {
               const isSelected = selectedPhoto?.filename === photo.filename
               return (
@@ -181,7 +180,7 @@ export function DownloadInvitation({
                   type="button"
                   key={photo.filename}
                   className={[
-                    'invitation-photo-selector group relative z-10 row-start-1 w-[clamp(4.75rem,24vw,6rem)] cursor-pointer rounded-[1.35rem] bg-white p-1.5 pb-4 text-left shadow-[0_22px_48px_-25px_rgba(27,42,74,0.68)] transition-[box-shadow,opacity] duration-500 sm:w-28 sm:rounded-[1.6rem] sm:p-2 sm:pb-6 md:w-[clamp(7.5rem,15vw,10rem)] lg:w-[clamp(10rem,17vw,12rem)] lg:pb-7',
+                    'invitation-photo-selector group relative z-10 row-start-1 hidden cursor-pointer rounded-[1.35rem] bg-white p-1.5 pb-4 text-left shadow-[0_22px_48px_-25px_rgba(27,42,74,0.68)] transition-[box-shadow,opacity] duration-500 md:block md:w-[clamp(7.5rem,15vw,10rem)] md:rounded-[1.6rem] md:p-2 md:pb-6 lg:w-[clamp(10rem,17vw,12rem)] lg:pb-7',
                     'focus-visible:z-30 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold/35',
                     index === 0
                       ? 'invitation-photo-selector--left col-start-1 md:col-start-1'
@@ -263,7 +262,7 @@ export function DownloadInvitation({
 
             <motion.div
               id="boarding-pass-preview"
-              className="relative z-20 col-span-2 col-start-1 row-start-2 mx-auto w-[88vw] max-w-[21rem] rounded-[1.5rem] [container-type:inline-size] sm:w-full sm:max-w-[420px] sm:rounded-[1.75rem] md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-[clamp(400px,42vw,425px)] lg:max-w-[440px]"
+              className="relative z-20 mx-auto w-[86vw] max-w-[22rem] rounded-[1.5rem] [container-type:inline-size] sm:w-full sm:max-w-[420px] sm:rounded-[1.75rem] md:col-start-2 md:row-start-1 md:max-w-[clamp(400px,42vw,425px)] lg:max-w-[440px]"
               onPointerMove={handlePointerMove}
               onPointerLeave={resetTilt}
               animate={reduce ? undefined : { y: [0, -6, 0] }}

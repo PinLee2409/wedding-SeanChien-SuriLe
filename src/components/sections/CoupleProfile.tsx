@@ -3,6 +3,8 @@ import { motion, useReducedMotion } from 'motion/react'
 import type { Person, WeddingConfig } from '../../config/wedding.config'
 import { cn } from '../../lib/cn'
 import { getOrderedCouple } from '../../lib/couple'
+import type { CoupleKey } from '../../lib/couple'
+import portraitFraming from '../../config/portraitFraming.json'
 import { easeLux } from '../../lib/motion'
 import { useI18n } from '../../i18n/LanguageContext'
 import { RomanticAura } from '../decorations/RomanticAura'
@@ -12,20 +14,35 @@ import { SmartImage } from '../ui/SmartImage'
 
 const PORTRAIT_SIZE = 'w-[clamp(5.75rem,30vw,10rem)]'
 
+interface Framing {
+  /** Zoom factor inside the arch frame. */
+  scale: number
+  /** Focal point in percent — drives both the crop and the zoom origin. */
+  x: number
+  y: number
+}
+
+const DEFAULT_FRAMING: Framing = { scale: 1, x: 50, y: 8 }
+
+function framingFor(key: CoupleKey): Framing {
+  const value = (portraitFraming as Record<string, unknown>)[key]
+  return value && typeof value === 'object' ? { ...DEFAULT_FRAMING, ...value } : DEFAULT_FRAMING
+}
+
 function ProfileCard({
   person,
   role,
   entryX,
   delay,
-  photoClassName,
+  framing,
   reverseFrame = false,
 }: {
   person: Person
   role: string
   entryX: number
   delay: number
-  /** Extra crop/zoom tuning for this person's portrait. */
-  photoClassName?: string
+  /** Crop and zoom for this portrait, tuned in the photo admin. */
+  framing: Framing
   reverseFrame?: boolean
 }) {
   const reduce = useReducedMotion()
@@ -58,9 +75,14 @@ function ProfileCard({
           src={person.photo}
           alt={person.name}
           label=""
-          className="relative aspect-square w-full rounded-t-[999px] rounded-b-[1.8rem] border-[3px] border-warm-white shadow-[0_18px_38px_-20px_rgba(27,42,74,0.72)] ring-1 ring-gold/35 sm:rounded-b-[2.4rem] sm:border-[5px]"
-          /* Portrait photos: keep the face (upper third) inside the frame. */
-          imgClassName={cn('object-top', photoClassName)}
+          /* 2:3 — the same shape as the photographs themselves, so a portrait
+             at scale 1 is shown whole rather than cropped into a square. */
+          className="relative aspect-[2/3] w-full rounded-t-[999px] rounded-b-[1.8rem] border-[3px] border-warm-white shadow-[0_18px_38px_-20px_rgba(27,42,74,0.72)] ring-1 ring-gold/35 sm:rounded-b-[2.4rem] sm:border-[5px]"
+          imgStyle={{
+            objectPosition: `${framing.x}% ${framing.y}%`,
+            transform: framing.scale === 1 ? undefined : `scale(${framing.scale})`,
+            transformOrigin: `${framing.x}% ${framing.y}%`,
+          }}
         />
       </div>
 
@@ -99,11 +121,7 @@ function CoupleCard({ config }: { config: WeddingConfig }) {
           }
           entryX={-22}
           delay={0}
-          photoClassName={
-            orderedCouple[0].key === 'bride'
-              ? 'scale-[2.5] origin-[41%_46%]'
-              : undefined
-          }
+          framing={framingFor(orderedCouple[0].key)}
         />
 
         {/* A permanent visual bond between both portraits, including 320px. */}
@@ -151,11 +169,7 @@ function CoupleCard({ config }: { config: WeddingConfig }) {
           entryX={22}
           delay={0.12}
           reverseFrame
-          photoClassName={
-            orderedCouple[1].key === 'bride'
-              ? 'scale-[2.5] origin-[41%_46%]'
-              : undefined
-          }
+          framing={framingFor(orderedCouple[1].key)}
         />
       </div>
     </div>

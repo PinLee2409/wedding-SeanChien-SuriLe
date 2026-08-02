@@ -1,3 +1,5 @@
+import landscapeConfig from '../config/landscapePhotos.json'
+
 export type PhotoOrientation = 'portrait' | 'landscape'
 
 export interface GalleryPhoto {
@@ -26,26 +28,7 @@ const fullModules = import.meta.glob('../assets/gallery/full/*.jpg', {
   import: 'default',
 }) as Record<string, string>
 
-const LANDSCAPE_FILENAMES = new Set([
-  'cuoi1_t04-04-248.jpg',
-  'cuoi1_t04-04-293.jpg',
-  'cuoi1_t04-04-327.jpg',
-  'cuoi2_dsc09678.jpg',
-  'cuoi2_dsc09271.jpg',
-  'cuoi2_dsc09275.jpg',
-  'cuoi2_dsc09287.jpg',
-  'cuoi2_dsc09305.jpg',
-  'cuoi2_dsc09438.jpg',
-  'cuoi2_dsc09450.jpg',
-  'cuoi2_dsc09461.jpg',
-  'cuoi3_dscf0859.jpg',
-  'cuoi3_dscf9011.jpg',
-  'cuoi3_dscf9015.jpg',
-  'cuoi3_dscf9017.jpg',
-  'cuoi3_dscf9029.jpg',
-  'cuoi3_dscf9054.jpg',
-  'cuoi3_dscf9107.jpg',
-])
+const LANDSCAPE_FILENAMES = new Set(landscapeConfig.landscape)
 
 function filenameFromPath(path: string) {
   return path.split('/').pop() ?? path
@@ -78,6 +61,20 @@ export const galleryPhotos: GalleryPhoto[] = Object.entries(displayModules)
 const photosByFilename = new Map(
   galleryPhotos.map((photo) => [photo.filename, photo]),
 )
+
+/**
+ * The three renditions as a srcset so the browser fetches the smallest file
+ * that still covers the box it is painted into. Widths are the nominal ones for
+ * each orientation — a few percent out on an unusual crop only ever costs one
+ * step up, never a wrong image.
+ */
+export function photoSrcSet(photo: GalleryPhoto): string {
+  const widths =
+    photo.orientation === 'landscape' ? [1200, 1600, 2400] : [800, 1067, 1600]
+  return [photo.thumb, photo.display, photo.full]
+    .map((url, index) => `${url} ${widths[index]}w`)
+    .join(', ')
+}
 
 export function pickGalleryPhotos(filenames: readonly string[]) {
   return filenames

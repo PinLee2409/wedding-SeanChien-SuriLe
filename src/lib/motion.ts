@@ -4,15 +4,27 @@ import type { Variants } from 'motion/react'
 
 export const easeLux = [0.22, 1, 0.36, 1] as const
 
-/** Fade + rise + subtle blur — the house reveal. */
+/**
+ * Fade + rise + a touch of blur — the house reveal.
+ *
+ * `filter` is the one property here the compositor cannot hand to the GPU: it
+ * repaints every frame, and a stagger fires a dozen of these at once. Keeping
+ * the blur small buys most of the softness for a fraction of the work, and it
+ * is dropped entirely once the element has arrived so nothing keeps a filter
+ * layer alive afterwards.
+ */
 export const fadeUpBlur: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.988, filter: 'blur(4px)' },
+  hidden: { opacity: 0, y: 20, scale: 0.988, filter: 'blur(2.5px)' },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
     filter: 'blur(0px)',
-    transition: { duration: 0.84, ease: easeLux },
+    transition: {
+      duration: 0.8,
+      ease: easeLux,
+      filter: { duration: 0.45, ease: 'easeOut' },
+    },
   },
 }
 
@@ -28,13 +40,17 @@ export const fadeIn: Variants = {
 
 /** Premium card entrance: fade + lift + slight scale/tilt. */
 export const cardEntrance: Variants = {
-  hidden: { opacity: 0, y: 22, scale: 0.975, filter: 'blur(3px)' },
+  hidden: { opacity: 0, y: 22, scale: 0.975, filter: 'blur(2px)' },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
     filter: 'blur(0px)',
-    transition: { duration: 0.88, ease: easeLux },
+    transition: {
+      duration: 0.86,
+      ease: easeLux,
+      filter: { duration: 0.4, ease: 'easeOut' },
+    },
   },
 }
 

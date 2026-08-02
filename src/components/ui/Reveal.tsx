@@ -27,8 +27,10 @@ export function Reveal({
   const reduce = useReducedMotion()
   const MotionTag = motion[as]
 
+  // Small blur on purpose — `filter` repaints every frame, so the softness is
+  // kept cheap and resolved early. See fadeUpBlur in lib/motion.
   const hidden = blur
-    ? { opacity: 0, y, scale: 0.988, filter: 'blur(4px)' }
+    ? { opacity: 0, y, scale: 0.988, filter: 'blur(2.5px)' }
     : { opacity: 0, y, scale: 0.992 }
   const shown = blur
     ? { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
@@ -40,7 +42,12 @@ export function Reveal({
       initial={reduce ? false : hidden}
       whileInView={reduce ? undefined : shown}
       viewport={{ once: true, amount: 0.16, margin: '0px 0px -6% 0px' }}
-      transition={{ duration: 0.84, ease: easeLux, delay }}
+      transition={{
+        duration: 0.8,
+        ease: easeLux,
+        delay,
+        filter: { duration: 0.45, ease: 'easeOut', delay },
+      }}
     >
       {children}
     </MotionTag>

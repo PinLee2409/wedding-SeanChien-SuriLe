@@ -1,0 +1,13 @@
+{
+  "$comment": "How each portrait sits inside its arch frame. `scale` zooms in, `x`/`y` are the focal point in percent — they drive both object-position and the zoom origin, so raising the zoom pulls in towards that point. Tuned live by the dev-only photo admin at /admin.html.",
+  "bride": {
+    "scale": 1,
+    "x": 86,
+    "y": 59
+  },
+  "groom": {
+    "scale": 1,
+    "x": 0,
+    "y": 21
+  }
+}

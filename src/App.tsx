@@ -9,7 +9,6 @@ import { CoupleProfile } from './components/sections/CoupleProfile'
 import { FlightTimeline } from './components/sections/FlightTimeline'
 import { WeddingDetails } from './components/sections/WeddingDetails'
 import { DownloadInvitation } from './components/sections/DownloadInvitation'
-import { FlightPhotoStory } from './components/sections/FlightPhotoStory'
 import { LoveMessage } from './components/sections/LoveMessage'
 import { MediaGallery } from './components/sections/MediaGallery'
 import { FinalThankYou } from './components/sections/FinalThankYou'
@@ -126,9 +125,6 @@ function App() {
 
         <RouteDivider className="bg-warm-white" />
 
-        <FlightPhotoStory />
-
-        {/* Words between the two photo runs, so neither becomes a wall. */}
         <LoveMessage config={weddingConfig} />
 
         <RouteDivider className="bg-ivory" />

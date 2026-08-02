@@ -1,0 +1,41 @@
+{
+  "$comment": "Which photograph sits in which slot. Edited by the dev-only photo admin at /admin.html — see plugins/photo-admin.ts. Every name must exist in src/assets/gallery/. Layout, cropping and ordering stay in the components; only the choice of photograph lives here.",
+  "hero": [
+    "cuoi1_t04-04-276.jpg",
+    "cuoi1_t04-04-187.jpg"
+  ],
+  "timeline": [
+    "cuoi2_dsc09233.jpg",
+    "cuoi2_dsc09249.jpg",
+    "cuoi2_dsc09275.jpg",
+    "cuoi2_dsc09328.jpg"
+  ],
+  "boardingPass": [
+    "cuoi2_dsc09588.jpg",
+    "cuoi2_dsc09570.jpg",
+    "cuoi2_dsc09626.jpg",
+    "cuoi2_dsc09644.jpg",
+    "cuoi2_dsc09700.jpg",
+    "cuoi2_dsc09711.jpg",
+    "moi_chatgpt-image-13-41-11-2-thg-8-2026-2.jpg",
+    "cuoi2_dsc09746.jpg"
+  ],
+  "downloadScene": [
+    "cuoi3_dscf0957.jpg",
+    "moi_dscf0968.jpg"
+  ],
+  "galleryGrid": [
+    "cuoi1_t04-04-323.jpg",
+    "cuoi1_t04-04-300.jpg",
+    "cuoi1_t04-04-291.jpg",
+    "cuoi1_t04-04-312.jpg",
+    "cuoi1_t04-04-166.jpg",
+    "cuoi1_t04-04-147.jpg",
+    "cuoi2_dsc09651.jpg",
+    "cuoi2_dsc09662.jpg",
+    "cuoi2_dsc09728.jpg",
+    "cuoi3_dscf0994.jpg",
+    "moi_dscf0975.jpg",
+    "moi_dscf0978.jpg"
+  ]
+}
