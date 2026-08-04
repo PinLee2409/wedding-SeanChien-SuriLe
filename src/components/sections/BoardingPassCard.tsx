@@ -79,7 +79,7 @@ function Field({
     >
       {/* The gold caption. Enlarged with the tracking eased back, so the extra
           size buys legibility instead of just making the line wider. */}
-      <span className="whitespace-nowrap text-[0.88em] font-medium uppercase tracking-[0.14em] text-gold-dark">
+      <span className="text-[0.88em] font-medium uppercase tracking-[0.14em] text-gold-dark">
         {label}
       </span>
       <span
@@ -252,7 +252,12 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             <span className="text-[0.84em] uppercase tracking-[0.24em] text-gold-dark">
               {t.pass.weddingOf}
             </span>
-            <p className="mt-[0.35em] whitespace-nowrap font-display text-[2.15em] font-semibold leading-[1.1]">
+            {/* Wrappable on purpose. Every size on this card is a share of its
+                width, which holds only while the webfonts are in place — until
+                Space Mono and Cormorant arrive, the browser paints wider
+                fallbacks, and `nowrap` turned that into text running off the
+                card or over its neighbour. Wrapping just costs a line. */}
+            <p className="mt-[0.35em] text-balance font-display text-[2.15em] font-semibold leading-[1.1]">
               {firstPartner.person.name}
               <span className="mx-[0.25em] text-gold">&amp;</span>
               {secondPartner.person.name}
@@ -267,20 +272,22 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             variants={fadeUpBlur}
             className="flex items-center justify-between gap-[0.8em] px-[1.5em] pt-[1.1em]"
           >
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-col">
               <span className="text-[0.86em] uppercase tracking-[0.14em] text-gold-dark">{t.pass.from}</span>
-              <span className="whitespace-nowrap font-display text-[1.58em] font-semibold leading-none">
+              <span className="font-display text-[1.58em] font-semibold leading-tight">
                 {t.pass.fromValue}
               </span>
             </div>
-            <div className="flex flex-1 items-center text-gold">
+            {/* The rule between them may collapse to nothing, but it never
+                squeezes the two place names off the card. */}
+            <div className="flex min-w-[1.8em] shrink flex-[0_1_auto] items-center text-gold">
               <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/70" />
-              <Plane className="mx-[0.3em] h-[1.3em] w-[1.3em] rotate-45" strokeWidth={1.6} />
+              <Plane className="mx-[0.3em] h-[1.3em] w-[1.3em] shrink-0 rotate-45" strokeWidth={1.6} />
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/70" />
             </div>
-            <div className="flex flex-col items-end text-right">
+            <div className="flex min-w-0 flex-col items-end text-right">
               <span className="text-[0.86em] uppercase tracking-[0.14em] text-gold-dark">{t.pass.to}</span>
-              <span className="whitespace-nowrap font-display text-[1.58em] font-semibold leading-none">
+              <span className="font-display text-[1.58em] font-semibold leading-tight">
                 {t.pass.toValue}
               </span>
             </div>
@@ -297,13 +304,17 @@ export const BoardingPassCard = forwardRef<HTMLDivElement, BoardingPassCardProps
             {/* Time and date share one field. As three columns they were fighting
                 for room at this type size; together they also read the way a
                 guest actually thinks about it — one moment, not two figures. */}
-            <div className="flex items-start justify-between gap-x-[0.9em]">
+            {/* Wraps rather than overlaps: if the two values cannot sit side by
+                side — a wider fallback font, a longer date — the second drops
+                to its own line instead of running through the first. */}
+            <div className="flex flex-wrap items-start justify-between gap-x-[0.9em] gap-y-[0.7em]">
               <Field label={t.pass.flight} value={flightNo} numeric />
               <Field
                 label={t.pass.when}
                 value={`${date.time} · ${date.displayDate.replace(/\s·\s/g, '/')}`}
                 align="right"
                 numeric
+                nowrap={false}
               />
             </div>
             {/* Venue — the one detail every guest actually needs on the pass. */}
