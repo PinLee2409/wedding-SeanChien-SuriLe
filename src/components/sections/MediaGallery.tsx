@@ -177,7 +177,11 @@ export function MediaGallery() {
         />
       </Reveal>
 
-      <SectionReveal className="relative z-10 mx-auto grid max-w-5xl grid-cols-2 gap-x-1 gap-y-6 px-7 sm:grid-cols-3 sm:gap-x-2 sm:gap-y-10 sm:px-12 lg:px-16">
+      {/* Flex rather than a grid: a grid packs its last row from the left, so
+          an album whose count is not a multiple of the columns ends on a row
+          of prints shoved to one side. `justify-center` centres every row,
+          which only shows on the short one. */}
+      <SectionReveal className="relative z-10 mx-auto flex max-w-5xl flex-wrap justify-center gap-x-1 gap-y-6 px-7 sm:gap-x-2 sm:gap-y-10 sm:px-12 lg:px-16">
         {GRID_PHOTOS.map((photo, index) => {
           const label = `${t.gallery.photo} ${index + 1}`
           const { tilt, layer, drift } = SCATTER[index % SCATTER.length]
@@ -185,7 +189,14 @@ export function MediaGallery() {
           return (
             <RevealItem
               key={photo.filename}
-              className={cn('relative -mx-2 sm:-mx-4', layer, drift, 'hover:z-50')}
+              /* Widths leave slack so the wrap point stays put: two per row on
+                 a phone, three from 640px up. */
+              className={cn(
+                'relative w-[46%] -mx-2 sm:w-[31%] sm:-mx-4',
+                layer,
+                drift,
+                'hover:z-50',
+              )}
             >
               <button
                 type="button"
