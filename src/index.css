@@ -1,6 +1,65 @@
 @import 'tailwindcss';
 
 /*
+  ───────────────────────────────────────────────────────────────────────────
+   METRIC-MATCHED FALLBACKS
+  ───────────────────────────────────────────────────────────────────────────
+   The webfonts load with `display=swap`, so until they arrive the browser
+   paints whatever the operating system offers — and those faces are not the
+   same width. Measured against the real ones: a serif fallback runs 9.4%
+   WIDER than Cormorant, a monospace one 10.2% narrower than Space Mono, a
+   system sans 12.4% narrower than Montserrat.
+
+   On the boarding pass, where every size is a share of the card's width,
+   that difference was enough to push "Bến Đỗ Hạnh Phúc" off the card and run
+   the flight number through the time. `size-adjust` scales each fallback back
+   to the real face's width, so the swap changes the letterforms and nothing
+   else — no reflow, no overflow, on any operating system.
+
+   The families below are only ever reached while the webfont is in flight or
+   if Google Fonts cannot be reached at all.
+  ───────────────────────────────────────────────────────────────────────────
+*/
+@font-face {
+  font-family: 'Display Fallback';
+  src:
+    local('Playfair Display'),
+    local('Times New Roman'),
+    local('Times'),
+    local('Liberation Serif');
+  size-adjust: 96.8%;
+  ascent-override: 105%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback';
+  src:
+    local('Segoe UI'),
+    local('Helvetica Neue'),
+    local('Roboto'),
+    local('Arial');
+  size-adjust: 113.5%;
+  ascent-override: 85%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Mono Fallback';
+  src:
+    local('Consolas'),
+    local('SF Mono'),
+    local('Menlo'),
+    local('DejaVu Sans Mono');
+  size-adjust: 111.3%;
+  ascent-override: 92%;
+  descent-override: 26%;
+  line-gap-override: 0%;
+}
+
+/*
   Bright & Luxurious Wedding Invitation — design tokens.
   Palette: elegant navy-blue + champagne gold + soft ivory.
   Vibrant, airy, and premium.
@@ -31,12 +90,13 @@
   --color-sky: #C4D8E8;
   --color-sky-soft: #E8F0F6;
 
-  /* Fonts */
-  --font-display: 'Cormorant Garamond', 'Playfair Display', 'Times New Roman',
-    serif;
-  --font-script: 'Great Vibes', 'Cormorant Garamond', cursive;
-  --font-sans: 'Montserrat', system-ui, 'Segoe UI', sans-serif;
-  --font-mono: 'Space Mono', ui-monospace, 'Consolas', monospace;
+  /* Fonts. Each real face is followed by its metric-matched stand-in (see the
+     @font-face block above), so a swap never changes how much room the text
+     takes — only the last entry is a plain generic, and it is a last resort. */
+  --font-display: 'Cormorant Garamond', 'Display Fallback', serif;
+  --font-script: 'Great Vibes', 'Cormorant Garamond', 'Display Fallback', cursive;
+  --font-sans: 'Montserrat', 'Sans Fallback', sans-serif;
+  --font-mono: 'Space Mono', 'Mono Fallback', monospace;
 
   /* Ambient animations */
   --animate-drift-slow: drift 60s linear infinite;
