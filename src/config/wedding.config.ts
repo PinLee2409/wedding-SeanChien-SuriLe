@@ -318,12 +318,12 @@ export const weddingConfig: WeddingConfig = {
       {
         src: 'music/beautiful-in-white.mp3',
         title: 'Beautiful In White',
-        artist: 'Piano & strings',
+        artist: 'Shane Filan',
       },
       {
         src: 'music/young-and-beautiful.mp3',
         title: 'Young and Beautiful',
-        artist: 'Lana Del Rey · Instrumental',
+        artist: 'Lana Del Rey',
       },
       {
         src: 'music/souvenirs.mp3',
