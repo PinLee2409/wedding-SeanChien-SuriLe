@@ -42,16 +42,12 @@
     />
     <meta name="twitter:image" content="%SITE_URL%images/web/og-cover.jpg" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- crossorigin makes the stylesheet's cssRules readable so the boarding
-         pass PNG/PDF export can embed the fonts (Google Fonts sends ACAO). -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
-      rel="stylesheet"
-      crossorigin="anonymous"
-    />
+    <!-- Fonts are served from this site — see the @font-face block at the top
+         of src/index.css. Nothing is fetched from Google, so the invitation
+         renders identically on every device, works on a poor connection, and
+         reports nothing about a guest's visit to a third party. Same-origin
+         also means the boarding-pass PNG/PDF export can read the rules it
+         needs to embed the faces. -->
   </head>
   <body>
     <div id="root"></div>
