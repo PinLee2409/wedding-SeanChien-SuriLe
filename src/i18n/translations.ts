@@ -115,6 +115,10 @@ export interface Translation {
     thanksYes: string
     thanksNo: string
     error: string
+    /** Sent too soon after the last one; "{s}" is the seconds to wait. */
+    tooSoon: string
+    /** This device has spent its sends. */
+    tooMany: string
     /** Small caps header on the confirmation stub. */
     stubLabel: string
     /** What the stub says once this device has answered. */
@@ -122,6 +126,8 @@ export interface Translation {
     confirmedNo: string
     /** Reopens the form so the answer can be changed. */
     change: string
+    /** Hands the form to a second guest sharing the same phone. */
+    another: string
   }
   couple: {
     kicker: string
@@ -321,10 +327,14 @@ export const translations: Record<Lang, Translation> = {
       thanksYes: 'Cảm ơn bạn! Chúng mình đã giữ chỗ và hẹn gặp bạn ♥',
       thanksNo: 'Cảm ơn bạn đã cho chúng mình biết. Hẹn gặp bạn dịp gần nhất nhé ♥',
       error: 'Chưa gửi được, bạn thử lại giúp mình nhé.',
+      tooSoon: 'Bạn vừa gửi xong — đợi {s} giây rồi gửi lại nhé.',
+      tooMany:
+        'Thiết bị này đã đổi câu trả lời khá nhiều lần rồi. Nếu cần sửa thêm, bạn nhắn trực tiếp cho cô dâu chú rể giúp mình nhé.',
       stubLabel: 'Đã xác nhận',
       confirmedYes: 'Chỗ của bạn đã được giữ trên chuyến bay hạnh phúc.',
       confirmedNo: 'Chúng mình đã nhận được lời nhắn của bạn.',
       change: 'Đổi câu trả lời',
+      another: 'Người khác muốn xác nhận',
     },
     couple: {
       kicker: 'Phi hành đoàn',
@@ -522,10 +532,14 @@ export const translations: Record<Lang, Translation> = {
       thanksYes: 'Thank you! Your seat is booked — see you there ♥',
       thanksNo: 'Thank you for letting us know. We hope to see you soon ♥',
       error: 'Could not send just now — please try again.',
+      tooSoon: 'That has just gone through — please try again in {s}s.',
+      tooMany:
+        'This device has changed its answer many times already. For any further change, please message the couple directly.',
       stubLabel: 'Confirmed',
       confirmedYes: 'Your seat is reserved on our flight to happiness.',
       confirmedNo: 'We have received your reply.',
       change: 'Change my answer',
+      another: 'Someone else would like to reply',
     },
     couple: {
       kicker: 'The flight crew',
@@ -755,10 +769,13 @@ export const translations: Record<Lang, Translation> = {
       thanksYes: '謝謝您！座位已為您保留，當天見 ♥',
       thanksNo: '謝謝您告知，期待與您相見 ♥',
       error: '暫時無法送出，請再試一次。',
+      tooSoon: '剛才已送出——請於 {s} 秒後再試。',
+      tooMany: '此裝置已多次更改回覆。如需再次更改，請直接聯繫新人。',
       stubLabel: '已確認',
       confirmedYes: '您的座位已保留在我們的幸福航班上。',
       confirmedNo: '我們已收到您的回覆。',
       change: '更改回覆',
+      another: '換另一位賓客回覆',
     },
     couple: {
       kicker: '機組人員',

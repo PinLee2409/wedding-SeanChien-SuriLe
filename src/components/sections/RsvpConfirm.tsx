@@ -12,8 +12,19 @@ import { RomanticAura } from '../decorations/RomanticAura'
 import { SectionRomance } from '../decorations/SectionRomance'
 
 const STORAGE_KEY = 'wedding-rsvp-v1'
+/** Stable per-device id. The endpoint keys its rows on this, so a guest who
+ *  changes their mind overwrites their own reply instead of adding a second
+ *  one — see scripts/rsvp-endpoint.gs. */
+const DEVICE_KEY = 'wedding-rsvp-device-v1'
+/** Timestamps of what this device has sent, for the local send limits. */
+const SENDS_KEY = 'wedding-rsvp-sends-v1'
 const NAME_MAX = 40
 const MESSAGE_MAX = 200
+/** Quiet period between two sends, and the most any one device may send.
+ *  Both are courtesies, not security: anything typed into a browser console
+ *  walks straight past them, which is why the endpoint enforces its own. */
+const RESEND_QUIET_MS = 15_000
+const SENDS_MAX = 10
 const GOLD_COLORS = ['#c68a74', '#e9c5b5', '#fffefd', '#dba8a3']
 
 interface Rsvp {
@@ -28,11 +39,25 @@ interface Rsvp {
  *  translated: the guest may be reading in English or Chinese, but the two
  *  people counting the seats read Vietnamese, and a column that mixes three
  *  languages cannot be sorted or counted. */
-function wireMessage(rsvp: Rsvp): string {
+function wireMessage(rsvp: Rsvp, revised: boolean): string {
   const answer = rsvp.attending
     ? `✅ THAM DỰ · ${rsvp.guests} khách`
     : '❌ KHÔNG THAM DỰ'
-  return rsvp.message ? `${answer} — ${rsvp.message}` : answer
+  // An endpoint that overwrites shows only the final answer, so the marker
+  // says "they changed their mind"; one that still appends needs it to tell
+  // which of two rows for the same guest is the live one.
+  const head = revised ? `${answer} (đã sửa)` : answer
+  return rsvp.message ? `${head} — ${rsvp.message}` : head
+}
+
+/** True when re-sending would tell the couple nothing they do not have. */
+function sameAnswer(a: Rsvp, b: Rsvp): boolean {
+  return (
+    a.name === b.name &&
+    a.attending === b.attending &&
+    a.message === b.message &&
+    (!a.attending || a.guests === b.guests)
+  )
 }
 
 function readStored(): Rsvp | null {
@@ -63,6 +88,65 @@ function saveStored(rsvp: Rsvp): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rsvp))
   } catch {
     /* private mode — the reply is already on its way to the couple */
+  }
+}
+
+/** The id this device signs its reply with, minted on first use. Without
+ *  storage it is per-session: the guest still gets one row per visit rather
+ *  than one per tap, which is the case that actually happens. */
+function deviceId(): string {
+  const mint = () =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+  try {
+    const existing = localStorage.getItem(DEVICE_KEY)
+    if (existing) return existing
+    const fresh = mint()
+    localStorage.setItem(DEVICE_KEY, fresh)
+    return fresh
+  } catch {
+    return mint()
+  }
+}
+
+/** Forgets whose reply this device holds, so the next one starts a new row.
+ *  One phone passed around a table replies for each person in turn, rather
+ *  than the second guest quietly editing the first guest's answer. */
+function forgetDevice(): void {
+  try {
+    localStorage.removeItem(DEVICE_KEY)
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
+function readSends(): number[] {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(SENDS_KEY) ?? '[]')
+    if (!Array.isArray(raw)) return []
+    return raw.map(Number).filter((ts) => Number.isFinite(ts) && ts > 0)
+  } catch {
+    return []
+  }
+}
+
+function recordSend(ts: number): void {
+  try {
+    localStorage.setItem(SENDS_KEY, JSON.stringify([...readSends(), ts]))
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
+/** How long this device must wait, and whether it has spent its sends. */
+function sendGuard(now: number): { waitMs: number; spent: boolean } {
+  const sends = readSends()
+  const last = sends.length ? Math.max(...sends) : 0
+  return {
+    waitMs: Math.max(0, RESEND_QUIET_MS - (now - last)),
+    spent: sends.length >= SENDS_MAX,
   }
 }
 
@@ -144,8 +228,17 @@ export function RsvpConfirm({ config }: { config: WeddingConfig }) {
   )
   const [guests, setGuests] = useState(stored?.guests ?? 1)
   const [message, setMessage] = useState(stored?.message ?? '')
-  const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle')
+  const [status, setStatus] = useState<
+    'idle' | 'sending' | 'error' | 'tooSoon' | 'tooMany'
+  >('idle')
+  const [waitSeconds, setWaitSeconds] = useState(0)
   const [confirmed, setConfirmed] = useState<Rsvp | null>(stored)
+
+  /** What the couple last heard from this device — the yardstick for "has
+   *  anything actually changed?", which `stored` stops being after a send. */
+  const sentRef = useRef<Rsvp | null>(stored)
+  /** Bots fill every field they find; a guest never sees this one. */
+  const trapRef = useRef<HTMLInputElement>(null)
 
   const trimmedName = name.trim()
   const canSubmit =
@@ -153,7 +246,7 @@ export function RsvpConfirm({ config }: { config: WeddingConfig }) {
 
   /** Posts the reply and resolves delivered? — never rejects. */
   const dispatch = useCallback(
-    (rsvp: Rsvp): Promise<boolean> => {
+    (rsvp: Rsvp, revised: boolean): Promise<boolean> => {
       if (!endpoint) return Promise.resolve(true)
       // text/plain keeps the request "simple" (no CORS preflight) and no-cors
       // lets an Apps Script endpoint accept it from any origin.
@@ -162,8 +255,12 @@ export function RsvpConfirm({ config }: { config: WeddingConfig }) {
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
+          // The row this reply owns. An endpoint that keys on it replaces the
+          // guest's earlier answer; one that ignores it appends, and the
+          // marker inside `message` says which row won.
+          id: deviceId(),
           name: rsvp.name,
-          message: wireMessage(rsvp),
+          message: wireMessage(rsvp, revised),
           ts: rsvp.ts,
           site,
           // Sent alongside for the day the sheet grows columns of its own;
@@ -184,22 +281,55 @@ export function RsvpConfirm({ config }: { config: WeddingConfig }) {
       event.preventDefault()
       if (!canSubmit || attending === null) return
 
+      const now = Date.now()
       const rsvp: Rsvp = {
         name: trimmedName.slice(0, NAME_MAX),
         attending,
         guests: attending ? Math.min(Math.max(1, guests), maxGuests) : 1,
         message: message.trim().slice(0, MESSAGE_MAX),
-        ts: Date.now(),
+        ts: now,
+      }
+
+      const sent = sentRef.current
+
+      // Reopening the form and closing it again is the commonest path back
+      // here, and most of the time nothing was actually changed. Say thank
+      // you, send nothing: the couple keep the row they already have.
+      if (sent && sameAnswer(sent, rsvp)) {
+        setStatus('idle')
+        setConfirmed(sent)
+        return
+      }
+
+      // A filled trap is a bot. Behave exactly as we would for a guest so
+      // there is nothing to learn from the response, and post nothing.
+      if (trapRef.current?.value) {
+        setStatus('idle')
+        setConfirmed(rsvp)
+        return
+      }
+
+      const guard = sendGuard(now)
+      if (guard.spent) {
+        setStatus('tooMany')
+        return
+      }
+      if (guard.waitMs > 0) {
+        setWaitSeconds(Math.ceil(guard.waitMs / 1000))
+        setStatus('tooSoon')
+        return
       }
 
       setStatus('sending')
-      const delivered = await dispatch(rsvp)
+      const delivered = await dispatch(rsvp, sent !== null)
       if (!delivered) {
         setStatus('error')
         return
       }
 
+      recordSend(now)
       saveStored(rsvp)
+      sentRef.current = rsvp
       setStatus('idle')
       setConfirmed(rsvp)
 
@@ -291,13 +421,35 @@ export function RsvpConfirm({ config }: { config: WeddingConfig }) {
                   </p>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setConfirmed(null)}
-                  className="btn btn-ghost mt-6"
-                >
-                  {t.rsvp.change}
-                </button>
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatus('idle')
+                      setConfirmed(null)
+                    }}
+                    className="btn btn-ghost"
+                  >
+                    {t.rsvp.change}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      forgetDevice()
+                      sentRef.current = null
+                      setName('')
+                      setAttending(null)
+                      setGuests(1)
+                      setMessage('')
+                      setStatus('idle')
+                      setConfirmed(null)
+                    }}
+                    className="cursor-pointer text-xs text-navy-400 underline decoration-gold/40 underline-offset-4 transition hover:text-gold-dark"
+                  >
+                    {t.rsvp.another}
+                  </button>
+                </div>
 
                 <div
                   aria-hidden
@@ -315,6 +467,18 @@ export function RsvpConfirm({ config }: { config: WeddingConfig }) {
                 transition={{ duration: 0.5, ease: easeLux }}
                 className="relative overflow-hidden rounded-3xl border border-gold/30 bg-white/80 px-4 py-6 shadow-[0_24px_50px_-30px_rgba(27,42,74,0.35)] backdrop-blur-md sm:px-8 sm:py-8"
               >
+                {/* Off-screen rather than display:none — a bot reading the
+                    DOM fills it, a guest never reaches it. */}
+                <input
+                  ref={trapRef}
+                  type="text"
+                  name="company"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-[-9999px] h-px w-px opacity-0"
+                />
+
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="rsvp-name"
@@ -441,11 +605,18 @@ export function RsvpConfirm({ config }: { config: WeddingConfig }) {
                   role="status"
                   aria-live="polite"
                   className={cn(
-                    'mt-3 min-h-5 text-center text-sm transition-opacity',
-                    status === 'error' ? 'text-rose' : 'opacity-0',
+                    'mt-3 min-h-5 text-balance text-center text-sm transition-opacity',
+                    status === 'error' && 'text-rose',
+                    (status === 'tooSoon' || status === 'tooMany') &&
+                      'text-gold-dark',
+                    (status === 'idle' || status === 'sending') && 'opacity-0',
                   )}
                 >
-                  {t.rsvp.error}
+                  {status === 'tooSoon'
+                    ? t.rsvp.tooSoon.replace('{s}', String(waitSeconds))
+                    : status === 'tooMany'
+                      ? t.rsvp.tooMany
+                      : t.rsvp.error}
                 </p>
 
                 <div

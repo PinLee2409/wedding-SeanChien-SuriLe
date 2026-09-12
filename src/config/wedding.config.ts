@@ -309,8 +309,12 @@ export const weddingConfig: WeddingConfig = {
   },
 
   rsvp: {
-    // Google Apps Script "Loi chuc - Boarding wishes" — appends every reply to
+    // Google Apps Script "Loi chuc - Boarding wishes" — writes every reply to
     // the couple's "Lời chúc" sheet, which is where they read the guest list.
+    // scripts/rsvp-endpoint.gs is the script this expects behind the URL: one
+    // row per guest, and the send limits that a browser cannot be trusted to
+    // keep. Until it is pasted in, the old script still accepts every reply —
+    // it simply appends a new row each time instead of correcting the old one.
     endpoint:
       'https://script.google.com/macros/s/AKfycbxaqUXWH-XPnL8yfOCyVqLZm66DiJRJJps38RW8sBfoAP4UO4eElx6We2ne5fs6_iQB/exec',
     site: 'suri',
