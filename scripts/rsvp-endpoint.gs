@@ -2,10 +2,17 @@
  * ─────────────────────────────────────────────────────────────────────────────
  *  RSVP ENDPOINT — the Google Apps Script behind `config.rsvp.endpoint`.
  * ─────────────────────────────────────────────────────────────────────────────
- *  Paste this over the script bound to the couple's "Lời chúc" spreadsheet
- *  (Extensions → Apps Script), then Deploy → Manage deployments → edit the
- *  existing web app → New version, so the URL already in the config keeps
- *  working. Execute as: Me. Who has access: Anyone.
+ *  Paste this in, save, then deploy as a web app — Execute as: Me, Who has
+ *  access: Anyone. Deploying a NEW version of the existing deployment keeps
+ *  the URL already in the config; a new deployment mints a new URL, which
+ *  then has to be copied back into `rsvp.endpoint` in both invitations.
+ *
+ *  Two ways to reach the sheet, and the script handles either:
+ *    bound      — opened from the spreadsheet (Extensions → Apps Script).
+ *                 Leave SPREADSHEET_ID empty.
+ *    standalone — its own project on script.google.com. Put the sheet's id
+ *                 in SPREADSHEET_ID (the long part of its URL between
+ *                 /d/ and /edit).
  *
  *  It exists because the browser cannot be trusted with either of the two
  *  things that matter here:
@@ -28,6 +35,9 @@
  *  first use — existing rows and formatting are left alone.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+
+/** The "Lời chúc" spreadsheet. Empty ⇒ the one this script is bound to. */
+const SPREADSHEET_ID = ''
 
 /** Leave empty to use the first sheet in the spreadsheet. */
 const SHEET_NAME = ''
@@ -93,9 +103,7 @@ function handle(e) {
   const limited = overLimit(id)
   if (limited) return reply({ ok: false, error: limited })
 
-  const sheet = SHEET_NAME
-    ? SpreadsheetApp.getActive().getSheetByName(SHEET_NAME)
-    : SpreadsheetApp.getActive().getSheets()[0]
+  const sheet = targetSheet()
   if (!sheet) return reply({ ok: false, error: 'sheet' })
 
   const col = headerIndex(sheet)
@@ -123,6 +131,38 @@ function handle(e) {
   sheet.appendRow(values)
   countWrite(id)
   return reply({ ok: true, updated: false })
+}
+
+/** The sheet replies are written to, whether this script is bound to the
+ *  spreadsheet or stands on its own. Null when neither route finds it. */
+function targetSheet() {
+  const book = SPREADSHEET_ID
+    ? SpreadsheetApp.openById(SPREADSHEET_ID)
+    : SpreadsheetApp.getActive()
+  if (!book) return null
+  return SHEET_NAME ? book.getSheetByName(SHEET_NAME) : book.getSheets()[0]
+}
+
+/**
+ * Run this once from the editor (Chạy) before deploying. It says which
+ * spreadsheet and sheet the script can see and how many replies are already
+ * there, so a wrong SPREADSHEET_ID shows up here rather than on the day.
+ */
+function checkSetup() {
+  const sheet = targetSheet()
+  if (!sheet) {
+    throw new Error(
+      'No spreadsheet. A standalone project needs SPREADSHEET_ID filled in.',
+    )
+  }
+  const rows = Math.max(0, sheet.getLastRow() - 1)
+  Logger.log(
+    'Spreadsheet: %s · sheet: %s · existing rows: %s',
+    sheet.getParent().getName(),
+    sheet.getName(),
+    rows,
+  )
+  Logger.log('Columns: %s', JSON.stringify(headerIndex(sheet)))
 }
 
 /** The invitation posts JSON as text/plain to dodge a CORS preflight. */
