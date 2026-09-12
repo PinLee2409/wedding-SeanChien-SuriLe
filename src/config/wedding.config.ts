@@ -316,7 +316,7 @@ export const weddingConfig: WeddingConfig = {
     // keep. Until it is pasted in, the old script still accepts every reply —
     // it simply appends a new row each time instead of correcting the old one.
     endpoint:
-      'https://script.google.com/macros/s/AKfycbxaqUXWH-XPnL8yfOCyVqLZm66DiJRJJps38RW8sBfoAP4UO4eElx6We2ne5fs6_iQB/exec',
+      'https://script.google.com/macros/s/AKfycbzQgxFuPWP9MtMSFr9tWiHe88V6ttDcP8eGbpuUSh6oqhr1w9_28F-OEeZ_44D-QM1A/exec',
     site: 'suri',
     maxGuests: 10,
   },
