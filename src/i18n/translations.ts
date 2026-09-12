@@ -93,24 +93,35 @@ export interface Translation {
     body: string[]
     signature: string
   }
-  guestbook: {
+  rsvp: {
     kicker: string
     title: string
     subtitle: string
     nameLabel: string
     namePlaceholder: string
+    /** The question standing above the two answers. */
+    attendingLabel: string
+    yes: string
+    no: string
+    /** Party size — asked only once the guest has answered yes. */
+    guestsLabel: string
+    /** Unit after the number: "khách" / "guests". */
+    guestsUnit: string
+    /** A wish is still welcome, it is simply no longer what we ask for. */
     messageLabel: string
     messagePlaceholder: string
     submit: string
     sending: string
-    thanks: string
+    thanksYes: string
+    thanksNo: string
     error: string
-    /** Small caps header printed on every wish ticket. */
-    wishLabel: string
-    /** "Seat" label in front of the playful seat code on each ticket. */
-    seat: string
-    /** Wishes from the couple/family that keep the wall warm from day one. */
-    seeds: Array<{ name: string; message: string }>
+    /** Small caps header on the confirmation stub. */
+    stubLabel: string
+    /** What the stub says once this device has answered. */
+    confirmedYes: string
+    confirmedNo: string
+    /** Reopens the form so the answer can be changed. */
+    change: string
   }
   couple: {
     kicker: string
@@ -291,38 +302,29 @@ export const translations: Record<Lang, Translation> = {
       ],
       signature: 'Với tất cả yêu thương và lòng biết ơn,',
     },
-    guestbook: {
-      kicker: 'Sổ lời chúc',
-      title: 'Lời chúc gửi chuyến bay',
+    rsvp: {
+      kicker: 'Xác nhận tham dự',
+      title: 'Bạn có bay cùng chúng mình không?',
       subtitle:
-        'Để lại đôi lời yêu thương — mỗi lời chúc là một tấm vé cùng cất cánh trên chuyến bay hạnh phúc của chúng mình.',
+        'Xác nhận giúp chúng mình một câu thôi — để gia đình chuẩn bị đúng số chỗ ngồi và đón bạn thật chu đáo trong ngày vui.',
       nameLabel: 'Tên của bạn',
       namePlaceholder: 'Ví dụ: Bạn Minh Anh',
-      messageLabel: 'Lời chúc',
+      attendingLabel: 'Bạn sẽ có mặt chứ?',
+      yes: 'Có, mình sẽ đến',
+      no: 'Rất tiếc, mình không đến được',
+      guestsLabel: 'Số người tham dự',
+      guestsUnit: 'khách',
+      messageLabel: 'Lời nhắn (không bắt buộc)',
       messagePlaceholder: 'Chúc hai bạn trăm năm hạnh phúc…',
-      submit: 'Gửi lời chúc',
+      submit: 'Gửi xác nhận',
       sending: 'Đang gửi…',
-      thanks: 'Cảm ơn bạn! Lời chúc của bạn đã lên máy bay ♥',
+      thanksYes: 'Cảm ơn bạn! Chúng mình đã giữ chỗ và hẹn gặp bạn ♥',
+      thanksNo: 'Cảm ơn bạn đã cho chúng mình biết. Hẹn gặp bạn dịp gần nhất nhé ♥',
       error: 'Chưa gửi được, bạn thử lại giúp mình nhé.',
-      wishLabel: 'Vé lời chúc',
-      seat: 'Ghế',
-      seeds: [
-        {
-          name: 'Cô dâu & Chú rể',
-          message:
-            'Cảm ơn bạn đã là một phần trong chuyến bay hạnh phúc của chúng mình!',
-        },
-        {
-          name: 'Gia đình hai bên',
-          message:
-            'Chúc hai con trăm năm hạnh phúc, bay thật xa và luôn nắm chặt tay nhau.',
-        },
-        {
-          name: 'Hội bạn thân',
-          message:
-            'Chúc chuyến bay LOVE cất cánh thuận lợi và hạnh phúc không bao giờ hạ cánh!',
-        },
-      ],
+      stubLabel: 'Đã xác nhận',
+      confirmedYes: 'Chỗ của bạn đã được giữ trên chuyến bay hạnh phúc.',
+      confirmedNo: 'Chúng mình đã nhận được lời nhắn của bạn.',
+      change: 'Đổi câu trả lời',
     },
     couple: {
       kicker: 'Phi hành đoàn',
@@ -501,37 +503,29 @@ export const translations: Record<Lang, Translation> = {
       ],
       signature: 'With love and gratitude,',
     },
-    guestbook: {
-      kicker: 'Guest Book',
-      title: 'Wishes for the Flight',
+    rsvp: {
+      kicker: 'Please confirm',
+      title: 'Will you be flying with us?',
       subtitle:
-        'Leave a few loving words — every wish becomes a little boarding pass on our flight to happiness.',
+        'One answer is all we need — it lets our families set the right number of seats and welcome you properly on the day.',
       nameLabel: 'Your name',
       namePlaceholder: 'e.g. Emily & Tom',
-      messageLabel: 'Your wish',
+      attendingLabel: 'Will you be there?',
+      yes: 'Yes, I will be there',
+      no: 'Sadly, I cannot make it',
+      guestsLabel: 'Number of guests',
+      guestsUnit: 'guests',
+      messageLabel: 'A note (optional)',
       messagePlaceholder: 'Wishing you a lifetime of love…',
-      submit: 'Send wish',
+      submit: 'Send confirmation',
       sending: 'Sending…',
-      thanks: 'Thank you! Your wish is now on board ♥',
+      thanksYes: 'Thank you! Your seat is booked — see you there ♥',
+      thanksNo: 'Thank you for letting us know. We hope to see you soon ♥',
       error: 'Could not send just now — please try again.',
-      wishLabel: 'Boarding wish',
-      seat: 'Seat',
-      seeds: [
-        {
-          name: 'The Bride & Groom',
-          message: 'Thank you for being part of our flight to happiness!',
-        },
-        {
-          name: 'Our Families',
-          message:
-            'Wishing the newlyweds a lifetime of love — hold hands through every sky.',
-        },
-        {
-          name: 'The Best Friends',
-          message:
-            'May flight LOVE take off smoothly and happiness never land!',
-        },
-      ],
+      stubLabel: 'Confirmed',
+      confirmedYes: 'Your seat is reserved on our flight to happiness.',
+      confirmedNo: 'We have received your reply.',
+      change: 'Change my answer',
     },
     couple: {
       kicker: 'The flight crew',
@@ -742,34 +736,29 @@ export const translations: Record<Lang, Translation> = {
       ],
       signature: '謹致誠摯謝意，',
     },
-    guestbook: {
-      kicker: '祝福留言簿',
-      title: '給幸福航班的祝福',
-      subtitle: '留下您的祝福——每一句祝福都是一張登上幸福航班的登機證。',
+    rsvp: {
+      kicker: '出席確認',
+      title: '您會與我們同行嗎？',
+      subtitle:
+        '只需回覆一句——讓雙方家庭備妥座位，在當天好好迎接您。',
       nameLabel: '您的名字',
       namePlaceholder: '例如：小美與阿哲',
-      messageLabel: '祝福內容',
+      attendingLabel: '您會出席嗎？',
+      yes: '會，我會出席',
+      no: '很抱歉，我無法出席',
+      guestsLabel: '出席人數',
+      guestsUnit: '位',
+      messageLabel: '留言（選填）',
       messagePlaceholder: '祝你們百年好合、幸福美滿…',
-      submit: '送出祝福',
+      submit: '送出確認',
       sending: '送出中…',
-      thanks: '謝謝您！您的祝福已登機 ♥',
+      thanksYes: '謝謝您！座位已為您保留，當天見 ♥',
+      thanksNo: '謝謝您告知，期待與您相見 ♥',
       error: '暫時無法送出，請再試一次。',
-      wishLabel: '祝福登機證',
-      seat: '座位',
-      seeds: [
-        {
-          name: '新娘與新郎',
-          message: '謝謝您成為我們幸福航班的一員！',
-        },
-        {
-          name: '雙方家人',
-          message: '祝福新人百年好合，攜手飛越每一片天空。',
-        },
-        {
-          name: '摯友們',
-          message: '願 LOVE 航班順利起飛，幸福永不降落！',
-        },
-      ],
+      stubLabel: '已確認',
+      confirmedYes: '您的座位已保留在我們的幸福航班上。',
+      confirmedNo: '我們已收到您的回覆。',
+      change: '更改回覆',
     },
     couple: {
       kicker: '機組人員',

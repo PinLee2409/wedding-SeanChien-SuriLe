@@ -142,14 +142,17 @@ export interface WeddingConfig {
     message: string
   }
 
-  guestbook: {
-    /** Optional Apps Script / API endpoint that stores + returns wishes as
-     *  JSON `[{ name, message, ts }]`. Empty ⇒ wishes stay on the guest's
-     *  device only (still a lovely keepsake, just not shared). */
+  rsvp: {
+    /** Optional Apps Script / API endpoint that appends one row per reply,
+     *  `{ name, message, ts, site }` — `message` carries the answer itself so
+     *  the couple's existing sheet reads it without any change. Empty ⇒ the
+     *  reply is only remembered on the guest's own device. */
     endpoint: string
-    /** Short tag identifying this wedding in the shared wishes sheet, so the
-     *  two invitation sites keep their guest books separate. */
+    /** Short tag identifying this wedding in the shared sheet, so the two
+     *  invitation sites keep their guest lists separate. */
     site: string
+    /** Largest party a single guest may confirm for. */
+    maxGuests: number
   }
 
   music: {
@@ -305,12 +308,13 @@ export const weddingConfig: WeddingConfig = {
       'We look forward to welcoming you as we begin this joyful journey together.',
   },
 
-  guestbook: {
-    // Google Apps Script "Loi chuc - Boarding wishes" — stores wishes in the
-    // couple's "Lời chúc" sheet and returns them for every guest.
+  rsvp: {
+    // Google Apps Script "Loi chuc - Boarding wishes" — appends every reply to
+    // the couple's "Lời chúc" sheet, which is where they read the guest list.
     endpoint:
       'https://script.google.com/macros/s/AKfycbxaqUXWH-XPnL8yfOCyVqLZm66DiJRJJps38RW8sBfoAP4UO4eElx6We2ne5fs6_iQB/exec',
     site: 'suri',
+    maxGuests: 10,
   },
 
   music: {

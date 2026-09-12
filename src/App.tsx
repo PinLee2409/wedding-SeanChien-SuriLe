@@ -9,6 +9,7 @@ import { CoupleProfile } from './components/sections/CoupleProfile'
 import { FlightTimeline } from './components/sections/FlightTimeline'
 import { WeddingDetails } from './components/sections/WeddingDetails'
 import { DownloadInvitation } from './components/sections/DownloadInvitation'
+import { RsvpConfirm } from './components/sections/RsvpConfirm'
 import { LoveMessage } from './components/sections/LoveMessage'
 import { MediaGallery } from './components/sections/MediaGallery'
 import { FinalThankYou } from './components/sections/FinalThankYou'
@@ -124,6 +125,10 @@ function App() {
         <DownloadInvitation config={weddingConfig} guestName={GUEST_NAME} />
 
         <RouteDivider className="bg-warm-white" />
+
+        {/* Everything the guest needs to decide has been said — so this is
+            where we ask for the one answer we need back. */}
+        <RsvpConfirm config={weddingConfig} />
 
         <LoveMessage config={weddingConfig} />
 
