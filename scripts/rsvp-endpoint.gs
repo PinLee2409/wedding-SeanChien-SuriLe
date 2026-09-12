@@ -31,8 +31,9 @@
  *  Both sites (`site: 'thaibinh'` and `site: 'suri'`) share this endpoint and
  *  this sheet; every row is tagged with its site.
  *
- *  The sheet is read by header name, and any column it is missing is added on
- *  first use — existing rows and formatting are left alone.
+ *  Columns are fixed, not looked up: A name, B message, C ts, D id, E site.
+ *  That is the order the first script wrote in, so replies already in the
+ *  sheet stay where they are; a header row is pushed in above them once.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -55,7 +56,17 @@ const PER_DEVICE_MAX = 20
  *  few dozen replies in total, so this only ever trips on abuse. */
 const HOURLY_MAX = 120
 
-const COLUMNS = ['id', 'name', 'message', 'ts', 'site']
+/**
+ * Fixed column layout, 1-based — NOT looked up by header name.
+ *
+ * The sheet was born without a header row: the first script simply appended
+ * name, message, ts into A, B, C. Reading the layout out of row 1 therefore
+ * mistook the oldest reply for a header. So the three original columns keep
+ * their places, the two new ones sit to their right, and `ensureHeader`
+ * labels them all the first time this script runs.
+ */
+const COL = { name: 1, message: 2, ts: 3, id: 4, site: 5 }
+const HEADER = ['name', 'message', 'ts', 'id', 'site']
 
 /**
  * The guest list is personal data — names, party sizes, and whatever people
@@ -105,25 +116,19 @@ function handle(e) {
 
   const sheet = targetSheet()
   if (!sheet) return reply({ ok: false, error: 'sheet' })
+  ensureHeader(sheet)
 
-  const col = headerIndex(sheet)
-  const row = {}
-  row[col.id] = id
-  row[col.name] = name
-  row[col.message] = message
-  row[col.ts] = Number(body.ts) || Date.now()
-  row[col.site] = site
-
-  const existing = findRow(sheet, col.id, id)
-  const width = sheet.getLastColumn()
   const values = []
-  for (let c = 1; c <= width; c += 1) values.push(row[c] === undefined ? '' : row[c])
+  values[COL.name - 1] = name
+  values[COL.message - 1] = message
+  values[COL.ts - 1] = Number(body.ts) || Date.now()
+  values[COL.id - 1] = id
+  values[COL.site - 1] = site
 
+  const existing = findRow(sheet, id)
   if (existing > 0) {
-    // Keep any column the couple added by hand: only write the ones we own.
-    COLUMNS.forEach(function (key) {
-      sheet.getRange(existing, col[key]).setValue(row[col[key]])
-    })
+    // Only our own columns, so anything the couple added by hand survives.
+    sheet.getRange(existing, 1, 1, HEADER.length).setValues([values])
     countWrite(id)
     return reply({ ok: true, updated: true })
   }
@@ -162,7 +167,12 @@ function checkSetup() {
     sheet.getName(),
     rows,
   )
-  Logger.log('Columns: %s', JSON.stringify(headerIndex(sheet)))
+  ensureHeader(sheet)
+  Logger.log('Columns: %s', JSON.stringify(COL))
+  Logger.log(
+    'Header row now reads: %s',
+    JSON.stringify(sheet.getRange(1, 1, 1, HEADER.length).getValues()[0]),
+  )
 }
 
 /** The invitation posts JSON as text/plain to dodge a CORS preflight. */
@@ -215,33 +225,28 @@ function countWrite(id) {
   cache.put(key, String(Number(cache.get(key) || 0) + 1), 3600)
 }
 
-/** Maps our column names to 1-based indices, adding any the sheet lacks. */
-function headerIndex(sheet) {
-  const width = Math.max(1, sheet.getLastColumn())
-  let headers = sheet.getRange(1, 1, 1, width).getValues()[0]
-  headers = headers.map(function (h) {
-    return String(h).trim().toLowerCase()
-  })
-
-  const index = {}
-  COLUMNS.forEach(function (key) {
-    const at = headers.indexOf(key)
-    if (at >= 0) {
-      index[key] = at + 1
-      return
-    }
-    headers.push(key)
-    index[key] = headers.length
-    sheet.getRange(1, headers.length).setValue(key)
-  })
-  return index
+/**
+ * Labels the columns, once. A sheet whose first row is already our header is
+ * left alone; one that opens straight into replies gets a header row pushed
+ * in above them, which keeps every existing reply in the columns it is
+ * already sitting in. Idempotent, so every write may call it.
+ */
+function ensureHeader(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(HEADER)
+    return
+  }
+  const first = String(sheet.getRange(1, 1).getValue()).trim().toLowerCase()
+  if (first === HEADER[0]) return
+  sheet.insertRowBefore(1)
+  sheet.getRange(1, 1, 1, HEADER.length).setValues([HEADER])
 }
 
-/** The 1-based row carrying this id, or 0. */
-function findRow(sheet, idColumn, id) {
+/** The 1-based row carrying this id, or 0. Row 1 is the header. */
+function findRow(sheet, id) {
   const rows = sheet.getLastRow()
   if (rows < 2) return 0
-  const ids = sheet.getRange(2, idColumn, rows - 1, 1).getValues()
+  const ids = sheet.getRange(2, COL.id, rows - 1, 1).getValues()
   for (let i = 0; i < ids.length; i += 1) {
     if (String(ids[i][0]).trim() === id) return i + 2
   }
